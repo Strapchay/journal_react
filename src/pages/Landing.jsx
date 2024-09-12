@@ -20,10 +20,10 @@ function Landing() {
   }, []);
 
   return (
-    <div className={styles["login-container"]}>
-      <header>
-        <nav className={styles["login-header"]}>
-          <Modal>
+    <Modal>
+      <div className={styles["login-container"]}>
+        <header>
+          <nav className={styles["login-header"]}>
             <ul>
               <Modal.Open opens="login-form">
                 <li
@@ -53,55 +53,54 @@ function Landing() {
                 <AuthForm formType="reset-form" />
               </Modal.Window>
             </ul>
-          </Modal>
-        </nav>
-      </header>
-      <div className={styles["login-content"]}>
-        <div className={styles["login-heading-row"]}>
-          <div className={styles["login-content-heading"]}>
-            Start your Journaling journey Today
-          </div>
-          <p className={styles["login-content-text"]}>
-            Take your Daily Experiences to an accountable level. Keep track of
-            the momentums that got you to where you are now. Start Today!
-          </p>
-        </div>
-        <div className={styles["login-content-row"]}>
-          <div className={styles["login-content-outline"]}>
-            <div className={styles["content-outlines"]}>
-              <div className={styles["content-outline"]}>
-                <div className={styles["outline-heading"]}>
-                  1. Start writing
-                </div>
-                <div className={styles["outline-text"]}>
-                  Get your experiences written down. Budget time to reflect on
-                  your day.
-                </div>
-              </div>
-              <div className={styles["content-outline"]}>
-                <div className={styles["outline-heading"]}>2. Tag it</div>
-                <div className={styles["outline-text"]}>
-                  Create tags to culminate your experience to keep track of it.
-                </div>
-              </div>
-              <div className={styles["content-outline"]}>
-                <div className={styles["outline-heading"]}>
-                  3. Reflect and grow
-                </div>
-                <div className={styles["outline-text"]}>
-                  Get to reflect on your experiences and daily activities for
-                  growth.
-                </div>
-              </div>
+          </nav>
+        </header>
+        <div className={styles["login-content"]}>
+          <div className={styles["login-heading-row"]}>
+            <div className={styles["login-content-heading"]}>
+              Start your Journaling journey Today
             </div>
-            <div className={styles["content-img"]}>
-              <div className={styles["content-img-box"]}>
-                <img
-                  src="/journal.jpg"
-                  alt="Diaries for Journaling stacked on each other"
-                />
-                <div className={styles["img-overlay"]}>
-                  <Modal>
+            <p className={styles["login-content-text"]}>
+              Take your Daily Experiences to an accountable level. Keep track of
+              the momentums that got you to where you are now. Start Today!
+            </p>
+          </div>
+          <div className={styles["login-content-row"]}>
+            <div className={styles["login-content-outline"]}>
+              <div className={styles["content-outlines"]}>
+                <div className={styles["content-outline"]}>
+                  <div className={styles["outline-heading"]}>
+                    1. Start writing
+                  </div>
+                  <div className={styles["outline-text"]}>
+                    Get your experiences written down. Budget time to reflect on
+                    your day.
+                  </div>
+                </div>
+                <div className={styles["content-outline"]}>
+                  <div className={styles["outline-heading"]}>2. Tag it</div>
+                  <div className={styles["outline-text"]}>
+                    Create tags to culminate your experience to keep track of
+                    it.
+                  </div>
+                </div>
+                <div className={styles["content-outline"]}>
+                  <div className={styles["outline-heading"]}>
+                    3. Reflect and grow
+                  </div>
+                  <div className={styles["outline-text"]}>
+                    Get to reflect on your experiences and daily activities for
+                    growth.
+                  </div>
+                </div>
+              </div>
+              <div className={styles["content-img"]}>
+                <div className={styles["content-img-box"]}>
+                  <img
+                    src="/journal.jpg"
+                    alt="Diaries for Journaling stacked on each other"
+                  />
+                  <div className={styles["img-overlay"]}>
                     <ul>
                       <Modal.Open opens="login-form">
                         <li
@@ -113,9 +112,6 @@ function Landing() {
                           Login
                         </li>
                       </Modal.Open>
-                      <Modal.Window name="login-form">
-                        <AuthForm formType="login-form" />
-                      </Modal.Window>
                       <Modal.Open opens="signup-form">
                         <li
                           className={[
@@ -126,18 +122,15 @@ function Landing() {
                           Sign Up
                         </li>
                       </Modal.Open>
-                      <Modal.Window name="signup-form">
-                        <AuthForm formType="signup-form" />
-                      </Modal.Window>
                     </ul>
-                  </Modal>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
