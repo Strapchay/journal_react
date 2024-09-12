@@ -60,17 +60,11 @@ function ModalCloseButton({ close }) {
   );
 }
 
-function Open({
-  children,
-  opens: opensWindowName,
-  extraAction = null,
-  click = true,
-}) {
+function Open({ children, opens: opensWindowName, click = true }) {
   const { open } = useContext(ModalContext);
   if (click)
     return cloneElement(children, {
       onClick: () => {
-        extraAction?.();
         open(opensWindowName);
       },
     });
