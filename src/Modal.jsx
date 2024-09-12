@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { HiXMark } from "react-icons/hi2";
 import { useOutsideClick } from "./hooks/useOutsideClick";
 import { useEffect } from "react";
+import { useRef } from "react";
 
 export const ModalContext = createContext();
 
@@ -12,6 +13,7 @@ function Modal({ children }) {
     setOpenName("");
   };
   const open = setOpenName;
+  const ref = useOutsideClick(close);
   return (
     <ModalContext.Provider
       value={{
@@ -19,6 +21,7 @@ function Modal({ children }) {
         close,
         openName,
         setOpenName,
+        refObj: ref,
       }}
     >
       {children}
@@ -34,16 +37,9 @@ function Overlay({ children }) {
   );
 }
 
-function StyledModal({ children, refObj }) {
-  //left-[50%]
-  //top-[50%]
-  //w-[70%]
-
+function StyledModal({ children }) {
   return (
-    <div
-      ref={refObj}
-      className="pointer-events-none origin fixed max-h-[90vh] min-h-[70vh] w-full translate-x-[-50%] translate-y-[-50%] transform overflow-y-auto px-4 py-[1rem]  transition-all"
-    >
+    <div className="pointer-events-none origin fixed max-h-[90vh] min-h-[70vh] w-full translate-x-[-50%] translate-y-[-50%] transform overflow-y-auto px-4 py-[1rem]  transition-all">
       {children}
     </div>
   );
@@ -60,29 +56,24 @@ function ModalCloseButton({ close }) {
   );
 }
 
-function Open({ children, opens: opensWindowName, click = true }) {
+function Open({ children, opens: opensWindowName }) {
   const { open } = useContext(ModalContext);
-  if (click)
-    return cloneElement(children, {
-      onClick: () => {
-        open(opensWindowName);
-      },
-    });
-  if (!click) open(opensWindowName);
+  return cloneElement(children, {
+    onClick: () => {
+      open(opensWindowName);
+    },
+  });
 }
 
 function Window({ children, name }) {
-  const { openName, close } = useContext(ModalContext);
-  const ref = useOutsideClick(close);
+  const { openName } = useContext(ModalContext);
 
   if (name != openName) return null;
-  //refObj={ref}
   return createPortal(
     <Overlay>
       <StyledModal>
-        {/* <ModalCloseButton close={close} /> */}
         <div className="flex items-center justify-center">
-          {cloneElement(children, { onCloseModal: close, refObj: ref })}
+          {cloneElement(children)}
         </div>
       </StyledModal>
     </Overlay>,

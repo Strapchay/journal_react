@@ -41,7 +41,7 @@ function LoginForm({ onCloseModal, switchForm }) {
   function onError(errors) {}
 
   return (
-    <>
+    <FormOverlay formType="login">
       <div className="form-content-form">
         <form
           action=""
@@ -97,7 +97,7 @@ function LoginForm({ onCloseModal, switchForm }) {
       >
         Forgot Password?
       </a>
-    </>
+    </FormOverlay>
   );
 }
 

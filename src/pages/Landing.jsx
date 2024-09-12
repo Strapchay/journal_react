@@ -1,13 +1,6 @@
 import styles from "./Landing.module.css";
-// import "../css/index.css";
-// import "../css/Login.css";
-// import "../css/Style.css";
-// import "../css/Queries.css";
 import { useEffect } from "react";
 import Modal from "../Modal";
-import LoginForm from "./forms/LoginForm";
-import SignupForm from "./forms/SignupForm";
-import ResetPasswordForm from "./forms/ResetPasswordForm";
 import AuthForm from "./forms/AuthForm";
 
 function Landing() {
