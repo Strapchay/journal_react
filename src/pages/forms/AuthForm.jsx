@@ -1,12 +1,10 @@
 import { useState } from "react";
-import LoginForm from "./LoginForm";
-import SignupForm from "./SignupForm";
 import { useContext } from "react";
 import { useEffect } from "react";
 import ResetPasswordForm from "./ResetPasswordForm";
+import LoginForm from "./LoginForm";
+import SignupForm from "./SignupForm";
 import { ModalContext } from "../../Modal";
-import FormOverlay from "../../FormOverlay";
-import { formatToFormType } from "../../utils/helpers";
 
 function AuthForm({ formType }) {
   const [currentForm, setCurrentForm] = useState("");
@@ -22,21 +20,11 @@ function AuthForm({ formType }) {
   }
 
   return (
-    <FormOverlay
-      refObj={refObj}
-      onCloseModal={onCloseModal}
-      formType={formatToFormType(formType)}
-    >
-      {currentForm === "login-form" && (
-        <LoginForm onCloseModal={onCloseModal} switchForm={switchForm} />
-      )}
-      {currentForm === "signup-form" && (
-        <SignupForm onCloseModal={onCloseModal} />
-      )}
-      {currentForm === "reset-form" && (
-        <ResetPasswordForm onCloseModal={onCloseModal} />
-      )}
-    </FormOverlay>
+    <>
+      {currentForm === "login-form" && <LoginForm switchForm={switchForm} />}
+      {currentForm === "signup-form" && <SignupForm />}
+      {currentForm === "reset-form" && <ResetPasswordForm />}
+    </>
   );
 }
 

@@ -33,30 +33,32 @@ function ResetPasswordForm({ onCloseModal }) {
   function onError() {}
 
   return (
-    <div className={styles["form-content-form"]}>
-      <form
-        action=""
-        id="reset-pwd-form"
-        className={styles["form-class"]}
-        onSubmit={handleSubmit(onSubmit, onError)}
-      >
-        {!resetEmailSent && (
-          <SendResetPasswordForm register={register} formEvent={isSending} />
-        )}
-        {resetEmailSent && (
-          <ResetPasswordConfirmForm
-            register={register}
-            formEvent={isResetting}
-          />
-        )}
-        <button
-          className={styles["form-submit"]}
-          disabled={!resetEmailSent ? isSending : isResetting}
+    <FormOverlay formType="reset">
+      <div className={styles["form-content-form"]}>
+        <form
+          action=""
+          id="reset-pwd-form"
+          className={styles["form-class"]}
+          onSubmit={handleSubmit(onSubmit, onError)}
         >
-          Submit
-        </button>
-      </form>
-    </div>
+          {!resetEmailSent && (
+            <SendResetPasswordForm register={register} formEvent={isSending} />
+          )}
+          {resetEmailSent && (
+            <ResetPasswordConfirmForm
+              register={register}
+              formEvent={isResetting}
+            />
+          )}
+          <button
+            className={styles["form-submit"]}
+            disabled={!resetEmailSent ? isSending : isResetting}
+          >
+            Submit
+          </button>
+        </form>
+      </div>
+    </FormOverlay>
   );
 }
 function SendResetPasswordForm({ register, formEvent }) {

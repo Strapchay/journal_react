@@ -1,11 +1,5 @@
 import { BASE_API_URL, successCodes } from "./constants";
 
-export function formatToFormType(string) {
-  if (string === "login-form") return "login";
-  if (string === "signup-form") return "create";
-  if (string === "reset-form") return "reset";
-}
-
 export function formRenderingHeading(formType) {
   if (formType === "reset") return "Reset Password";
 
