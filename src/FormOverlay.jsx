@@ -4,8 +4,8 @@ import { formRenderInfo, formRenderingHeading } from "./utils/helpers";
 
 function FormOverlay({ children, onCloseModal, formType, refObj }) {
   return (
-    <div className={styles["login-overlay"]}>
-      <div className={styles["login-overlay-bkg"]} ref={refObj}></div>
+    <div className={styles["login-overlay"]} ref={refObj}>
+      <div className={styles["login-overlay-bkg"]}></div>
       <div className={styles["form-container"]}>
         <div className={styles[`${formType}-form-container`]}>
           <CloseFormNudge onCloseModal={onCloseModal} />

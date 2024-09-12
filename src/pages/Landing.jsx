@@ -114,9 +114,9 @@ function Landing() {
                         </li>
                       </Modal.Open>
                       <Modal.Window name="login-form">
-                        <LoginForm />
+                        <AuthForm formType="login-form" />
                       </Modal.Window>
-                      <Modal.Open>
+                      <Modal.Open opens="signup-form">
                         <li
                           className={[
                             styles["cta-btn"],
@@ -127,7 +127,7 @@ function Landing() {
                         </li>
                       </Modal.Open>
                       <Modal.Window name="signup-form">
-                        <SignupForm />
+                        <AuthForm formType="signup-form" />
                       </Modal.Window>
                     </ul>
                   </Modal>
