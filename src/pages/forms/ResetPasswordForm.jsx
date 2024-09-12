@@ -5,10 +5,13 @@ import { useForm } from "react-hook-form";
 import { useSendResetPassword } from "../../features/users/useSendResetPassword";
 import { useResetPasswordConfirm } from "../../features/users/useResetPasswordConfirm";
 import { useEffect } from "react";
+import { useContext } from "react";
+import { ModalContext } from "../../Modal";
 
-function ResetPasswordForm({ onCloseModal }) {
+function ResetPasswordForm() {
+  const { close } = useContext(ModalContext);
   const [resetEmailSent, setResetEmailSent] = useState(false);
-  const { register, handleSubmit, reset, formState } = useForm();
+  const { register, handleSubmit, reset, formState, getValues } = useForm();
   const { sendResetPassword, isLoading: isSending } = useSendResetPassword();
   const { resetPasswordConfirm, isLoading: isResetting } =
     useResetPasswordConfirm();
@@ -24,7 +27,7 @@ function ResetPasswordForm({ onCloseModal }) {
       resetPasswordConfirm(data, {
         onSuccess: () => {
           reset();
-          onCloseModal?.();
+          close?.();
         },
       });
     }
@@ -48,6 +51,7 @@ function ResetPasswordForm({ onCloseModal }) {
             <ResetPasswordConfirmForm
               register={register}
               formEvent={isResetting}
+              getValues={getValues}
             />
           )}
           <button
@@ -61,6 +65,7 @@ function ResetPasswordForm({ onCloseModal }) {
     </FormOverlay>
   );
 }
+
 function SendResetPasswordForm({ register, formEvent }) {
   return (
     <div className={styles["reset-reset"]}>
@@ -85,7 +90,7 @@ function SendResetPasswordForm({ register, formEvent }) {
   );
 }
 
-function ResetPasswordConfirmForm({ register, formEvent }) {
+function ResetPasswordConfirmForm({ register, getValues, formEvent }) {
   return (
     <div className={styles["reset-confirm"]}>
       <div className={styles["form-div"]}>
@@ -103,7 +108,7 @@ function ResetPasswordConfirmForm({ register, formEvent }) {
           disabled={formEvent}
         />
       </div>
-      <div className="form-div">
+      <div className={styles["form-div"]}>
         <label htmlFor="uid">UID</label>
         <input
           type="text"
@@ -117,7 +122,7 @@ function ResetPasswordConfirmForm({ register, formEvent }) {
           disabled={formEvent}
         />
       </div>
-      <div className="form-div">
+      <div className={styles["form-div"]}>
         <label htmlFor="new_password1">New Password</label>
         <input
           type="password"
@@ -125,11 +130,20 @@ function ResetPasswordConfirmForm({ register, formEvent }) {
           placeholder="Create a strong password"
           className={styles["new_password1"]}
           id="new_password1"
-          required
+          {...register("new_password1", {
+            required: "This field is required",
+            minLength: {
+              value: 9,
+              message: "Your password should be at least 9 characters long",
+            },
+            validate: (value) =>
+              value == getValues().new_password2 ||
+              "Password fields don't match",
+          })}
+          disabled={formEvent}
         />
-        disabled={formEvent}
       </div>
-      <div className="form-div">
+      <div className={styles["form-div"]}>
         <label htmlFor="new_password2">Confirm Password</label>
         <input
           type="password"
@@ -137,7 +151,9 @@ function ResetPasswordConfirmForm({ register, formEvent }) {
           placeholder="Re-type your password"
           className={styles["new_password2"]}
           id="new_password2"
-          required
+          {...register("new_password2", {
+            required: "This field is required",
+          })}
           disabled={formEvent}
         />
       </div>
