@@ -10,7 +10,6 @@ import { useLocalStorageState } from "../../hooks/useLocalStorageState";
 import { useState } from "react";
 import { useEffect } from "react";
 import SpinnerMini from "../../SpinnerMini";
-import { useContext } from "react";
 
 function LoginForm({ onCloseModal, switchForm }) {
   const { setToken } = useLocalStorageState({}, "token");
@@ -24,10 +23,6 @@ function LoginForm({ onCloseModal, switchForm }) {
       onCloseModal?.();
     }
   }, [isLoggedIn, navigate, onCloseModal]);
-
-  function handleC() {
-    console.log("clicked");
-  }
 
   function onSubmit(data) {
     const formattedData = {
@@ -96,7 +91,10 @@ function LoginForm({ onCloseModal, switchForm }) {
           </button>
         </form>
       </div>
-      <a className={styles["btn-reset"]} onClick={() => handleC()}>
+      <a
+        className={styles["btn-reset"]}
+        onClick={() => switchForm("reset-form")}
+      >
         Forgot Password?
       </a>
     </>
