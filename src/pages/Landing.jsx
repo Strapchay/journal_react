@@ -1,15 +1,23 @@
 import styles from "./Landing.module.css";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Modal from "../Modal";
 import AuthForm from "./forms/AuthForm";
+import { useLocalStorageState } from "../hooks/useLocalStorageState";
 
 function Landing() {
+  const { token } = useLocalStorageState(null, "token");
+  const navigate = useNavigate();
   useEffect(() => {
     document.body.classList.add("login-template");
 
     return () => {
       document.body.classList.remove("login-template");
     };
+  }, []);
+
+  useEffect(() => {
+    if (token) navigate("/dashboard", { replace: true });
   }, []);
 
   return (

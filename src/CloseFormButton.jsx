@@ -8,7 +8,7 @@ function CloseFormNudge({ onCloseModal }) {
         classList="close-form"
         fragId="xmark"
         styles={styles}
-        onCloseModal={onCloseModal}
+        onClick={onCloseModal}
       />
     </div>
   );

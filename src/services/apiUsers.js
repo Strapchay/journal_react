@@ -29,25 +29,6 @@ export async function resetPasswordConfirm(payload) {
   );
 }
 
-export async function getAuthenticatedUser() {
-  // try {
-  //   const url = API.APIEnum.USER.SESSION;
-  //   const res = await fetch(url, {
-  //     method: "GET",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     credentials: "include",
-  //   });
-  //   const data = await res.json();
-  //   if (!res.ok || !successCodes.includes(res.status))
-  //     throw new Error(getInitError(data));
-  //   return data;
-  // } catch (err) {
-  //   throw new Error(err.message);
-  // }
-}
-
 export async function getUserProfile() {
   // try {
   //   const url = API.APIEnum.USER.PROFILE;
