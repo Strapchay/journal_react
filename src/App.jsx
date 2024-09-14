@@ -6,6 +6,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import PageNotFound from "./pages/PageNotFound";
 import Journal from "./pages/Journal";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+// import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      {/* <ReactQueryDevTools initialIsOpen={false} /> */}
       <RouterProvider router={router} />
       <Toaster
         position="top-center"

@@ -24,3 +24,13 @@ export async function getJournalTables(token) {
     "GET",
   );
 }
+
+export async function updateJournalInfo(token, payload, journalsId) {
+  return makeAPIRequest(
+    API.APIEnum.JOURNAL.PATCH(journalsId),
+    payload,
+    "updateJournalInfo",
+    token,
+    "PATCH",
+  );
+}

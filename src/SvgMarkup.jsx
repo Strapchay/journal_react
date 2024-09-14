@@ -8,7 +8,6 @@ function SvgMarkup({ classList = "", fragId, styles, onClick }) {
       : classList.length === 1
         ? [styles[classList]]
         : [classList];
-  console.log("the classList styles", classList);
 
   return (
     <div

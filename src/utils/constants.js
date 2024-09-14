@@ -242,3 +242,5 @@ export const PREVENT_DESTRUCTURING_FROM_API_ENDPOINT_RESP = [
   "updatePwd",
   "batchTags",
 ];
+
+export const THROTTLE_TIMER = 2 * 1000;

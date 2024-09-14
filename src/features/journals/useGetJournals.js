@@ -4,19 +4,21 @@ import { useContext } from "react";
 import { AuthContext } from "../../ProtectedRoute";
 import { formatAPIResp } from "../../utils/helpers";
 
-export function useGetJournals() {
-  const { token } = useContext(AuthContext);
+export function useGetJournals(token) {
+  // const { token } = useContext(AuthContext);
   const {
     isPending: isLoading,
     data: journals,
     error,
+    isFetchedAfterMount,
   } = useQuery({
     queryKey: ["journals"],
-    queryFn: () => {
-      const journalList = getJournalList(token);
+    queryFn: async () => {
+      const journalList = await getJournalList(token?.token);
       const formattedJournalList = formatAPIResp(...journalList, "journal");
       return formattedJournalList;
     },
+    staleTime: Infinity,
   });
   return { journals, isLoading, error };
 }

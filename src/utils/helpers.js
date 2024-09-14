@@ -83,8 +83,8 @@ export function formRenderInfo(formType) {
 }
 
 export const formatJournalHeadingName = (username) => {
-  const headingName = `${username.slice(0, 1).toUpperCase() + username.slice(1)}'s Journal`;
-  return `${headingName.slice(0, 15)}...`;
+  const headingName = `${username?.slice(0, 1).toUpperCase() + username?.slice(1)}'s Journal`;
+  return `${headingName?.slice(0, 15)}...`;
 };
 
 export function getInitError(data) {

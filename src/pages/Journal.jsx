@@ -15,22 +15,18 @@ import {
   TABLE_HEAD_LIMIT,
   TABLE_ROW_FILTER_PLACEHOLDER,
   TABLE_ROW_PLACEHOLDER,
+  THROTTLE_TIMER,
 } from "../utils/constants";
 import { useRef } from "react";
+import { useUpdateJournalInfo } from "../features/journals/useUpdateJournalInfo";
+import { useContext } from "react";
+import { AuthContext } from "../ProtectedRoute";
 
 function Journal() {
-  const { journals, isLoading: journalsLoading } = useGetJournals();
-  const { journalTables, isLoading: journalTablesLoading } =
-    useGetJournalTables();
+  const { journalState, dispatch } = useContext(AuthContext);
+  console.log("the jor state", journalState);
+  // console.log("the journals value", journals, journalsLoading);
   // const tableBodyRef = useRef(null);
-
-  useEffect(() => {
-    document.body.classList.add("journal-template");
-
-    return () => {
-      document.body.classList.remove("journal-template");
-    };
-  }, []);
 
   return (
     <main>
@@ -38,12 +34,12 @@ function Journal() {
         <JournalSidebar />
         <div className={styles["content-container"]}>
           <div className={styles["row"]}>
-            <JournalInfoHeaderComponent journalName="sdfdsfsdf" />
+            <JournalInfoHeaderComponent journalName={journalState?.name} />
             <div className={styles["container-main-content"]}>
               <div
                 className={[styles["row"], styles["row-scroller"]].join(" ")}
               >
-                <JournalInfoContentComponent />
+                <JournalInfoContentComponent journal={journalState} />
                 <div className={styles["table-container"]}>
                   <div className={styles["main-table"]}>
                     <div
@@ -55,8 +51,8 @@ function Journal() {
                       <div className={styles["main-table-head"]}>
                         <div className={styles["main-table-head-box"]}>
                           <JournalTableHeadComponent
-                            journals={journals}
-                            currentTableId={2}
+                            journals={journalState?.tableHeads}
+                            currentTableId={journalState?.currentTable}
                           />
                         </div>
                       </div>
@@ -204,10 +200,14 @@ function JournalSidebar() {
 }
 
 function JournalSidebarHeadingMarkup() {
-  const username = "Strapchay";
+  const { journalState } = useContext(AuthContext);
+  const username = journalState.username;
+
   return (
     <div className={styles["nav-options-heading"]}>
-      <div className={styles["options-heading-icon"]}>{username[0]}</div>
+      <div className={styles["options-heading-icon"]}>
+        {username?.[0] ?? ""}
+      </div>
       <div className={styles["options-heading-title"]}>
         {formatJournalHeadingName(username)}
       </div>
@@ -220,7 +220,8 @@ function JournalSidebarHeadingMarkup() {
   );
 }
 
-function JournalSidebarJournalMarkup(journalName) {
+function JournalSidebarJournalMarkup() {
+  const { journalState } = useContext(AuthContext);
   return (
     <div
       className={[styles["nav-option"], styles["nav-options-journal"]].join(
@@ -246,8 +247,8 @@ function JournalSidebarJournalMarkup(journalName) {
           </div>
 
           <div className={styles["nav-options-text"]}>
-            {journalName.length > 0
-              ? valueEclipser(journalName, SIDEBAR_JOURNAL_TITLE_LENGTH)
+            {journalState?.name?.length > 0
+              ? valueEclipser(journalState?.name, SIDEBAR_JOURNAL_TITLE_LENGTH)
               : "Untitled"}
           </div>
         </div>
@@ -309,20 +310,59 @@ function JournalSidebarLogout() {
 }
 
 function JournalInfoHeaderComponent({ journalName }) {
+  const { journalState } = useContext(AuthContext);
   return (
     <div className={styles["container-header"]}>
       <div className={styles["nav-options-journal-icon"]}>
-        {/* <SvgMarkup classList="journal-icon icon" fragId="journal-icon" /> */}
+        <SvgMarkup
+          classList="journal-icon icon"
+          fragId="journal-icon"
+          styles={styles}
+        />
       </div>
 
       <div className={styles["nav-options-text"]}>
-        {journalName.length > 0 ? journalName : "Untitled"}
+        {journalState?.name?.length > 0 ? journalState?.name : "Untitled"}
       </div>
     </div>
   );
 }
 
 function JournalInfoContentComponent({ journal }) {
+  const { journalState, dispatch } = useContext(AuthContext);
+
+  const journalNameRef = useRef(null);
+  const throttleTimerRef = useRef(null);
+  const {
+    updateJournalInfo,
+    isLoading: isUpdating,
+    error,
+  } = useUpdateJournalInfo();
+
+  function getRefNameValue() {
+    return journalNameRef.current.textContent.trim();
+  }
+
+  function handleJournalNameChange() {
+    if (throttleTimerRef.current) {
+      clearInterval(throttleTimerRef.current);
+      throttleTimerRef.current = null;
+    }
+
+    dispatch({
+      type: "updateJournalInfo",
+      payload: {
+        name: getRefNameValue(),
+      },
+    });
+    throttleTimerRef.current = setTimeout(() => {
+      const payload = {
+        journal_name: getRefNameValue(),
+      };
+      updateJournalInfo(payload);
+    }, THROTTLE_TIMER);
+  }
+
   return (
     <div className={styles["main-content-info"]}>
       <div className={styles["main-content-heading"]}>
@@ -338,6 +378,9 @@ function JournalInfoContentComponent({ journal }) {
           className={styles["journal-title-input"]}
           contentEditable={true}
           placeholder="Untitled"
+          suppressContentEditableWarning={true}
+          ref={journalNameRef}
+          onInput={handleJournalNameChange}
         >
           {journal?.name?.trim()}
         </h2>
@@ -346,6 +389,7 @@ function JournalInfoContentComponent({ journal }) {
         <div
           className={styles["content-description-input"]}
           contentEditable={true}
+          suppressContentEditableWarning={true}
         >
           {journal?.description}
         </div>
@@ -354,8 +398,7 @@ function JournalInfoContentComponent({ journal }) {
   );
 }
 
-function JournalTableRowComponent({ journalItems }) {
-  const currentTableId = 2;
+function JournalTableRowComponent({ journalItems, currentTableId }) {
   return (
     <>
       {journalItems?.map((journal, i) => {
@@ -395,15 +438,20 @@ function JournalTableRowComponent({ journalItems }) {
   );
 }
 
-function JournalTableHeadComponent({ journals, currentTableId }) {
-  const switchTableAdd = journals?.length >= 5;
-  const journalItems = swapItemIndexInPlace(journals, currentTableId);
+function JournalTableHeadComponent({ tables, currentTableId }) {
+  const switchTableAdd = tables?.length >= 5;
+  const tableItems = swapItemIndexInPlace(tables, currentTableId);
+
+  console.log("the journalsItems", tableItems);
 
   return (
     <>
       {!switchTableAdd && (
         <div className={styles["main-table-heading"]}>
-          <JournalTableRowComponent journalItems={journalItems} />
+          <JournalTableRowComponent
+            journalItems={tableItems}
+            currentTableId={currentTableId}
+          />
           <div
             className={[styles["table-column-adder"], styles["table-row"]].join(
               " ",
@@ -415,7 +463,7 @@ function JournalTableHeadComponent({ journals, currentTableId }) {
       )}
       {switchTableAdd && (
         <div className={styles["main-table-heading"]}>
-          <JournalTableRowComponent journalItems={journalItems} />
+          <JournalTableRowComponent journalItems={tableItems} />
           <div
             className={[
               styles["table-column-options"],
@@ -423,7 +471,7 @@ function JournalTableHeadComponent({ journals, currentTableId }) {
             ].join(" ")}
           >
             <div className={styles["table-row-text"]}>
-              {journals.length - TABLE_HEAD_LIMIT} more...
+              {tables.length - TABLE_HEAD_LIMIT} more...
             </div>
           </div>
         </div>
