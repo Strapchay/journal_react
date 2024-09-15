@@ -6,7 +6,7 @@ import {
 
 export const initialState = {
   name: "",
-  description: DEFAULT_JOURNAL_DESC,
+  description: "", //DEFAULT_JOURNAL_DESC,
   tables: [],
   tableHeads: [],
   tags: TABLE_TAGS.tags,

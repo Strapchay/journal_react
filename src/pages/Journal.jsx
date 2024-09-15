@@ -327,10 +327,10 @@ function JournalInfoHeaderComponent({ journalName }) {
   );
 }
 
-function JournalInfoContentComponent({ journal }) {
+function JournalInfoContentComponent() {
   const { journalState, dispatch } = useContext(AuthContext);
-
   const journalNameRef = useRef(null);
+  const journalDescRef = useRef(null);
   const throttleTimerRef = useRef(null);
   const {
     updateJournalInfo,
@@ -340,14 +340,18 @@ function JournalInfoContentComponent({ journal }) {
 
   useEffect(() => {
     if (!journalNameRef.current.textContent)
-      journalNameRef.current.textContent = journal?.name?.trim();
-  }, [journal]);
+      journalNameRef.current.textContent = journalState?.name?.trim();
+    if (!journalDescRef.current.textContent)
+      journalDescRef.current.textContent = journalState?.description?.trim();
+  }, [journalState]);
 
-  function getRefNameValue() {
-    return journalNameRef.current.textContent.trim();
+  function getRefTypeValue(type) {
+    if (type === "name") return journalNameRef.current.textContent.trim();
+    if (type === "description")
+      return journalDescRef.current.textContent.trim();
   }
 
-  function handleJournalNameChange() {
+  function handleJournalInfoChange(type) {
     if (throttleTimerRef.current) {
       clearInterval(throttleTimerRef.current);
       throttleTimerRef.current = null;
@@ -356,12 +360,12 @@ function JournalInfoContentComponent({ journal }) {
     dispatch({
       type: "updateJournalInfo",
       payload: {
-        name: getRefNameValue(),
+        [type]: getRefTypeValue(type),
       },
     });
     throttleTimerRef.current = setTimeout(() => {
       const payload = {
-        journal_name: getRefNameValue(),
+        [`journal_${type}`]: getRefTypeValue(type),
       };
       updateJournalInfo(payload);
     }, THROTTLE_TIMER);
@@ -384,18 +388,20 @@ function JournalInfoContentComponent({ journal }) {
           placeholder="Untitled"
           suppressContentEditableWarning={true}
           ref={journalNameRef}
-          onKeyUp={handleJournalNameChange}
+          onKeyUp={(e) => handleJournalInfoChange("name")}
         >
-          {/*journal?.name?.trim()*/}
+          {/*journalState?.name?.trim()*/}
         </h2>
       </div>
       <div className={styles["main-content-description"]}>
         <div
           className={styles["content-description-input"]}
           contentEditable={true}
+          ref={journalDescRef}
           suppressContentEditableWarning={true}
+          onKeyUp={(e) => handleJournalInfoChange("description")}
         >
-          {journal?.description}
+          {/*journalState?.description*/}
         </div>
       </div>
     </div>

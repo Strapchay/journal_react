@@ -64,7 +64,6 @@ function ProtectedRoute() {
 
     if (journalState?.tableHeads?.length === 0 && updater)
       dispatch({ type: "updateState", payload: updater });
-    // setJournalState((_) => updater);
   }, [
     journalState,
     journalTables,
