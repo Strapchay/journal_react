@@ -254,6 +254,7 @@ svg.hidden {
     min-height: 1em;
     caret-color: #bec1c6;
     -webkit-text-fill-color: #bec1c6;
+    color: #bec1c6;
     cursor: text;
     /* position: relative; */
 }

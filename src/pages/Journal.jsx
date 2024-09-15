@@ -1,8 +1,15 @@
-import { useEffect } from "react";
+import { useContext, useEffect, useRef } from "react";
+import { useUpdateJournalInfo } from "../features/journals/useUpdateJournalInfo";
+import { AuthContext } from "../ProtectedRoute";
 import SvgMarkup from "../SvgMarkup";
-import styles from "./Journal.module.css";
-import { useGetJournals } from "../features/journals/useGetJournals";
-import { useGetJournalTables } from "../features/journals/useGetJournalTables";
+import {
+  HEADER_JOURNAL_TITLE_LENGTH,
+  SIDEBAR_JOURNAL_TITLE_LENGTH,
+  TABLE_HEAD_LIMIT,
+  TABLE_ROW_FILTER_PLACEHOLDER,
+  TABLE_ROW_PLACEHOLDER,
+  THROTTLE_TIMER,
+} from "../utils/constants";
 import {
   dateTimeFormat,
   formatJournalHeadingName,
@@ -10,17 +17,7 @@ import {
   tableRowActivator,
   valueEclipser,
 } from "../utils/helpers";
-import {
-  SIDEBAR_JOURNAL_TITLE_LENGTH,
-  TABLE_HEAD_LIMIT,
-  TABLE_ROW_FILTER_PLACEHOLDER,
-  TABLE_ROW_PLACEHOLDER,
-  THROTTLE_TIMER,
-} from "../utils/constants";
-import { useRef } from "react";
-import { useUpdateJournalInfo } from "../features/journals/useUpdateJournalInfo";
-import { useContext } from "react";
-import { AuthContext } from "../ProtectedRoute";
+import styles from "./Journal.module.css";
 
 function Journal() {
   const { journalState, dispatch } = useContext(AuthContext);
@@ -322,7 +319,9 @@ function JournalInfoHeaderComponent({ journalName }) {
       </div>
 
       <div className={styles["nav-options-text"]}>
-        {journalState?.name?.length > 0 ? journalState?.name : "Untitled"}
+        {journalState?.name?.length > 0
+          ? valueEclipser(journalState?.name, HEADER_JOURNAL_TITLE_LENGTH)
+          : "Untitled"}
       </div>
     </div>
   );
@@ -338,6 +337,11 @@ function JournalInfoContentComponent({ journal }) {
     isLoading: isUpdating,
     error,
   } = useUpdateJournalInfo();
+
+  useEffect(() => {
+    if (!journalNameRef.current.textContent)
+      journalNameRef.current.textContent = journal?.name?.trim();
+  }, [journal]);
 
   function getRefNameValue() {
     return journalNameRef.current.textContent.trim();
@@ -380,9 +384,9 @@ function JournalInfoContentComponent({ journal }) {
           placeholder="Untitled"
           suppressContentEditableWarning={true}
           ref={journalNameRef}
-          onInput={handleJournalNameChange}
+          onKeyUp={handleJournalNameChange}
         >
-          {journal?.name?.trim()}
+          {/*journal?.name?.trim()*/}
         </h2>
       </div>
       <div className={styles["main-content-description"]}>

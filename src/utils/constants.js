@@ -20,6 +20,7 @@ export const TABLE_VIEW_OPTION_REPLACE_TABLE_OPTION = "(max-width: 1008px)";
 export const LAYOUT_BREAKPOINT = "(max-width: 1008px)";
 export const LAYOUT_SMALLER_DESKTOP_BREAKPOINT = "(max-width:800px)";
 export const SIDEBAR_JOURNAL_TITLE_LENGTH = 14;
+export const HEADER_JOURNAL_TITLE_LENGTH = 24;
 export const NEW_JOURNAL_NAME = "Table";
 export const TABLE_HEAD_LIMIT = 4;
 export const TABLE_BODY_LOAD_AFTER = 1; //seconds
