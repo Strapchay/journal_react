@@ -288,3 +288,134 @@ export const createTableItemAPIRequestPayload = function (
   if (relativeItem) payload["ordering_list"] = tableItemOrdering(relativeItem);
   return payload;
 };
+
+const getSubModelField = (submodel) => {
+  if (submodel !== "grateful_for")
+    return submodel.slice(0, submodel.length - 1);
+  return submodel;
+};
+
+const createSubModelPayload = function (payload, submodel) {
+  let formattedRequest = {};
+  const subModelField = getSubModelField(submodel);
+
+  //submodel value
+  formattedRequest[submodel] = {
+    activity: payload.itemId,
+    update_and_create: payload?.modelProperty?.property?.updateAndAddProperty,
+    update_only: payload?.modelProperty?.updateProperty,
+    type: submodel,
+    delete_only: payload?.modelProperty?.property?.delete ? true : false,
+  };
+
+  //add update value
+  payload?.modelProperty?.property?.update
+    ? (formattedRequest[submodel].update = {
+        id:
+          payload?.modelProperty?.property?.update?.propertyId.length > 0
+            ? Number(payload?.modelProperty?.property?.update?.propertyId)
+            : null,
+      })
+    : null;
+
+  //add subfield value
+  if (formattedRequest[submodel].update)
+    formattedRequest[submodel].update[subModelField] =
+      payload?.modelProperty?.property?.update?.value ?? null;
+
+  //add create value
+  payload?.modelProperty?.property?.create
+    ? (formattedRequest[submodel].create = {
+        relative_item:
+          payload?.modelProperty?.property?.create?.relativeProperty,
+        ordering: payload?.modelProperty?.property?.create?.ordering,
+      })
+    : (formattedRequest[submodel].create = null);
+
+  if (formattedRequest[submodel]?.create) {
+    formattedRequest[submodel].create[subModelField] =
+      payload?.modelProperty?.property?.create?.value;
+  }
+
+  //add ordering list value
+  if (payload?.modelProperty?.property?.orderingList)
+    formattedRequest[submodel].ordering_list =
+      payload.modelProperty.property.orderingList;
+
+  //add action item checkbox
+  if (payload?.modelProperty?.property?.updateActionItem) {
+    formattedRequest[submodel].update_action_item_checked = {
+      checked: payload?.modelProperty.property.updateActionItem.checked,
+      key: payload?.modelProperty.property.updateActionItem.key,
+      id: Number(payload?.modelProperty.property.updateActionItem.propertyId),
+      update_checked: true,
+      type: "action_items",
+    };
+  }
+
+  if (payload?.modelProperty?.property?.delete) {
+    formattedRequest[submodel].delete = {
+      id: payload.modelProperty.property.delete.propertyId,
+    };
+  }
+
+  return formattedRequest;
+};
+
+const getIdsFromTagsDiv = (tags) => {
+  //TODO: switch logic
+  const tagsWithId = tags
+    .map((tag) => (tag?.dataset?.id ? +tag.dataset.id : {}))
+    .filter((tag) => tag);
+  return tagsWithId;
+};
+
+export const formatAPIRequestUpdateTableItemPayload = function (payload, type) {
+  let formattedRequest;
+  if (type === "title") {
+    formattedRequest = {
+      name: payload?.title ?? "",
+    };
+  }
+
+  if (type === "tags") {
+    formattedRequest = getIdsFromTagsDiv(payload.tags);
+  }
+
+  if (type === "selectTags") {
+    formattedRequest = {
+      activities_list: [
+        {
+          ids: payload.itemIds.map((id) => +id),
+          tags: getIdsFromTagsDiv(payload.tags),
+        },
+      ],
+    };
+  }
+
+  if (type === "deleteTableItems") {
+    formattedRequest = {
+      delete_list: payload.items.map((id) => +id),
+    };
+  }
+
+  if (type === "duplicateTableItems") {
+    formattedRequest = {
+      duplicate_list: [{ ids: payload.items.map((id) => +id) }],
+    };
+  }
+
+  if (type === "intentions")
+    formattedRequest = createSubModelPayload(payload, "intentions");
+
+  if (type === "happenings")
+    formattedRequest = createSubModelPayload(payload, "happenings");
+
+  if (type === "actionItems")
+    formattedRequest = createSubModelPayload(payload, "action_items");
+
+  if (type === "gratefulFor")
+    formattedRequest = createSubModelPayload(payload, "grateful_for");
+
+  return formattedRequest;
+};

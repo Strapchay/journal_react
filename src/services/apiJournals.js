@@ -44,3 +44,13 @@ export function createTableItem(token, payload) {
     "POST",
   );
 }
+
+export async function updateTableItem(token, payload, itemId) {
+  return makeAPIRequest(
+    API.APIEnum.ACTIVITIES.PATCH(itemId),
+    payload,
+    "updateTableItem",
+    token,
+    "PATCH",
+  );
+}

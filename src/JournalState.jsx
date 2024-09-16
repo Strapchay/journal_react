@@ -33,6 +33,24 @@ export function journalReducer(state, action) {
 
       return { ...state };
     }
+    case "updateTableItem": {
+      const currentTableIndex = state.tables.findIndex(
+        (table) => table.id === state.currentTable,
+      );
+
+      const itemIndex = state.tables[currentTableIndex].tableItems.findIndex(
+        (item) => item.id === action.payload[0].id,
+      );
+      if (itemIndex > -1) {
+        state.tables[currentTableIndex].tableItems.splice(
+          itemIndex,
+          1,
+          ...action.payload,
+        );
+      }
+
+      return { ...state };
+    }
     default:
       throw new Error("Unknown action");
   }

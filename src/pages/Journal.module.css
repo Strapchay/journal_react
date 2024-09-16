@@ -2340,6 +2340,7 @@ svg.hidden {
 .overlay-content-content {
     position: relative;
     pointer-events: auto;
+    color: #bec1c6;
 }
 
 .notification-render {

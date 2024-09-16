@@ -20,6 +20,7 @@ import {
 } from "../utils/helpers";
 import styles from "./Journal.module.css";
 import ComponentOverlay from "../ComponentOverlay";
+import { useUpdateTableItem } from "../features/journals/useUpdateTableItem";
 
 function Journal() {
   const { journalState, dispatch, overlayContainerRef } =
@@ -674,6 +675,40 @@ function JournalTableBodyPlaceholder({ placeholder, onClick }) {
   );
 }
 
+function JournalTableBodyItemInputOverlayComponent({ itemId, onSubmit }) {
+  const [text, setText] = useState("");
+  const { updateTableItem } = useUpdateTableItem(onSubmit);
+  const { dispatch } = useContext(AuthContext);
+
+  function handleInputEvent(e) {
+    if (e.key !== "Enter") setText(e.target.textContent);
+    else
+      updateTableItem(
+        {
+          payload: {
+            itemId,
+            title: text,
+          },
+          type: "title",
+        },
+        {
+          onSuccess: (data) => {
+            const res = formatAPITableItems([data]);
+            dispatch({ type: "updateTableItem", payload: res });
+            onSubmit?.();
+          },
+        },
+      );
+  }
+  return (
+    <div
+      className={styles["row-actions-text-input"]}
+      contentEditable={true}
+      onKeyUp={handleInputEvent}
+    ></div>
+  );
+}
+
 function JournalTableBodyItemComponent({ item }) {
   // const [inputActive, setInputActive] = useState(false);
   const { overlayContainerRef } = useContext(AuthContext);
@@ -720,7 +755,9 @@ function JournalTableBodyItemComponent({ item }) {
                   name="nameInput"
                   objectToOverlay={inputRef}
                   type="input"
-                />
+                >
+                  <JournalTableBodyItemInputOverlayComponent itemId={item.id} />
+                </ComponentOverlay.Window>
               </ComponentOverlay>
               <div
                 className={[

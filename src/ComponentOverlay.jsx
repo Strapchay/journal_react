@@ -19,18 +19,6 @@ function ComponentOverlay({ children }) {
   );
 }
 
-function InputOverlayComponent() {
-  const [text, setText] = useState("");
-  console.log("the input got rend");
-  return (
-    <div
-      className={styles["row-actions-text-input"]}
-      contentEditable={true}
-      onInput={(e) => setText(e.target.textContent)}
-    ></div>
-  );
-}
-
 function Overlay({ children, objectToOverlay, disableOverlayInterceptor }) {
   const { top, left, width, height } =
     objectToOverlay.current.getBoundingClientRect();
@@ -79,12 +67,13 @@ function Open({ children, opens }) {
 }
 
 function Window({
+  children,
   name,
   objectToOverlay,
   disableOverlayInterceptor = false,
   type,
 }) {
-  const { openName } = useContext(OverlayContext);
+  const { openName, close } = useContext(OverlayContext);
   const { overlayContainerRef } = useContext(AuthContext);
   if (name != openName) return null;
   return createPortal(
@@ -92,7 +81,11 @@ function Window({
       objectToOverlay={objectToOverlay}
       disableOverlayInterceptor={disableOverlayInterceptor}
     >
-      {type === "input" && <InputOverlayComponent />}
+      {cloneElement(children, {
+        onSubmit: () => {
+          close();
+        },
+      })}
     </Overlay>,
     overlayContainerRef.current,
   );
