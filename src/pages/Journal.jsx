@@ -12,6 +12,7 @@ import {
 } from "../utils/constants";
 import {
   dateTimeFormat,
+  formatAPITableItems,
   formatJournalHeadingName,
   swapItemIndexInPlace,
   tableRowActivator,
@@ -31,12 +32,12 @@ function Journal() {
         <JournalSidebar />
         <div className={styles["content-container"]}>
           <div className={styles["row"]}>
-            <JournalInfoHeaderComponent journalName={journalState?.name} />
+            <JournalInfoHeaderComponent />
             <div className={styles["container-main-content"]}>
               <div
                 className={[styles["row"], styles["row-scroller"]].join(" ")}
               >
-                <JournalInfoContentComponent journal={journalState} />
+                <JournalInfoContentComponent />
                 <div className={styles["table-container"]}>
                   <div className={styles["main-table"]}>
                     <div
@@ -47,10 +48,7 @@ function Journal() {
                     >
                       <div className={styles["main-table-head"]}>
                         <div className={styles["main-table-head-box"]}>
-                          <JournalTableHeadComponent
-                            journals={journalState?.tableHeads}
-                            currentTableId={journalState?.currentTable}
-                          />
+                          <JournalTableHeadComponent />
                         </div>
                       </div>
 
@@ -143,10 +141,7 @@ function Journal() {
                               </div>
                             </div>
                           </div>
-                          <JournalTableBodyComponent
-                            body={true}
-                            placeholder={true}
-                          />
+                          <JournalTableBodyComponent />
                         </div>
 
                         {/*<!-- table row adder -->
@@ -306,7 +301,7 @@ function JournalSidebarLogout() {
   );
 }
 
-function JournalInfoHeaderComponent({ journalName }) {
+function JournalInfoHeaderComponent() {
   const { journalState } = useContext(AuthContext);
   return (
     <div className={styles["container-header"]}>
@@ -416,31 +411,33 @@ function JournalTableRowComponent({ journalItems, currentTableId }) {
         const activeTable = tableRowActivator(currentTableId, journalId, i);
 
         {
-          i < 4 && (
-            <div
-              className={[
-                styles["table-row"],
-                styles["table-journal"],
-                styles[activeTable],
-              ].join(" ")}
-              data-name={journalName}
-              data-id={journalId}
-            >
-              <div className={styles["table-row-icon"]}>
+          return (
+            i < 4 && (
+              <div
+                className={[
+                  styles["table-row"],
+                  styles["table-journal"],
+                  styles[activeTable],
+                ].join(" ")}
+                key={journalId}
+                data-name={journalName}
+                data-id={journalId}
+              >
+                <div className={styles["table-row-icon"]}>
+                  <SvgMarkup
+                    classList={styles["table-icon"]}
+                    fragId="list-icon"
+                    styles={styles}
+                  />
+                </div>
+                <div className={styles["table-row-text"]}>{journalName}</div>
                 <SvgMarkup
-                  classList="table-icon"
-                  fragId="list-icon"
+                  classList="table-icon table-head-selector"
+                  fragId="arrow-down"
                   styles={styles}
                 />
-                $
               </div>
-              <div className={styles["table-row-text"]}>{journalName}</div>$
-              <SvgMarkup
-                classList="table-icon table-head-selector"
-                fragId="arrow-down"
-                styles={styles}
-              />
-            </div>
+            )
           );
         }
       })}
@@ -448,11 +445,15 @@ function JournalTableRowComponent({ journalItems, currentTableId }) {
   );
 }
 
-function JournalTableHeadComponent({ tables, currentTableId }) {
+function JournalTableHeadComponent() {
+  const { journalState } = useContext(AuthContext);
+  const tables = journalState.tables.map((table) => [
+    table.tableTitle,
+    table.id,
+  ]);
+  const currentTableId = journalState.currentTable;
   const switchTableAdd = tables?.length >= 5;
   const tableItems = swapItemIndexInPlace(tables, currentTableId);
-
-  console.log("the journalsItems", tableItems);
 
   return (
     <>
@@ -467,7 +468,11 @@ function JournalTableHeadComponent({ tables, currentTableId }) {
               " ",
             )}
           >
-            <SvgMarkup classList="table-icon" fragId="plus" styles={styles} />
+            <SvgMarkup
+              classList={styles["table-icon"]}
+              fragId="plus"
+              styles={styles}
+            />
           </div>
         </div>
       )}
@@ -521,7 +526,7 @@ function JournalTableHeadActionComponent() {
       >
         <div className={styles["table-row-icon"]}>
           <SvgMarkup
-            classList="table-icon"
+            classList={styles["table-icon"]}
             fragId="search-icon"
             styles={styles}
           />
@@ -564,28 +569,64 @@ function JournalTableHeadActionComponent() {
         className={[styles["table-row-options"], styles["table-row"]].join(" ")}
       >
         <div className={styles["table-row-icon"]}>
-          <SvgMarkup classList="table-icon" fragId="ellipsis" styles={styles} />
+          <SvgMarkup
+            classList={styles["table-icon"]}
+            fragId="ellipsis"
+            styles={styles}
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function JournalTableBodyComponent({ body, placeholder }) {
-  //TODO: use ref to hold tablebody element
+function JournalTableBodyComponent({ body = false, placeholder = false }) {
+  const { createTableItem, createTableItemError, journalState, dispatch } =
+    useContext(AuthContext);
+  const currentTableIndex = journalState.tables.findIndex(
+    (table) => table.id === journalState.currentTable,
+  );
+  const currentTable = journalState?.tables?.[currentTableIndex];
+  const currentTableItems = currentTable?.tableItems;
+  function handleAddBodyItem() {
+    createTableItem(
+      { currentTableId: journalState.currentTable },
+      {
+        onSuccess: (data) => {
+          const formatResp = formatAPITableItems([data]);
+          dispatch({ type: "createTableItem", payload: formatResp });
+        },
+      },
+    );
+  }
   return (
     <>
       <div role="tablebody">
-        <JournalTableBodyPlaceholder placeholder={placeholder} />
+        {!currentTableItems?.length && (
+          <JournalTableBodyPlaceholder
+            placeholder={placeholder}
+            onClick={handleAddBodyItem}
+          />
+        )}
+        {currentTableItems?.length &&
+          currentTableItems.map((tableItem) => (
+            <JournalTableBodyItemComponent
+              item={tableItem}
+              key={tableItem?.id}
+            />
+          ))}
       </div>
-      {body && (
+      {!body && (
         <div role="tableadd">
           <div role="rowgroup" className={styles["rowfill"]}>
             <div role="row" className={styles["row-adder"]}>
-              <div className={styles["row-adder-content"]}>
+              <div
+                className={styles["row-adder-content"]}
+                onClick={handleAddBodyItem}
+              >
                 <div className={styles["row-adder-icon"]}>
                   <SvgMarkup
-                    classList="row-icon"
+                    classList={styles["row-icon"]}
                     fragId="plus"
                     styles={styles}
                   />
@@ -607,7 +648,7 @@ function JournalTableBodyComponent({ body, placeholder }) {
   );
 }
 
-function JournalTableBodyPlaceholder({ placeholder }) {
+function JournalTableBodyPlaceholder({ placeholder, onClick }) {
   return (
     <div role="rowgroup" className={styles["rowfill"]}>
       <div role="row">
@@ -615,6 +656,8 @@ function JournalTableBodyPlaceholder({ placeholder }) {
           className={
             styles[placeholder ? "row-adder-filter" : "row-adder-content"]
           }
+          // ref={ref}
+          onClick={onClick}
         >
           <div
             className={[styles["row-adder-text"], styles["color-dull"]].join(
@@ -637,7 +680,7 @@ function JournalTableBodyItemComponent({ item }) {
           <input
             type="checkbox"
             name=""
-            className="checkboxInput"
+            className={styles["checkboxInput"]}
             autoComplete="off"
           />
         </label>
@@ -735,7 +778,7 @@ function JournalTableBodyItemComponent({ item }) {
                 styles["row-actions-text"],
               ].join(" ")}
             >
-              <JournalTableBodyItemTagItem tags={item.itemTags} />
+              <JournalTableBodyItemTagItem tags={item?.itemTags} />
             </div>
           </span>
         </div>
@@ -745,9 +788,9 @@ function JournalTableBodyItemComponent({ item }) {
 }
 
 function JournalTableBodyItemTagItem({ journal, tags }) {
-  const tagsExist = tags.length > 0;
-  const journalTags = journal.tags;
-  const journalTagColors = journal.tagColors;
+  const tagsExist = tags?.length > 0;
+  const journalTags = journal?.tags;
+  const journalTagColors = journal?.tagColors;
   return (
     <>
       {tagsExist &&

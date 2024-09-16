@@ -125,6 +125,7 @@ export async function makeAPIRequest(
       if (res.status === 401) removeToken?.();
       throw new Error(getInitError(data));
     }
+    console.log("the data val", action, data);
     return data;
   } catch (err) {
     throw new Error(err.message);
@@ -162,6 +163,7 @@ export const formatAPISub = function (APIResp, type) {
 export const formatAPITableItems = function (APIResp, type) {
   let formattedData = [];
   if (APIResp.length > 0) {
+    console.log("the APIResp val", APIResp);
     APIResp.forEach((resp) => {
       let formatAPITableItem = {
         id: resp.id,
@@ -246,4 +248,43 @@ export const formatAPIResp = function (APIResp, type) {
   }
 
   return formattedData;
+};
+
+export const tableItemOrdering = function (createRelativeProperty) {
+  //TODO: switch functionality implementation
+  let incrementOrderingIndex = false;
+  let createItemOrdering = null;
+  const itemsOrdering = Array.from(
+    document.querySelectorAll(`.row-actions-handler-container`),
+  ).map((item, i) => {
+    if (
+      createRelativeProperty &&
+      Number(item.dataset.id) === createRelativeProperty
+    ) {
+      incrementOrderingIndex = true;
+      createItemOrdering = i + 2;
+      return { id: Number(item.dataset.id), ordering: i + 1 };
+    }
+    return {
+      id: Number(item.dataset.id),
+      ordering: incrementOrderingIndex ? i + 2 : i + 1,
+    };
+  });
+
+  return {
+    create_item_ordering: createItemOrdering,
+    table_items_ordering: itemsOrdering,
+  };
+};
+
+export const createTableItemAPIRequestPayload = function (
+  currentTableId,
+  relativeItem = false,
+) {
+  const payload = {
+    name: "",
+    journal_table: currentTableId,
+  };
+  if (relativeItem) payload["ordering_list"] = tableItemOrdering(relativeItem);
+  return payload;
 };

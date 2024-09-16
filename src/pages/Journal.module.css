@@ -1386,11 +1386,13 @@ svg.hidden {
 
 .row-adder-text {
     font-size: 1.4rem;
+    cursor: pointer;
 }
 
 .row-actions-handler-container {
     position: relative;
     border: none;
+    color: #bec1c6;
 }
 
 .row-actions-handler-container:hover .row-actions-handler {

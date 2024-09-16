@@ -13,6 +13,7 @@ import {
 } from "./utils/constants";
 import { useReducer } from "react";
 import { initialState, journalReducer } from "./JournalState";
+import { useCreateTableItem } from "./features/journals/useCreateTableItem";
 
 export const AuthContext = createContext();
 
@@ -28,15 +29,17 @@ function ProtectedRoute() {
     error: journalsError,
     isFetchedAfterMount: journalsFetchedAfterMount,
   } = useGetJournals(token);
-  console.log("j", journals);
-  console.log("journal fetched aft mount", journalsFetchedAfterMount);
   const {
     journalTables,
     isLoading: journalTablesLoading,
     error: journalTablesError,
     journalTablesFetchedAfterMount,
   } = useGetJournalTables(token);
+  console.log("j and fetched after mount", journalTables, journals);
   const [journalState, dispatch] = useReducer(journalReducer, initialState);
+
+  const { isCreatingTableItem, createTableItem, createTableItemError } =
+    useCreateTableItem(token);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -53,17 +56,25 @@ function ProtectedRoute() {
 
   useEffect(() => {
     let updater;
-    if (!journalsLoading && !journalsError && !journalsFetchedAfterMount)
-      updater = { ...journalState, ...journals };
+    if (!journalsLoading && !journalsError && !journalState.journalsLoaded)
+      updater = { ...journalState, ...journals, journalsLoaded: true };
     if (
       !journalTablesLoading &&
       !journalTablesError &&
-      !journalTablesFetchedAfterMount
-    )
-      updater = { ...updater, tables: journalTables };
+      !journalState.journalTablesLoaded
+    ) {
+      updater = {
+        ...updater,
+        tables: journalTables,
+        journalTablesLoaded: true,
+      };
+      console.log("updater value jortab", updater);
+    }
 
-    if (journalState?.tableHeads?.length === 0 && updater)
+    if (journalState?.tableHeads?.length === 0 && updater) {
+      console.log("update state from api");
       dispatch({ type: "updateState", payload: updater });
+    }
   }, [
     journalState,
     journalTables,
@@ -89,6 +100,9 @@ function ProtectedRoute() {
         // journal,
         journalState,
         dispatch,
+        isCreatingTableItem,
+        createTableItem,
+        createTableItemError,
       }}
     >
       <Journal />

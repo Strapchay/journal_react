@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getJournalTables } from "../../services/apiJournals";
-import { useContext } from "react";
-import { AuthContext } from "../../ProtectedRoute";
 import { formatAPIResp } from "../../utils/helpers";
-import { IconsManifest } from "react-icons/lib";
 
 export function useGetJournalTables(token) {
   // const { token } = useContext(AuthContext);
@@ -14,15 +11,16 @@ export function useGetJournalTables(token) {
     isFetchedAfterMount: journalTablesFetchedAfterMount,
   } = useQuery({
     queryKey: ["journalTables"],
-    queryFn: () => {
+    queryFn: async () => {
       const tableItems = [];
-      const journalTables = getJournalTables(token?.token);
+      const journalTables = await getJournalTables(token?.token);
       journalTables.forEach((tableItem) =>
         tableItems.push(formatAPIResp(tableItem, "journalTables")),
       );
       return tableItems;
     },
     staleTime: Infinity,
+    refetchOnMount: false,
   });
   return { journalTables, isLoading, error, journalTablesFetchedAfterMount };
 }

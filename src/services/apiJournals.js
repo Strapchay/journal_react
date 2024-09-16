@@ -34,3 +34,13 @@ export async function updateJournalInfo(token, payload, journalsId) {
     "PATCH",
   );
 }
+
+export function createTableItem(token, payload) {
+  return makeAPIRequest(
+    API.APIEnum.ACTIVITIES.CREATE,
+    payload,
+    "createTableItem",
+    token,
+    "POST",
+  );
+}

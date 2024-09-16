@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { getJournalList } from "../../services/apiJournals";
-import { useContext } from "react";
-import { AuthContext } from "../../ProtectedRoute";
 import { formatAPIResp } from "../../utils/helpers";
 
 export function useGetJournals(token) {
@@ -19,8 +17,9 @@ export function useGetJournals(token) {
       return formattedJournalList;
     },
     staleTime: Infinity,
+    refetchOnMount: false,
   });
-  return { journals, isLoading, error };
+  return { journals, isLoading, error, isFetchedAfterMount };
 }
 
 export const replaceStateJournalDataWithAPIData = function (
