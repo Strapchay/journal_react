@@ -14,10 +14,12 @@ import {
 import { useReducer } from "react";
 import { initialState, journalReducer } from "./JournalState";
 import { useCreateTableItem } from "./features/journals/useCreateTableItem";
+import { useRef } from "react";
 
 export const AuthContext = createContext();
 
 function ProtectedRoute() {
+  const overlayContainerRef = useRef(null);
   const { token, removeStorageData, journal } = useLocalStorageState(
     {},
     "token",
@@ -103,6 +105,7 @@ function ProtectedRoute() {
         isCreatingTableItem,
         createTableItem,
         createTableItemError,
+        overlayContainerRef,
       }}
     >
       <Journal />

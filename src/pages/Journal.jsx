@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useUpdateJournalInfo } from "../features/journals/useUpdateJournalInfo";
 import { AuthContext } from "../ProtectedRoute";
 import SvgMarkup from "../SvgMarkup";
@@ -19,9 +19,11 @@ import {
   valueEclipser,
 } from "../utils/helpers";
 import styles from "./Journal.module.css";
+import ComponentOverlay from "../ComponentOverlay";
 
 function Journal() {
-  const { journalState, dispatch } = useContext(AuthContext);
+  const { journalState, dispatch, overlayContainerRef } =
+    useContext(AuthContext);
   console.log("the jor state", journalState);
   // console.log("the journals value", journals, journalsLoading);
   // const tableBodyRef = useRef(null);
@@ -155,7 +157,7 @@ function Journal() {
           </div>
         </div>
       </div>
-      <div className={styles["overlay-container"]}>
+      <div className={styles["overlay-container"]} ref={overlayContainerRef}>
         <div className={styles["overlay-container-base"]}>
           <div className={styles["overlay"]}>
             <div>
@@ -673,6 +675,10 @@ function JournalTableBodyPlaceholder({ placeholder, onClick }) {
 }
 
 function JournalTableBodyItemComponent({ item }) {
+  // const [inputActive, setInputActive] = useState(false);
+  const { overlayContainerRef } = useContext(AuthContext);
+  const inputRef = useRef(null);
+
   return (
     <div role="tablecontent">
       <div className={styles["tableInput-container"]}>
@@ -697,16 +703,25 @@ function JournalTableBodyItemComponent({ item }) {
               " ",
             )}
           >
-            <div className={styles["row-actions-segment"]}>
-              <div
-                className={[
-                  styles["name-actions-text"],
-                  styles["row-actions-text"],
-                  styles["highlight-column"],
-                ].join(" ")}
-              >
-                {item.itemTitle}
-              </div>
+            <div className={styles["row-actions-segment"]} ref={inputRef}>
+              <ComponentOverlay>
+                <ComponentOverlay.Open opens="nameInput">
+                  <div
+                    className={[
+                      styles["name-actions-text"],
+                      styles["row-actions-text"],
+                      styles["highlight-column"],
+                    ].join(" ")}
+                  >
+                    {item.itemTitle}
+                  </div>
+                </ComponentOverlay.Open>
+                <ComponentOverlay.Window
+                  name="nameInput"
+                  objectToOverlay={inputRef}
+                  type="input"
+                />
+              </ComponentOverlay>
               <div
                 className={[
                   styles["row-actions-render"],
