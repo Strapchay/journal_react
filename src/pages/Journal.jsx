@@ -3,6 +3,7 @@ import { useUpdateJournalInfo } from "../features/journals/useUpdateJournalInfo"
 import { AuthContext } from "../ProtectedRoute";
 import SvgMarkup from "../SvgMarkup";
 import {
+  COPY_ALERT,
   HEADER_JOURNAL_TITLE_LENGTH,
   SIDEBAR_JOURNAL_TITLE_LENGTH,
   TABLE_HEAD_LIMIT,
@@ -21,6 +22,7 @@ import {
 import styles from "./Journal.module.css";
 import ComponentOverlay from "../ComponentOverlay";
 import { useUpdateTableItem } from "../features/journals/useUpdateTableItem";
+import toast from "react-hot-toast";
 
 function Journal() {
   const { journalState, dispatch, overlayContainerRef } =
@@ -709,13 +711,41 @@ function JournalTableBodyItemInputOverlayComponent({ itemId, onSubmit }) {
   );
 }
 
+function JournalTableBodyItemHoverComponent() {
+  return (
+    <div className={[styles["row-actions-render"]].join(" ")}>
+      <div className={styles["row-actions-render-icon"]}>
+        <SvgMarkup
+          classList={styles["row-icon"]}
+          fragId="arrow-open"
+          styles={styles}
+        />
+      </div>
+      <div className={styles["row-actions-render-text"]}>OPEN</div>
+      <div className={styles["row-actions-tooltip"]}>
+        <div className={styles["tooltip-text"]}>Open in side peek</div>
+      </div>
+    </div>
+  );
+}
+
 function JournalTableBodyItemComponent({ item }) {
-  // const [inputActive, setInputActive] = useState(false);
   const { overlayContainerRef } = useContext(AuthContext);
   const inputRef = useRef(null);
+  const [hoverActive, setHoverActive] = useState(true);
+  const textToCopyRef = useRef(null);
+
+  function handleCopyToClipboardEvent() {
+    navigator.clipboard.writeText(textToCopyRef.current.textContent.trim());
+    toast.success(COPY_ALERT);
+  }
 
   return (
-    <div role="tablecontent">
+    <div
+      role="tablecontent"
+      onMouseOver={() => setHoverActive(true)}
+      onMouseOut={() => setHoverActive(false)}
+    >
       <div className={styles["tableInput-container"]}>
         <label className={styles["tableInput"]}>
           <input
@@ -759,26 +789,7 @@ function JournalTableBodyItemComponent({ item }) {
                   <JournalTableBodyItemInputOverlayComponent itemId={item.id} />
                 </ComponentOverlay.Window>
               </ComponentOverlay>
-              <div
-                className={[
-                  styles["row-actions-render"],
-                  styles["hidden"],
-                ].join(" ")}
-              >
-                <div className={styles["row-actions-render-icon"]}>
-                  <SvgMarkup
-                    classList="row-icon"
-                    fragId="arrow-open"
-                    styles={styles}
-                  />
-                </div>
-                <div className={styles["row-actions-render-text"]}>OPEN</div>
-                <div className={styles["row-actions-tooltip"]}>
-                  <div className={styles["tooltip-text"]}>
-                    Open in side peek
-                  </div>
-                </div>
-              </div>
+              {hoverActive && <JournalTableBodyItemHoverComponent />}
             </div>
           </span>
           <span
@@ -794,28 +805,29 @@ function JournalTableBodyItemComponent({ item }) {
                   styles["created-actions-text"],
                   styles["row-actions-text"],
                 ].join(" ")}
+                ref={textToCopyRef}
               >
                 {dateTimeFormat(item.created ?? item.id)}
               </div>
-              <div
-                className={[
-                  styles["row-actions-render"],
-                  styles["hidden"],
-                ].join(" ")}
-              >
-                <div className={styles["row-actions-render-icon"]}>
-                  <SvgMarkup
-                    classList="row-icon"
-                    fragId="copy"
-                    styles={styles}
-                  />
-                </div>
-                <div className={styles["row-actions-tooltip"]}>
-                  <div className={styles["tooltip-text"]}>
-                    Copy to Clipboard
+              {hoverActive && (
+                <div className={[styles["row-actions-render"]].join(" ")}>
+                  <div
+                    className={styles["row-actions-render-icon"]}
+                    onClick={handleCopyToClipboardEvent}
+                  >
+                    <SvgMarkup
+                      classList={styles["row-icon"]}
+                      fragId="copy"
+                      styles={styles}
+                    />
+                  </div>
+                  <div className={styles["row-actions-tooltip"]}>
+                    <div className={styles["tooltip-text"]}>
+                      Copy to Clipboard
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </span>
           <span
