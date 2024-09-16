@@ -730,20 +730,53 @@ function JournalTableBodyItemHoverComponent() {
 }
 
 function JournalTableBodyItemComponent({ item }) {
-  const { overlayContainerRef } = useContext(AuthContext);
   const inputRef = useRef(null);
-  const [hoverActive, setHoverActive] = useState(true);
+  const [hoverActive, setHoverActive] = useState(false);
   const textToCopyRef = useRef(null);
+  const { createTableItem, createTableItemError, journalState, dispatch } =
+    useContext(AuthContext);
 
   function handleCopyToClipboardEvent() {
     navigator.clipboard.writeText(textToCopyRef.current.textContent.trim());
     toast.success(COPY_ALERT);
   }
 
+  function handleAddRelativeTableBodyItemEvent(e) {
+    const currentTableId = journalState.currentTable;
+    const currentTableIndex = journalState.tables.findIndex(
+      (table) => table.id === currentTableId,
+    );
+
+    createTableItem(
+      {
+        currentTableId,
+        relativeItem: item.id,
+        tableItems: journalState.tables[currentTableIndex].tableItems,
+      },
+      {
+        onSuccess: (data) => {
+          const formatResp = formatAPITableItems([data]);
+          dispatch({
+            type: "createRelativeTableItem",
+            payload: formatResp,
+            relativeItem: item.id,
+            tableItemInputActive: formatResp[0].id,
+          });
+        },
+      },
+    );
+  }
+
   return (
     <div
       role="tablecontent"
-      onMouseOver={() => setHoverActive(true)}
+      onMouseOver={() => {
+        if (
+          !journalState.tableItemInputActive ||
+          journalState.tableItemInputActive !== item.id
+        )
+          setHoverActive(true);
+      }}
       onMouseOut={() => setHoverActive(false)}
     >
       <div className={styles["tableInput-container"]}>
@@ -770,7 +803,15 @@ function JournalTableBodyItemComponent({ item }) {
           >
             <div className={styles["row-actions-segment"]} ref={inputRef}>
               <ComponentOverlay>
-                <ComponentOverlay.Open opens="nameInput">
+                <ComponentOverlay.Open
+                  opens="nameInput"
+                  click={
+                    journalState.tableItemInputActive &&
+                    journalState.tableItemInputActive === item.id
+                      ? false
+                      : true
+                  }
+                >
                   <div
                     className={[
                       styles["name-actions-text"],
@@ -846,6 +887,31 @@ function JournalTableBodyItemComponent({ item }) {
             </div>
           </span>
         </div>
+        {hoverActive && (
+          <div className={styles["row-actions-handler"]} data-id={item.id}>
+            <div
+              className={[
+                styles["row-actions-icon"],
+                styles["row-add-icon"],
+                styles["hover"],
+              ].join(" ")}
+              onClick={handleAddRelativeTableBodyItemEvent}
+            >
+              <SvgMarkup
+                classList={styles["row-icon"]}
+                fragId="plus"
+                styles={styles}
+              />
+            </div>
+            <div className="row-actions-icon row-drag-icon hover">
+              <SvgMarkup
+                classList={styles["row-icon"]}
+                fragId="drag-icon"
+                styles={styles}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

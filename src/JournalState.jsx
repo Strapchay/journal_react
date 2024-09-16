@@ -13,6 +13,7 @@ export const initialState = {
   tagsColor: TAGS_COLORS.colors,
   journalsLoaded: false,
   journalTablesLoaded: false,
+  tableItemInputActive: null,
 };
 
 export function journalReducer(state, action) {
@@ -33,6 +34,27 @@ export function journalReducer(state, action) {
 
       return { ...state };
     }
+    case "createRelativeTableItem": {
+      const currentTableIndex = state.tables.findIndex(
+        (table) => table.id === state.currentTable,
+      );
+      const relativeTableItemIndex = state.tables[
+        currentTableIndex
+      ].tableItems.findIndex((item) => item.id === action.relativeItem);
+      if (relativeTableItemIndex > -1) {
+        const itemIsDuplicate = state.tables[currentTableIndex].tableItems.find(
+          (item) => item.id === action.payload[0].id,
+        );
+        if (!itemIsDuplicate)
+          state.tables[currentTableIndex].tableItems.splice(
+            relativeTableItemIndex + 1,
+            0,
+            ...action.payload,
+          );
+      }
+
+      return { ...state, tableItemInputActive: action.tableItemInputActive };
+    }
     case "updateTableItem": {
       const currentTableIndex = state.tables.findIndex(
         (table) => table.id === state.currentTable,
@@ -49,7 +71,7 @@ export function journalReducer(state, action) {
         );
       }
 
-      return { ...state };
+      return { ...state, tableItemInputActive: null };
     }
     default:
       throw new Error("Unknown action");

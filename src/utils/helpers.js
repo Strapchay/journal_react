@@ -250,23 +250,18 @@ export const formatAPIResp = function (APIResp, type) {
   return formattedData;
 };
 
-export const tableItemOrdering = function (createRelativeProperty) {
+export const tableItemOrdering = function (relativeItem, tableItems) {
   //TODO: switch functionality implementation
   let incrementOrderingIndex = false;
   let createItemOrdering = null;
-  const itemsOrdering = Array.from(
-    document.querySelectorAll(`.row-actions-handler-container`),
-  ).map((item, i) => {
-    if (
-      createRelativeProperty &&
-      Number(item.dataset.id) === createRelativeProperty
-    ) {
+  const itemsOrdering = tableItems.map((item, i) => {
+    if (relativeItem && Number(item.id) === relativeItem) {
       incrementOrderingIndex = true;
       createItemOrdering = i + 2;
-      return { id: Number(item.dataset.id), ordering: i + 1 };
+      return { id: Number(item.id), ordering: i + 1 };
     }
     return {
-      id: Number(item.dataset.id),
+      id: Number(item.id),
       ordering: incrementOrderingIndex ? i + 2 : i + 1,
     };
   });
@@ -280,12 +275,16 @@ export const tableItemOrdering = function (createRelativeProperty) {
 export const createTableItemAPIRequestPayload = function (
   currentTableId,
   relativeItem = false,
+  tableItems = null,
 ) {
   const payload = {
     name: "",
     journal_table: currentTableId,
   };
-  if (relativeItem) payload["ordering_list"] = tableItemOrdering(relativeItem);
+
+  if (relativeItem)
+    payload["ordering_list"] = tableItemOrdering(relativeItem, tableItems);
+
   return payload;
 };
 

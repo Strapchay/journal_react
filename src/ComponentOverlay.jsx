@@ -57,13 +57,16 @@ function Overlay({ children, objectToOverlay, disableOverlayInterceptor }) {
   );
 }
 
-function Open({ children, opens }) {
+function Open({ children, opens, click = true }) {
   const { open } = useContext(OverlayContext);
-  return cloneElement(children, {
-    onClick: () => {
-      open(opens);
-    },
-  });
+
+  if (click)
+    return cloneElement(children, {
+      onClick: () => {
+        open(opens);
+      },
+    });
+  open(opens);
 }
 
 function Window({

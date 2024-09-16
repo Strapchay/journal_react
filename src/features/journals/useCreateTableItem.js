@@ -11,10 +11,14 @@ export function useCreateTableItem(token) {
     mutate: createTableItem,
     error: createTableItemError,
   } = useMutation({
-    mutationFn: ({ currentTableId, relativeItem = false }) =>
+    mutationFn: ({ currentTableId, relativeItem = null, tableItems = null }) =>
       createTableItemApi(
         token?.token,
-        createTableItemAPIRequestPayload(currentTableId, relativeItem),
+        createTableItemAPIRequestPayload(
+          currentTableId,
+          relativeItem,
+          tableItems,
+        ),
       ),
     onError: (err) => {
       toast.error(err.message);
