@@ -96,6 +96,19 @@ export function getInitError(data) {
   return data;
 }
 
+async function getDeleteRes(data, requestType) {
+  if (requestType.includes("batch")) {
+    let res;
+    try {
+      res = await data.json();
+    } catch (_) {
+      res = null;
+    }
+  } else {
+    if ((await data?.status) === 201) return "Item(s) deleted successfully";
+  }
+}
+
 export async function makeAPIRequest(
   url,
   payload = null,
@@ -120,7 +133,8 @@ export async function makeAPIRequest(
       fetch(BASE_API_URL + url, prepare),
       timeout(20, action),
     ]);
-    const data = await res.json();
+    const data =
+      method !== "DELETE" ? await res.json() : await getDeleteRes(res, action);
     if (!res.ok || !successCodes.includes(res.status)) {
       if (res.status === 401) removeToken?.();
       throw new Error(getInitError(data));

@@ -63,10 +63,11 @@ function Open({ children, opens, click = true }) {
   if (click)
     return cloneElement(children, {
       onClick: () => {
+        console.log("clicking the component");
         open(opens);
       },
     });
-  open(opens);
+  if (!click) open(opens);
 }
 
 function Window({
@@ -74,11 +75,11 @@ function Window({
   name,
   objectToOverlay,
   disableOverlayInterceptor = false,
-  type,
 }) {
   const { openName, close } = useContext(OverlayContext);
   const { overlayContainerRef } = useContext(AuthContext);
   if (name != openName) return null;
+
   return createPortal(
     <Overlay
       objectToOverlay={objectToOverlay}

@@ -13,6 +13,7 @@ import {
 } from "../utils/constants";
 import {
   dateTimeFormat,
+  formatAPIResp,
   formatAPITableItems,
   formatJournalHeadingName,
   swapItemIndexInPlace,
@@ -23,13 +24,14 @@ import styles from "./Journal.module.css";
 import ComponentOverlay from "../ComponentOverlay";
 import { useUpdateTableItem } from "../features/journals/useUpdateTableItem";
 import toast from "react-hot-toast";
+import { useCreateTable } from "../features/journals/useCreateTable";
+import Modal from "../Modal";
+import UpdatePwdForm from "./forms/UpdatePwdForm";
+import UpdateInfoForm from "./forms/UpdateInfoForm";
 
 function Journal() {
-  const { journalState, dispatch, overlayContainerRef } =
-    useContext(AuthContext);
+  const { journalState, overlayContainerRef } = useContext(AuthContext);
   console.log("the jor state", journalState);
-  // console.log("the journals value", journals, journalsLoading);
-  // const tableBodyRef = useRef(null);
 
   return (
     <main>
@@ -51,11 +53,7 @@ function Journal() {
                         styles["row-scroller-table"],
                       ].join(" ")}
                     >
-                      <div className={styles["main-table-head"]}>
-                        <div className={styles["main-table-head-box"]}>
-                          <JournalTableHeadComponent />
-                        </div>
-                      </div>
+                      <JournalTableHeadComponent />
 
                       {/*<!-- start view option markup -->*/}
 
@@ -69,83 +67,7 @@ function Journal() {
                         {/*<!-- swith table to div start -->*/}
 
                         <div role="tablerow" aria-label="Journals">
-                          <div role="tablehead">
-                            <div className={styles["tableInput-container"]}>
-                              <label className={styles["tableInput"]}>
-                                <input
-                                  type="checkbox"
-                                  name=""
-                                  id="checkboxInput"
-                                  className={styles["checkboxInput"]}
-                                />
-                              </label>
-                            </div>
-                            <div role="rowgroup">
-                              <div role="row">
-                                <span role="columnhead">
-                                  <div
-                                    className={styles["action-filter-content"]}
-                                  >
-                                    <div
-                                      className={styles["action-filter-icon"]}
-                                    >
-                                      <SvgMarkup
-                                        classList="filter-icon"
-                                        fragId="alphabet-icon"
-                                        styles={styles}
-                                      />
-                                    </div>
-                                    <div
-                                      className={styles["action-filter-text"]}
-                                    >
-                                      Name
-                                    </div>
-                                  </div>
-                                </span>
-                                <span role="columnhead">
-                                  <div
-                                    className={styles["action-filter-content"]}
-                                  >
-                                    <div
-                                      className={styles["action-filter-icon"]}
-                                    >
-                                      <SvgMarkup
-                                        classList="filter-icon"
-                                        fragId="clock"
-                                        styles={styles}
-                                      />
-                                    </div>
-
-                                    <div
-                                      className={styles["action-filter-text"]}
-                                    >
-                                      Created
-                                    </div>
-                                  </div>
-                                </span>
-                                <span role="columnhead">
-                                  <div
-                                    className={styles["action-filter-content"]}
-                                  >
-                                    <div
-                                      className={styles["action-filter-icon"]}
-                                    >
-                                      <SvgMarkup
-                                        classList="filter-icon"
-                                        fragId="list-icon"
-                                        styles={styles}
-                                      />
-                                    </div>
-                                    <div
-                                      className={styles["action-filter-text"]}
-                                    >
-                                      Tags
-                                    </div>
-                                  </div>
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+                          <JournalTableRowHeadComponent />
                           <JournalTableBodyComponent />
                         </div>
 
@@ -218,7 +140,19 @@ function JournalSidebarHeadingMarkup() {
 }
 
 function JournalSidebarJournalMarkup() {
-  const { journalState } = useContext(AuthContext);
+  const { journalState, dispatch } = useContext(AuthContext);
+  const [listTables, setListTables] = useState(false);
+  const tables = journalState.tables.map((table) => [
+    table.tableTitle,
+    table.id,
+  ]);
+  const currentTableId = journalState.currentTable;
+
+  function handleSidebarSwitchTableEvent(tableId) {
+    if (tableId !== currentTableId)
+      dispatch({ type: "updateCurrentTable", payload: tableId });
+  }
+
   return (
     <div
       className={[styles["nav-option"], styles["nav-options-journal"]].join(
@@ -226,10 +160,13 @@ function JournalSidebarJournalMarkup() {
       )}
     >
       <div className={styles["nav-group"]}>
-        <div className={styles["nav-options-icon"]}>
+        <div
+          className={styles["nav-options-icon"]}
+          onClick={() => setListTables((s) => !s)}
+        >
           <SvgMarkup
             classList="table-list-arrow-render arrow-render arrow-right-icon icon icon-mid"
-            fragId="arrow-right"
+            fragId={listTables ? "arrow-down" : "arrow-right"}
             styles={styles}
           />
         </div>
@@ -251,22 +188,45 @@ function JournalSidebarJournalMarkup() {
         </div>
       </div>
       <div className={styles["journal-tables-list"]}>
-        <ul className={styles["tables-list"]}></ul>
+        <ul className={styles["tables-list"]}>
+          {listTables &&
+            tables.map((table) => (
+              <>
+                <div
+                  className={[
+                    styles["tables-list-box"],
+                    styles["hover"],
+                    styles[table[1] === currentTableId ? "hover-bg-stay" : ""],
+                  ].join(" ")}
+                  data-id={table[1]}
+                  onClick={() => handleSidebarSwitchTableEvent(table[1])}
+                >
+                  <div className={styles["tables-list-disc"]}></div>
+                  <li className="tables-list-table">{table[0]}</li>
+                </div>
+              </>
+            ))}
+        </ul>
       </div>
     </div>
   );
 }
 
 function JournalSidebarUserSettingsOption() {
+  const [listSettings, setListSettings] = useState(false);
+
   return (
     <div
       className={[styles["nav-option"], styles["nav-options-user"]].join(" ")}
     >
       <div className={styles["nav-group"]}>
-        <div className={styles["nav-options-icon"]}>
+        <div
+          className={styles["nav-options-icon"]}
+          onClick={() => setListSettings((s) => !s)}
+        >
           <SvgMarkup
             classList="update-list-arrow-render arrow-render arrow-right-icon icon icon-mid"
-            fragId="arrow-right"
+            fragId={listSettings ? "arrow-down" : "arrow-right"}
             styles={styles}
           />
         </div>
@@ -274,7 +234,7 @@ function JournalSidebarUserSettingsOption() {
         <div className={styles["nav-icon-text"]}>
           <div className={styles["nav-options-journal-icon"]}>
             <SvgMarkup
-              classList="icon"
+              classList={styles["icon"]}
               fragId="user-settings"
               styles={styles}
             />
@@ -282,24 +242,65 @@ function JournalSidebarUserSettingsOption() {
           <div className={styles["nav-options-text"]}>Update Info</div>
         </div>
       </div>
-      <div className={styles["journal-update-info-list"]}>
-        <ul className={styles["update-info-list"]}></ul>
-      </div>
+      <Modal>
+        <div className={styles["journal-update-info-list"]}>
+          {listSettings && (
+            <ul className={styles["update-info-list"]}>
+              <Modal.Open opens="update-info-form">
+                <div
+                  className={[styles["update-list-box"], styles["hover"]].join(
+                    " ",
+                  )}
+                >
+                  <div className={styles["update-list-disc"]}></div>
+                  <li className={styles["update-option"]}>Update User Info</li>
+                </div>
+              </Modal.Open>
+              <Modal.Window name="update-info-form">
+                <UpdateInfoForm />
+              </Modal.Window>
+              <Modal.Open opens="update-pwd-form">
+                <div
+                  className={[styles["update-list-box"], styles["hover"]].join(
+                    " ",
+                  )}
+                >
+                  <div className={styles["update-list-disc"]}></div>
+                  <li className={styles["update-option"]}>Update Password</li>
+                </div>
+              </Modal.Open>
+              <Modal.Window name="update-pwd-form">
+                <UpdatePwdForm />
+              </Modal.Window>
+            </ul>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
 
 function JournalSidebarLogout() {
+  const { removeTokenAndLogout } = useContext(AuthContext);
+  function handleLogoutEvent() {
+    removeTokenAndLogout();
+  }
+
   return (
     <div
       className={[styles["nav-option"], styles["nav-options-logout"]].join(" ")}
+      onClick={handleLogoutEvent}
     >
       <div className={styles["nav-group"]}>
         <div className={styles["nav-icon-text"]}>
           <div className={styles["nav-options-journal-icon"]}>
-            <SvgMarkup classList="icon" fragId="logout" styles={styles} />
+            <SvgMarkup
+              classList={styles["icon"]}
+              fragId="logout"
+              styles={styles}
+            />
           </div>
-          <div className="nav-options-text">Logout</div>
+          <div className={styles["nav-options-text"]}>Logout</div>
         </div>
       </div>
     </div>
@@ -312,7 +313,7 @@ function JournalInfoHeaderComponent() {
     <div className={styles["container-header"]}>
       <div className={styles["nav-options-journal-icon"]}>
         <SvgMarkup
-          classList="journal-icon icon"
+          classList={[styles["journal-icon"], styles["icon"]].join(" ")}
           fragId="journal-icon"
           styles={styles}
         />
@@ -408,12 +409,173 @@ function JournalInfoContentComponent() {
   );
 }
 
-function JournalTableRowComponent({ journalItems, currentTableId }) {
+function JournalTableOptionComponent({ tableId }) {
+  return (
+    <div
+      className={[
+        styles["table-row-active--options"],
+        styles["component-options"],
+      ].join(" ")}
+    >
+      <div className={styles["table-options"]}>
+        <div className={styles["table-options-edits--option"]}>
+          <div className={styles["edit-content-container"]}>
+            <div className={styles["edit-content-box"]}>
+              <div
+                className={[styles["edit-content-form"], styles["hidden"]].join(
+                  " ",
+                )}
+              >
+                <form action="" id="table-rename-form">
+                  <input
+                    type="text"
+                    placeholder=""
+                    className={[
+                      styles["table-rename"],
+                      styles[" component-form"],
+                    ].join(" ")}
+                    name="table-rename"
+                  />
+                </form>
+              </div>
+              <div className={styles["edit-content"]}>
+                <div className={styles["edit-content-icon"]}>
+                  <SvgMarkup
+                    classList={styles["edit-icon"]}
+                    fragId="pen-to-square"
+                    styles={styles}
+                  />
+                </div>
+                <div className="edit-text">Rename</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="table-options-actions--option">
+          <div className="actions-content-container">
+            <div className="actions-content-box">
+              <div className="action-content action-duplicate">
+                <div className="action-content-icon">
+                  <SvgMarkup
+                    classList={styles["action-icon"]}
+                    fragId="clone"
+                    styles={styles}
+                  />
+                </div>
+                <div className="action-text">Duplicate</div>
+              </div>
+              <div className="action-content action-delete">
+                <div className="action-icon">
+                  <SvgMarkup
+                    classList={styles["action-icon"]}
+                    fragId="trashcan-icon"
+                    styles={styles}
+                  />
+                </div>
+                <div className="action-text">Delete</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JournalTableRowHeadComponent() {
+  const { selectAllSelectedTableItems, selectedTableItems } =
+    useContext(AuthContext);
+  const [checkedActive, setCheckedActive] = useState(false);
+  const selectedTableItemsLength = Object.values(selectedTableItems).filter(
+    (v) => v,
+  ).length;
+
+  useEffect(() => {
+    if (checkedActive && !selectedTableItemsLength) setCheckedActive(false);
+  }, [checkedActive, selectedTableItemsLength]);
+
+  function handleSelectHead() {
+    selectAllSelectedTableItems(!checkedActive); //use the old value since that would be the
+    setCheckedActive((s) => !s);
+  }
+
+  return (
+    <div role="tablehead">
+      <div className={styles["tableInput-container"]}>
+        <label className={styles["tableInput"]}>
+          <input
+            type="checkbox"
+            name=""
+            id="checkboxInput"
+            checked={checkedActive}
+            className={styles["checkboxInput"]}
+            onChange={handleSelectHead}
+          />
+        </label>
+      </div>
+      <div role="rowgroup">
+        <div role="row">
+          <span role="columnhead">
+            <div className={styles["action-filter-content"]}>
+              <div className={styles["action-filter-icon"]}>
+                <SvgMarkup
+                  classList="filter-icon"
+                  fragId="alphabet-icon"
+                  styles={styles}
+                />
+              </div>
+              <div className={styles["action-filter-text"]}>Name</div>
+            </div>
+          </span>
+          <span role="columnhead">
+            <div className={styles["action-filter-content"]}>
+              <div className={styles["action-filter-icon"]}>
+                <SvgMarkup
+                  classList="filter-icon"
+                  fragId="clock"
+                  styles={styles}
+                />
+              </div>
+
+              <div className={styles["action-filter-text"]}>Created</div>
+            </div>
+          </span>
+          <span role="columnhead">
+            <div className={styles["action-filter-content"]}>
+              <div className={styles["action-filter-icon"]}>
+                <SvgMarkup
+                  classList="filter-icon"
+                  fragId="list-icon"
+                  styles={styles}
+                />
+              </div>
+              <div className={styles["action-filter-text"]}>Tags</div>
+            </div>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JournalTableRowComponent({ journalItems }) {
+  const { dispatch, journalState } = useContext(AuthContext);
+  const tableHeadRef = useRef(null);
+
+  function handleSetCurrentTable(journalId) {
+    if (journalId !== journalState.currentTable)
+      dispatch({ type: "updateCurrentTable", payload: journalId });
+  }
+
   return (
     <>
       {journalItems?.map((journal, i) => {
         const [journalName, journalId] = journal;
-        const activeTable = tableRowActivator(currentTableId, journalId, i);
+        const activeTable = tableRowActivator(
+          journalState.currentTable,
+          journalId,
+          i,
+        );
 
         {
           return (
@@ -427,20 +589,36 @@ function JournalTableRowComponent({ journalItems, currentTableId }) {
                 key={journalId}
                 data-name={journalName}
                 data-id={journalId}
+                onClick={() => handleSetCurrentTable(journalId)}
+                ref={tableHeadRef}
               >
-                <div className={styles["table-row-icon"]}>
-                  <SvgMarkup
-                    classList={styles["table-icon"]}
-                    fragId="list-icon"
-                    styles={styles}
-                  />
-                </div>
-                <div className={styles["table-row-text"]}>{journalName}</div>
-                <SvgMarkup
-                  classList="table-icon table-head-selector"
-                  fragId="arrow-down"
-                  styles={styles}
-                />
+                <ComponentOverlay key={journalId}>
+                  <ComponentOverlay.Open opens="tableColumnOption">
+                    <>
+                      <div className={styles["table-row-icon"]}>
+                        <SvgMarkup
+                          classList={styles["table-icon"]}
+                          fragId="list-icon"
+                          styles={styles}
+                        />
+                      </div>
+                      <div className={styles["table-row-text"]}>
+                        {journalName}
+                      </div>
+                      <SvgMarkup
+                        classList="table-icon table-head-selector"
+                        fragId="arrow-down"
+                        styles={styles}
+                      />
+                    </>
+                  </ComponentOverlay.Open>
+                  <ComponentOverlay.Window
+                    name={activeTable ? "tableColumnOption" : null}
+                    objectToOverlay={tableHeadRef}
+                  >
+                    <JournalTableOptionComponent tableId={journalId} />
+                  </ComponentOverlay.Window>
+                </ComponentOverlay>
               </div>
             )
           );
@@ -451,7 +629,9 @@ function JournalTableRowComponent({ journalItems, currentTableId }) {
 }
 
 function JournalTableHeadComponent() {
-  const { journalState } = useContext(AuthContext);
+  const { journalState, token, dispatch, selectedTableItems } =
+    useContext(AuthContext);
+  const { createTable } = useCreateTable(token);
   const tables = journalState.tables.map((table) => [
     table.tableTitle,
     table.id,
@@ -459,45 +639,68 @@ function JournalTableHeadComponent() {
   const currentTableId = journalState.currentTable;
   const switchTableAdd = tables?.length >= 5;
   const tableItems = swapItemIndexInPlace(tables, currentTableId);
+  const selectedTableItemsLength = Object.values(selectedTableItems).filter(
+    (v) => v,
+  ).length;
+
+  function handleAddTableEvent(e) {
+    createTable(journalState.id, {
+      onSuccess: (data) => {
+        const formattedData = formatAPIResp(data, "journalTables");
+        dispatch({ type: "createTable", payload: formattedData });
+      },
+    });
+  }
 
   return (
-    <>
-      {!switchTableAdd && (
-        <div className={styles["main-table-heading"]}>
-          <JournalTableRowComponent
-            journalItems={tableItems}
-            currentTableId={currentTableId}
-          />
-          <div
-            className={[styles["table-column-adder"], styles["table-row"]].join(
-              " ",
-            )}
-          >
-            <SvgMarkup
-              classList={styles["table-icon"]}
-              fragId="plus"
-              styles={styles}
+    <div className={styles["main-table-head"]}>
+      <div className={styles["main-table-head-box"]}>
+        {!switchTableAdd && (
+          <div className={styles["main-table-heading"]}>
+            <JournalTableRowComponent
+              journalItems={tableItems}
+              // currentTableId={currentTableId}
             />
-          </div>
-        </div>
-      )}
-      {switchTableAdd && (
-        <div className={styles["main-table-heading"]}>
-          <JournalTableRowComponent journalItems={tableItems} />
-          <div
-            className={[
-              styles["table-column-options"],
-              styles["table-row"],
-            ].join(" ")}
-          >
-            <div className={styles["table-row-text"]}>
-              {tables.length - TABLE_HEAD_LIMIT} more...
+            <div
+              className={[
+                styles["table-column-adder"],
+                styles["table-row"],
+              ].join(" ")}
+              onClick={handleAddTableEvent}
+            >
+              <SvgMarkup
+                classList={styles["table-icon"]}
+                fragId="plus"
+                styles={styles}
+              />
             </div>
           </div>
-        </div>
+        )}
+        {switchTableAdd && (
+          <div className={styles["main-table-heading"]}>
+            <JournalTableRowComponent journalItems={tableItems} />
+            <div
+              className={[
+                styles["table-column-options"],
+                styles["table-row"],
+              ].join(" ")}
+            >
+              <div className={styles["table-row-text"]}>
+                {tables.length - TABLE_HEAD_LIMIT} more...
+              </div>
+            </div>
+          </div>
+        )}
+        <JournalTableHeadActionComponent />
+      </div>
+      {selectedTableItemsLength ? (
+        <JournalTableBodyCheckboxOptionComponent
+          selectedItemsLength={selectedTableItemsLength}
+        />
+      ) : (
+        ""
       )}
-      <JournalTableHeadActionComponent />
-    </>
+    </div>
   );
 }
 
@@ -585,14 +788,97 @@ function JournalTableHeadActionComponent() {
   );
 }
 
-function JournalTableBodyComponent({ body = false, placeholder = false }) {
-  const { createTableItem, createTableItemError, journalState, dispatch } =
-    useContext(AuthContext);
-  const currentTableIndex = journalState.tables.findIndex(
-    (table) => table.id === journalState.currentTable,
+function JournalTableBodyCheckboxOptionComponent({ selectedItemsLength }) {
+  const {
+    unselectAllSelectedTableItems,
+    deleteSelectedTableItems,
+    duplicateSelectedTableItems,
+    isDuplicatingTableItems,
+    selectAllSelectedTableItems,
+  } = useContext(AuthContext);
+  const toastInst = toast;
+  const toastRef = useRef(0);
+
+  if (isDuplicatingTableItems && toastRef.current === 0) {
+    toastRef.current = 1;
+    toastInst.loading("Duplicating items");
+  }
+  if (!isDuplicatingTableItems && toastRef.current > 0) {
+    toastRef.current = 0;
+    toastInst.remove();
+  }
+  return (
+    <div className={styles["checkbox-options"]}>
+      <div className={styles["checkbox-options-box"]}>
+        <div
+          className={[
+            styles["checkbox-item"],
+            styles["checkbox-total"],
+            styles["hover"],
+          ].join(" ")}
+          onClick={unselectAllSelectedTableItems}
+        >
+          <div className={styles["checkbox-text"]}>
+            {selectedItemsLength} selected
+          </div>
+        </div>
+        <div
+          className={[
+            styles["checkbox-item"],
+            styles["checkbox-tags"],
+            styles["hover"],
+          ].join(" ")}
+        >
+          <SvgMarkup
+            classList="icon-md icon-active"
+            fragId="list-icon"
+            styles={styles}
+          />
+          <div className={styles["checkbox-text"]}>Tags</div>
+        </div>
+        <div
+          className={[
+            styles["checkbox-item"],
+            styles["checkbox-delete"],
+            styles["hover"],
+          ].join(" ")}
+          onClick={deleteSelectedTableItems}
+        >
+          <SvgMarkup
+            classList="icon-md icon-active"
+            fragId="trashcan-icon"
+            styles={styles}
+          />
+        </div>
+        <div
+          className={[
+            styles["checkbox-item"],
+            styles["checkbox-clone"],
+            styles["hover"],
+          ].join(" ")}
+          onClick={duplicateSelectedTableItems}
+        >
+          <SvgMarkup
+            classList="icon-md icon-active"
+            fragId="clone"
+            styles={styles}
+          />
+        </div>
+      </div>
+    </div>
   );
-  const currentTable = journalState?.tables?.[currentTableIndex];
-  const currentTableItems = currentTable?.tableItems;
+}
+
+function JournalTableBodyComponent({ body = false, placeholder = false }) {
+  const {
+    createTableItem,
+    journalState,
+    dispatch,
+    selectedTableItems,
+    setSelectedTableItems,
+    currentTableItems,
+  } = useContext(AuthContext);
+
   function handleAddBodyItem() {
     createTableItem(
       { currentTableId: journalState.currentTable },
@@ -604,6 +890,11 @@ function JournalTableBodyComponent({ body = false, placeholder = false }) {
       },
     );
   }
+
+  function onSelectTableItem(tableItemId) {
+    setSelectedTableItems((s) => ({ ...s, [tableItemId]: !s[tableItemId] }));
+  }
+
   return (
     <>
       <div role="tablebody">
@@ -613,13 +904,16 @@ function JournalTableBodyComponent({ body = false, placeholder = false }) {
             onClick={handleAddBodyItem}
           />
         )}
-        {currentTableItems?.length &&
-          currentTableItems.map((tableItem) => (
-            <JournalTableBodyItemComponent
-              item={tableItem}
-              key={tableItem?.id}
-            />
-          ))}
+        {currentTableItems?.length
+          ? currentTableItems.map((tableItem) => (
+              <JournalTableBodyItemComponent
+                item={tableItem}
+                key={tableItem?.id}
+                tableItemsMap={selectedTableItems}
+                onSelectTableItem={onSelectTableItem}
+              />
+            ))
+          : ""}
       </div>
       {!body && (
         <div role="tableadd">
@@ -729,12 +1023,16 @@ function JournalTableBodyItemHoverComponent() {
   );
 }
 
-function JournalTableBodyItemComponent({ item }) {
+function JournalTableBodyItemComponent({
+  item,
+  tableItemsMap,
+  onSelectTableItem,
+}) {
   const inputRef = useRef(null);
   const [hoverActive, setHoverActive] = useState(false);
+  // const [itemSelected, setItemSelected] = useState(false);
   const textToCopyRef = useRef(null);
-  const { createTableItem, createTableItemError, journalState, dispatch } =
-    useContext(AuthContext);
+  const { createTableItem, journalState, dispatch } = useContext(AuthContext);
 
   function handleCopyToClipboardEvent() {
     navigator.clipboard.writeText(textToCopyRef.current.textContent.trim());
@@ -770,6 +1068,7 @@ function JournalTableBodyItemComponent({ item }) {
   return (
     <div
       role="tablecontent"
+      className={tableItemsMap[item?.id] ? styles["highlight-rows"] : ""}
       onMouseOver={() => {
         if (
           !journalState.tableItemInputActive ||
@@ -784,8 +1083,13 @@ function JournalTableBodyItemComponent({ item }) {
           <input
             type="checkbox"
             name=""
-            className={styles["checkboxInput"]}
+            className={[
+              styles["checkboxInput"],
+              tableItemsMap[item?.id] ? styles["visible"] : "",
+            ].join(" ")}
             autoComplete="off"
+            checked={tableItemsMap[item?.id] ?? false}
+            onChange={() => onSelectTableItem(item?.id)}
           />
         </label>
       </div>
@@ -825,7 +1129,6 @@ function JournalTableBodyItemComponent({ item }) {
                 <ComponentOverlay.Window
                   name="nameInput"
                   objectToOverlay={inputRef}
-                  type="input"
                 >
                   <JournalTableBodyItemInputOverlayComponent itemId={item.id} />
                 </ComponentOverlay.Window>

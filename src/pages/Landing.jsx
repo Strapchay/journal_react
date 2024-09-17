@@ -17,7 +17,7 @@ function Landing() {
   }, []);
 
   useEffect(() => {
-    if (token) navigate("/dashboard", { replace: true });
+    if (token && token?.token) navigate("/dashboard", { replace: true });
   }, []);
 
   return (

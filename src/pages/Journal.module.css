@@ -39,7 +39,7 @@ svg.hidden {
     visibility: hidden;
 }
 
-.journal-template {
+:global(.journal-template) {
     height: 100vh;
     /* font-family: sans-serif; */
     font-family: "Roboto Mono", monospace;
@@ -78,6 +78,7 @@ svg.hidden {
 .nav-options-user {
     flex-direction: column;
     align-items: start;
+    color: #bec1c6;
 }
 
 .journal-tables-list,
@@ -2432,6 +2433,7 @@ svg.hidden {
 
 .checkbox-total .checkbox-text {
     color: #2b68bb;
+    cursor: pointer;
 }
 
 .checkbox-text {

@@ -29,6 +29,26 @@ export async function resetPasswordConfirm(payload) {
   );
 }
 
+export async function updateUserInfo(token, user) {
+  return makeAPIRequest(
+    API.APIEnum.USER.UPDATE_INFO,
+    user,
+    "updateInfo",
+    token,
+    "PUT",
+  );
+}
+
+export async function updateUserPwd(token, payload) {
+  return makeAPIRequest(
+    API.APIEnum.USER.UPDATE_PWD,
+    payload,
+    "updatePwd",
+    token,
+    "PUT",
+  );
+}
+
 export async function getUserProfile() {
   // try {
   //   const url = API.APIEnum.USER.PROFILE;

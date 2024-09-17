@@ -18,8 +18,12 @@ export const initialState = {
 
 export function journalReducer(state, action) {
   switch (action.type) {
+    case "createTable":
+      return { ...state, tables: [...state.tables, action.payload] };
     case "updateState":
       return { ...state, ...action.payload };
+    case "updateCurrentTable":
+      return { ...state, currentTable: action.payload };
     case "updateJournalInfo":
       return { ...state, ...action.payload };
     case "createTableItem": {
@@ -72,6 +76,33 @@ export function journalReducer(state, action) {
       }
 
       return { ...state, tableItemInputActive: null };
+    }
+    case "deleteTableItems": {
+      const currentTableIndex = state.tables.findIndex(
+        (table) => table.id === state.currentTable,
+      );
+      const filteredValues = [
+        ...state.tables[currentTableIndex].tableItems.filter(
+          (item) => action.payload.some((i) => +i === item.id) === false,
+        ),
+      ];
+      state.tables[currentTableIndex].tableItems = [...filteredValues];
+
+      return { ...state };
+    }
+    case "duplicateTableItems": {
+      const currentTableIndex = state.tables.findIndex(
+        (table) => table.id === state.currentTable,
+      );
+      const payloadIds = action.payload.map((i) => i.id);
+      const tableItems = state.tables[currentTableIndex].tableItems;
+      if (!tableItems.some((item) => item.id === payloadIds[0]))
+        state.tables[currentTableIndex].tableItems = [
+          ...state.tables[currentTableIndex].tableItems,
+          ...action.payload,
+        ];
+
+      return { ...state };
     }
     default:
       throw new Error("Unknown action");
