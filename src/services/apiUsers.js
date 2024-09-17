@@ -29,6 +29,10 @@ export async function resetPasswordConfirm(payload) {
   );
 }
 
+export async function getUserInfo(token) {
+  return makeAPIRequest(API.APIEnum.USER.GET, null, "getUser", token, "GET");
+}
+
 export async function updateUserInfo(token, user) {
   return makeAPIRequest(
     API.APIEnum.USER.UPDATE_INFO,

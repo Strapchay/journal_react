@@ -19,6 +19,7 @@ import { useDeleteTableItems } from "./features/journals/useDeleteTableItems";
 import toast from "react-hot-toast";
 import { useDuplicateTableItems } from "./features/journals/useDuplicateTableItems";
 import { formatAPITableItems } from "./utils/helpers";
+import { useGetUser } from "./features/users/useGetUser";
 
 export const AuthContext = createContext();
 
@@ -31,6 +32,7 @@ function ProtectedRoute() {
     "token",
     "journal",
   );
+  const { user } = useGetUser(token);
   const {
     journals,
     isLoading: journalsLoading,
@@ -46,6 +48,7 @@ function ProtectedRoute() {
   const { deleteTableItems } = useDeleteTableItems(token);
   const { duplicateTableItems, isDuplicatingTableItems } =
     useDuplicateTableItems(token);
+  console.log("tags....", Object.keys(journals?.tags ?? {}));
   console.log("j and fetched after mount", journalTables, journals);
   const [journalState, dispatch] = useReducer(journalReducer, initialState);
   const { isCreatingTableItem, createTableItem, createTableItemError } =
@@ -73,8 +76,14 @@ function ProtectedRoute() {
 
   useEffect(() => {
     let updater;
-    if (!journalsLoading && !journalsError && !journalState.journalsLoaded)
-      updater = { ...journalState, ...journals, journalsLoaded: true };
+    if (!journalsLoading && !journalsError && !journalState.journalsLoaded) {
+      const dupJournalsLoaded = JSON.stringify(journals);
+      console.log("dup journ", dupJournalsLoaded);
+      updater = { ...journalState, journalsLoaded: true };
+      updater = { ...updater, ...journals };
+      console.log("updater value jortab", JSON.stringify(updater));
+    }
+
     if (
       !journalTablesLoading &&
       !journalTablesError &&
@@ -85,7 +94,6 @@ function ProtectedRoute() {
         tables: journalTables,
         journalTablesLoaded: true,
       };
-      console.log("updater value jortab", updater);
     }
 
     if (journalState?.tableHeads?.length === 0 && updater) {
@@ -113,7 +121,6 @@ function ProtectedRoute() {
         : tableItemKeys.length > currentTableItems?.length
           ? "removeItems"
           : null;
-    console.log("trigged this", updateAction);
 
     if (updateAction === "addItems") {
       const newTableItems = currentTableItems
@@ -188,7 +195,7 @@ function ProtectedRoute() {
       value={{
         removeTokenAndLogout,
         token,
-        // journal,
+        user,
         journalState,
         dispatch,
         isCreatingTableItem,

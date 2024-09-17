@@ -167,10 +167,11 @@ export const timeoutWithoutPromise = (sec, fn) => {
 
 export const formatAPISub = function (APIResp, type) {
   let formatList = [];
-  if (APIResp.length > 1 || APIResp.length === 1) {
-    APIResp.forEach((resp) => formatList.push(formatAPIResp(resp, type)));
-    return formatList;
-  }
+  if (type === "apiTags")
+    if (APIResp.length > 1 || APIResp.length === 1) {
+      APIResp.forEach((resp) => formatList.push(formatAPIResp(resp, type)));
+      return formatList;
+    }
   return APIResp;
 };
 

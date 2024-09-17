@@ -4,24 +4,37 @@ import styles from "../Landing.module.css";
 import { useUpdateUserInfo } from "../../features/journals/useUpdateUserInfo";
 import { useContext } from "react";
 import { AuthContext } from "../../ProtectedRoute";
+import { useGetUser } from "../../features/users/useGetUser";
+import { ModalContext } from "../../Modal";
+import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
-function UpdateInfoForm({ onCloseModal }) {
-  const { token } = useContext(AuthContext);
-  const { register, handleSubmit, reset, formState, getValues } = useForm();
+function UpdateInfoForm() {
+  const queryClient = useQueryClient();
+  const { token, removeTokenAndLogout } = useContext(AuthContext);
+  const { close } = useContext(ModalContext);
+  const { user } = useGetUser(token);
+  const { register, handleSubmit, reset, formState, getValues } = useForm({
+    defaultValues: {
+      first_name: user?.first_name,
+      last_name: user?.last_name,
+      email: user?.email,
+      username: user?.username,
+    },
+  });
   const { updateUserInfo, isLoading, error } = useUpdateUserInfo(token);
 
   function onSubmit(data) {
-    //   pattern: {
-    //     value: /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/,
-    //     message: "The entered email value is invalid",
-    //   },
-    // }
-    //TODO: check and validate the email field if supplied
-    const emailValue = data.email;
-
     updateUserInfo(data, {
       onSuccess: (data) => {
         reset();
+        close?.();
+        if (user.email !== data.email) {
+          toast.success("Your email has changed, please login again");
+          removeTokenAndLogout();
+        }
+        toast.success("User info updated successfully");
+        queryClient.invalidateQueries({ queryKey: ["user"] });
       },
     });
   }
@@ -71,7 +84,13 @@ function UpdateInfoForm({ onCloseModal }) {
               name="email"
               id="email"
               placeholder="eg. johndoe@example.com"
-              {...register("email")}
+              {...register("email", {
+                required: false,
+                pattern: {
+                  value: /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/,
+                  message: "The entered email value is invalid",
+                },
+              })}
               disabled={isLoading}
             />
           </div>

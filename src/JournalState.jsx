@@ -9,11 +9,12 @@ export const initialState = {
   description: "", //DEFAULT_JOURNAL_DESC,
   tables: [],
   tableHeads: [],
-  tags: TABLE_TAGS.tags,
+  tags: [],
   tagsColor: TAGS_COLORS.colors,
   journalsLoaded: false,
   journalTablesLoaded: false,
   tableItemInputActive: null,
+  sideBarClosed: false,
 };
 
 export function journalReducer(state, action) {
@@ -104,11 +105,9 @@ export function journalReducer(state, action) {
 
       return { ...state };
     }
+    case "updateSidebarClosed":
+      return { ...state, sideBarClosed: !state.sideBarClosed };
     default:
       throw new Error("Unknown action");
   }
-}
-
-function createTableItem(state, tableItem) {
-  console.log("about creating table item", tableItem);
 }

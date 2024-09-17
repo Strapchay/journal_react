@@ -35,7 +35,12 @@ function Journal() {
 
   return (
     <main>
-      <div className={styles["container"]}>
+      <div
+        className={[
+          styles["container"],
+          styles[journalState?.sideBarClosed ? "nav-hide" : ""],
+        ].join(" ")}
+      >
         <JournalSidebar />
         <div className={styles["content-container"]}>
           <div className={styles["row"]}>
@@ -105,7 +110,6 @@ function Journal() {
 }
 
 function JournalSidebar() {
-  //TODO: get username from journals
   return (
     <div className={styles["nav-sidebar"]}>
       <div className={styles["nav-sidebar-options"]}>
@@ -119,8 +123,8 @@ function JournalSidebar() {
 }
 
 function JournalSidebarHeadingMarkup() {
-  const { journalState } = useContext(AuthContext);
-  const username = journalState.username;
+  const { user, journalState, dispatch } = useContext(AuthContext);
+  const username = user?.username;
 
   return (
     <div className={styles["nav-options-heading"]}>
@@ -131,9 +135,10 @@ function JournalSidebarHeadingMarkup() {
         {formatJournalHeadingName(username)}
       </div>
       <SvgMarkup
-        classList="angles-icon sidebar-close icon"
+        classList="angles-icon sidebar-open icon"
         fragId="angles-left"
         styles={styles}
+        onClick={() => dispatch({ type: "updateSidebarClosed" })}
       />
     </div>
   );
@@ -159,11 +164,11 @@ function JournalSidebarJournalMarkup() {
         " ",
       )}
     >
-      <div className={styles["nav-group"]}>
-        <div
-          className={styles["nav-options-icon"]}
-          onClick={() => setListTables((s) => !s)}
-        >
+      <div
+        className={styles["nav-group"]}
+        onClick={() => setListTables((s) => !s)}
+      >
+        <div className={styles["nav-options-icon"]}>
           <SvgMarkup
             classList="table-list-arrow-render arrow-render arrow-right-icon icon icon-mid"
             fragId={listTables ? "arrow-down" : "arrow-right"}
@@ -191,20 +196,19 @@ function JournalSidebarJournalMarkup() {
         <ul className={styles["tables-list"]}>
           {listTables &&
             tables.map((table) => (
-              <>
-                <div
-                  className={[
-                    styles["tables-list-box"],
-                    styles["hover"],
-                    styles[table[1] === currentTableId ? "hover-bg-stay" : ""],
-                  ].join(" ")}
-                  data-id={table[1]}
-                  onClick={() => handleSidebarSwitchTableEvent(table[1])}
-                >
-                  <div className={styles["tables-list-disc"]}></div>
-                  <li className="tables-list-table">{table[0]}</li>
-                </div>
-              </>
+              <div
+                className={[
+                  styles["tables-list-box"],
+                  styles["hover"],
+                  styles[table[1] === currentTableId ? "hover-bg-stay" : ""],
+                ].join(" ")}
+                data-id={table[1]}
+                key={table[1]}
+                onClick={() => handleSidebarSwitchTableEvent(table[1])}
+              >
+                <div className={styles["tables-list-disc"]}></div>
+                <li className="tables-list-table">{table[0]}</li>
+              </div>
             ))}
         </ul>
       </div>
@@ -219,11 +223,11 @@ function JournalSidebarUserSettingsOption() {
     <div
       className={[styles["nav-option"], styles["nav-options-user"]].join(" ")}
     >
-      <div className={styles["nav-group"]}>
-        <div
-          className={styles["nav-options-icon"]}
-          onClick={() => setListSettings((s) => !s)}
-        >
+      <div
+        className={styles["nav-group"]}
+        onClick={() => setListSettings((s) => !s)}
+      >
+        <div className={styles["nav-options-icon"]}>
           <SvgMarkup
             classList="update-list-arrow-render arrow-render arrow-right-icon icon icon-mid"
             fragId={listSettings ? "arrow-down" : "arrow-right"}
@@ -308,9 +312,26 @@ function JournalSidebarLogout() {
 }
 
 function JournalInfoHeaderComponent() {
-  const { journalState } = useContext(AuthContext);
+  const { journalState, dispatch } = useContext(AuthContext);
   return (
     <div className={styles["container-header"]}>
+      {journalState.sideBarClosed ? (
+        <div
+          className={[
+            styles["sidebar-open"],
+            styles["nav-options-sidebar-open-icon"],
+          ].join(" ")}
+          onClick={() => dispatch({ type: "updateSidebarClosed" })}
+        >
+          <SvgMarkup
+            classList="angles-icon icon icon-lg"
+            fragId="angles-right"
+            styles={styles}
+          />
+        </div>
+      ) : (
+        ""
+      )}
       <div className={styles["nav-options-journal-icon"]}>
         <SvgMarkup
           classList={[styles["journal-icon"], styles["icon"]].join(" ")}
@@ -1065,6 +1086,8 @@ function JournalTableBodyItemComponent({
     );
   }
 
+  function handleTagRenderEvent() {}
+
   return (
     <div
       role="tablecontent"
@@ -1179,15 +1202,9 @@ function JournalTableBodyItemComponent({
             className={[styles["table-item"], styles["table-item-tags"]].join(
               " ",
             )}
+            onClick={handleTagRenderEvent}
           >
-            <div
-              className={[
-                styles["tags-actions-text"],
-                styles["row-actions-text"],
-              ].join(" ")}
-            >
-              <JournalTableBodyItemTagItem tags={item?.itemTags} />
-            </div>
+            <JournalTableBodyItemTagItem tags={item?.itemTags} />
           </span>
         </div>
         {hoverActive && (
@@ -1220,17 +1237,24 @@ function JournalTableBodyItemComponent({
   );
 }
 
-function JournalTableBodyItemTagItem({ journal, tags }) {
-  const tagsExist = tags?.length > 0;
-  const journalTags = journal?.tags;
-  const journalTagColors = journal?.tagColors;
+function JournalTableBodyItemTagItem() {
+  const { journalState } = useContext(AuthContext);
+  const tagsExist = journalState?.tags?.length > 0;
+  const journalTags = journalState?.tags;
+  const journalTagColors = journalState?.tagColors;
   return (
-    <>
+    <div
+      className={[styles["tags-actions-text"], styles["row-actions-text"]].join(
+        " ",
+      )}
+    >
       {tagsExist &&
-        tags.map((tag, i) => {
-          const tagProperty = tags.find((modelTag) => modelTag.id === tag); //tag is an id
+        journalTags.map((tag, i) => {
+          const tagProperty = journalTags.find(
+            (modelTag) => modelTag.id === tag,
+          ); //tag is an id
           if (!tagProperty || tagProperty === -1) {
-            tags.splice(i, 1);
+            journalTags.splice(i, 1);
           }
           {
             tagProperty ||
@@ -1246,7 +1270,7 @@ function JournalTableBodyItemTagItem({ journal, tags }) {
               ));
           }
         })}
-    </>
+    </div>
   );
 }
 
