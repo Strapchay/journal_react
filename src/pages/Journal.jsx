@@ -16,6 +16,7 @@ import {
   formatAPIResp,
   formatAPITableItems,
   formatJournalHeadingName,
+  formatTagRenderedText,
   swapItemIndexInPlace,
   tableRowActivator,
   valueEclipser,
@@ -28,6 +29,7 @@ import { useCreateTable } from "../features/journals/useCreateTable";
 import Modal from "../Modal";
 import UpdatePwdForm from "./forms/UpdatePwdForm";
 import UpdateInfoForm from "./forms/UpdateInfoForm";
+import { forwardRef } from "react";
 
 function Journal() {
   const { journalState, overlayContainerRef } = useContext(AuthContext);
@@ -1026,6 +1028,128 @@ function JournalTableBodyItemInputOverlayComponent({ itemId, onSubmit }) {
   );
 }
 
+function JournalTableBodyItemSelectedTagsRenderComponent({
+  tagProperty,
+  addXmark = false,
+}) {
+  return (
+    <>
+      <div
+        className={[
+          styles[addXmark ? "tag-tag" : "row-tag-tag"],
+          styles[tagProperty.color],
+        ].join(" ")}
+        data-id={tagProperty.id}
+      >
+        {formatTagRenderedText(tagProperty?.text)}
+        {addXmark ? (
+          <div className={styles["row-tag-icon"]}>
+            <SvgMarkup
+              classList={styles["tags-items-icon"]}
+              fragId="xmark"
+              styles={styles}
+            />
+          </div>
+        ) : (
+          ""
+        )}
+      </div>
+    </>
+  );
+}
+
+function JournalTableBodyItemTagsOptionsAvailableComponent({
+  disableOptionsNudge = false,
+}) {
+  const { journalState } = useContext(AuthContext);
+  const tags = journalState?.tags;
+
+  return (
+    <>
+      {tags.map((tag) => (
+        <div className={styles["tags-option"]} key={tag?.id}>
+          {console.log("the tags value and tag", tags, tag)}
+          <div className={styles["row-drag-icon"]}>
+            <SvgMarkup
+              classList="row-icon icon-md"
+              fragId="drag-icon"
+              styles={styles}
+            />
+          </div>
+          <div className={styles["row-option-tag"]}>
+            <JournalTableBodyItemSelectedTagsRenderComponent
+              tagProperty={tag}
+            />
+          </div>
+          {!disableOptionsNudge ? (
+            <div className={styles["row-option-icon"]}>
+              <SvgMarkup
+                classList="row-icon icon-md"
+                fragId="ellipsis"
+                styles={styles}
+              />
+            </div>
+          ) : (
+            ""
+          )}
+        </div>
+      ))}
+    </>
+  );
+}
+
+function JournalTableBodyItemTagOptionOverlayComponent({ itemId, itemTags }) {
+  const { journalState } = useContext(AuthContext);
+  const tags = itemTags?.length
+    ? [
+        ...itemTags
+          .map((it) =>
+            journalState.tags.find((modelTag) => modelTag.id === it.id),
+          )
+          .filter((tag) => tag),
+      ]
+    : [];
+  const tagsExist = tags?.length;
+  return (
+    <div
+      className={[styles["row-tag-popup"], styles["options-markup"]].join(" ")}
+      data-id={itemId}
+    >
+      <div className={styles["row-tag-box"]}>
+        <div className={styles["tag-input-container"]}>
+          <div className={styles["tag-input"]}>
+            <div className={styles["tags-items"]}>
+              {tagsExist
+                ? tags.map((tag) => (
+                    <JournalTableBodyItemSelectedTagsRenderComponent
+                      tagProperty={tag}
+                      addXmark={true}
+                      key={tag?.id}
+                    />
+                  ))
+                : ""}
+
+              <input
+                type="text"
+                className={styles["tag-input-input"]}
+                placeholder="Search or create tag..."
+              />
+            </div>
+          </div>
+        </div>
+        <div className={styles["tags-box"]}>
+          <div className={styles["tags-info"]}>
+            Select an option or create one
+          </div>
+          <div className={styles["tags-available"]}>
+            <JournalTableBodyItemTagsOptionsAvailableComponent />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function JournalTableBodyItemHoverComponent() {
   return (
     <div className={[styles["row-actions-render"]].join(" ")}>
@@ -1050,6 +1174,7 @@ function JournalTableBodyItemComponent({
   onSelectTableItem,
 }) {
   const inputRef = useRef(null);
+  const tagRef = useRef(null);
   const [hoverActive, setHoverActive] = useState(false);
   // const [itemSelected, setItemSelected] = useState(false);
   const textToCopyRef = useRef(null);
@@ -1202,9 +1327,23 @@ function JournalTableBodyItemComponent({
             className={[styles["table-item"], styles["table-item-tags"]].join(
               " ",
             )}
-            onClick={handleTagRenderEvent}
+            // onClick={() => console.log("clicked tagOption")}
+            ref={tagRef}
           >
-            <JournalTableBodyItemTagItem tags={item?.itemTags} />
+            <ComponentOverlay>
+              <ComponentOverlay.Open opens="tagOption">
+                <JournalTableBodyItemTagItem tags={item?.itemTags} />
+              </ComponentOverlay.Open>
+              <ComponentOverlay.Window
+                name="tagOption"
+                objectToOverlay={tagRef}
+              >
+                <JournalTableBodyItemTagOptionOverlayComponent
+                  itemId={item?.id}
+                  itemTags={item?.itemTags}
+                />
+              </ComponentOverlay.Window>
+            </ComponentOverlay>
           </span>
         </div>
         {hoverActive && (
@@ -1237,38 +1376,36 @@ function JournalTableBodyItemComponent({
   );
 }
 
-function JournalTableBodyItemTagItem() {
+function JournalTableBodyItemTagItem({ tags, onClick }) {
   const { journalState } = useContext(AuthContext);
-  const tagsExist = journalState?.tags?.length > 0;
-  const journalTags = journalState?.tags;
-  const journalTagColors = journalState?.tagColors;
+  const tagsExist = tags?.length > 0;
+  const journalTags = [...journalState.tags];
+
   return (
     <div
       className={[styles["tags-actions-text"], styles["row-actions-text"]].join(
         " ",
       )}
+      onClick={onClick}
     >
       {tagsExist &&
-        journalTags.map((tag, i) => {
+        tags.map((tag, i) => {
           const tagProperty = journalTags.find(
-            (modelTag) => modelTag.id === tag,
-          ); //tag is an id
-          if (!tagProperty || tagProperty === -1) {
-            journalTags.splice(i, 1);
-          }
-          {
-            tagProperty ||
-              (tagProperty > 0 && (
-                <div
-                  className={[
-                    styles["tag-tag"],
-                    styles[tagProperty.color],
-                  ].join(" ")}
-                >
-                  {tagProperty.text}
-                </div>
-              ));
-          }
+            (modelTag) => modelTag.id === tag.id,
+          );
+
+          return tagProperty ? (
+            <div
+              className={[styles["tag-tag"], styles[tagProperty.color]].join(
+                " ",
+              )}
+              key={tagProperty?.id}
+            >
+              {tagProperty.text}
+            </div>
+          ) : (
+            ""
+          );
         })}
     </div>
   );

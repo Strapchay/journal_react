@@ -37,7 +37,7 @@ function ProtectedRoute() {
     journals,
     isLoading: journalsLoading,
     error: journalsError,
-    isFetchedAfterMount: journalsFetchedAfterMount,
+    journalsFetchedAfterMount,
   } = useGetJournals(token);
   const {
     journalTables,
@@ -48,8 +48,6 @@ function ProtectedRoute() {
   const { deleteTableItems } = useDeleteTableItems(token);
   const { duplicateTableItems, isDuplicatingTableItems } =
     useDuplicateTableItems(token);
-  console.log("tags....", Object.keys(journals?.tags ?? {}));
-  console.log("j and fetched after mount", journalTables, journals);
   const [journalState, dispatch] = useReducer(journalReducer, initialState);
   const { isCreatingTableItem, createTableItem, createTableItemError } =
     useCreateTableItem(token);
@@ -76,30 +74,24 @@ function ProtectedRoute() {
 
   useEffect(() => {
     let updater;
-    if (!journalsLoading && !journalsError && !journalState.journalsLoaded) {
-      const dupJournalsLoaded = JSON.stringify(journals);
-      console.log("dup journ", dupJournalsLoaded);
-      updater = { ...journalState, journalsLoaded: true };
-      updater = { ...updater, ...journals };
-      console.log("updater value jortab", JSON.stringify(updater));
-    }
-
     if (
+      !journalsLoading &&
+      !journalsError &&
+      !journalState.journalsLoaded &&
       !journalTablesLoading &&
       !journalTablesError &&
       !journalState.journalTablesLoaded
-    ) {
+    )
       updater = {
-        ...updater,
+        ...journalState,
+        ...journals,
         tables: journalTables,
+        journalsLoaded: true,
         journalTablesLoaded: true,
       };
-    }
 
-    if (journalState?.tableHeads?.length === 0 && updater) {
-      console.log("update state from api");
+    if (journalState?.tableHeads?.length === 0 && updater)
       dispatch({ type: "updateState", payload: updater });
-    }
   }, [
     journalState,
     journalTables,

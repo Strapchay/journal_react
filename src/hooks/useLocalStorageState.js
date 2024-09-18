@@ -45,6 +45,7 @@ export function useLocalStorageState(
 
   const removeStorageData = useCallback((tokenName) => {
     localStorage.removeItem(tokenName);
+    localStorage.removeItem("journal");
   }, []);
   return { token, setToken, removeStorageData, journal, setJournal };
 }

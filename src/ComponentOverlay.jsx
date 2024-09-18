@@ -62,10 +62,7 @@ function Open({ children, opens, click = true }) {
 
   if (click)
     return cloneElement(children, {
-      onClick: () => {
-        console.log("clicking the component");
-        open(opens);
-      },
+      onClick: () => open(opens),
     });
   if (!click) open(opens);
 }

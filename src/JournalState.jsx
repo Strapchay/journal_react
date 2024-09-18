@@ -22,7 +22,10 @@ export function journalReducer(state, action) {
     case "createTable":
       return { ...state, tables: [...state.tables, action.payload] };
     case "updateState":
-      return { ...state, ...action.payload };
+      if (!state.journalsLoaded || !state.journalTablesLoaded) {
+        return { ...state, ...action.payload };
+      }
+      return state;
     case "updateCurrentTable":
       return { ...state, currentTable: action.payload };
     case "updateJournalInfo":

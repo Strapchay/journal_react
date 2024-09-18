@@ -8,7 +8,7 @@ export function useGetJournals(token) {
     isPending: isLoading,
     data: journals,
     error,
-    isFetchedAfterMount,
+    isFetchedAfterMount: journalsFetchedAfterMount,
   } = useQuery({
     queryKey: ["journals"],
     queryFn: async () => {
@@ -19,7 +19,7 @@ export function useGetJournals(token) {
     staleTime: Infinity,
     refetchOnMount: false,
   });
-  return { journals, isLoading, error, isFetchedAfterMount };
+  return { journals, isLoading, error, journalsFetchedAfterMount };
 }
 
 export const replaceStateJournalDataWithAPIData = function (

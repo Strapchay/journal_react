@@ -1,4 +1,9 @@
-import { BASE_API_URL, LOCALE_TIME, successCodes } from "./constants";
+import {
+  BASE_API_URL,
+  LOCALE_TIME,
+  successCodes,
+  TAG_TEXT_RENDER_LENGTH,
+} from "./constants";
 
 export const valueEclipser = (value, len) => {
   if (value.length < len) return value;
@@ -85,6 +90,12 @@ export function formRenderInfo(formType) {
 export const formatJournalHeadingName = (username) => {
   const headingName = `${username?.slice(0, 1).toUpperCase() + username?.slice(1)}'s Journal`;
   return `${headingName?.slice(0, 15)}...`;
+};
+
+export const formatTagRenderedText = (tagText) => {
+  if (tagText?.length > TAG_TEXT_RENDER_LENGTH)
+    return tagText.slice(0, TAG_TEXT_RENDER_LENGTH) + "...";
+  return tagText;
 };
 
 export function getInitError(data) {
@@ -178,7 +189,6 @@ export const formatAPISub = function (APIResp, type) {
 export const formatAPITableItems = function (APIResp, type) {
   let formattedData = [];
   if (APIResp.length > 0) {
-    console.log("the APIResp val", APIResp);
     APIResp.forEach((resp) => {
       let formatAPITableItem = {
         id: resp.id,
