@@ -18,6 +18,9 @@ import {
   formatAPITableItems,
   formatJournalHeadingName,
   formatTagRenderedText,
+  getCurrentTable,
+  getSelectedItems,
+  getTableItemWithMaxTags,
   swapItemIndexInPlace,
   tableRowActivator,
   valueEclipser,
@@ -813,15 +816,17 @@ function JournalTableHeadActionComponent() {
 }
 
 function JournalTableBodyCheckboxOptionComponent({ selectedItemsLength }) {
+  const toastInst = toast;
+  const toastRef = useRef(0);
+  const checkboxTagOptionRef = useRef(null);
   const {
     unselectAllSelectedTableItems,
     deleteSelectedTableItems,
     duplicateSelectedTableItems,
     isDuplicatingTableItems,
     selectAllSelectedTableItems,
+    selectedTableItems,
   } = useContext(AuthContext);
-  const toastInst = toast;
-  const toastRef = useRef(0);
 
   if (isDuplicatingTableItems && toastRef.current === 0) {
     toastRef.current = 1;
@@ -846,20 +851,33 @@ function JournalTableBodyCheckboxOptionComponent({ selectedItemsLength }) {
             {selectedItemsLength} selected
           </div>
         </div>
-        <div
-          className={[
-            styles["checkbox-item"],
-            styles["checkbox-tags"],
-            styles["hover"],
-          ].join(" ")}
-        >
-          <SvgMarkup
-            classList="icon-md icon-active"
-            fragId="list-icon"
-            styles={styles}
-          />
-          <div className={styles["checkbox-text"]}>Tags</div>
-        </div>
+        <ComponentOverlay>
+          <ComponentOverlay.Open opens="checkboxTags">
+            <div
+              className={[
+                styles["checkbox-item"],
+                styles["checkbox-tags"],
+                styles["hover"],
+              ].join(" ")}
+              ref={checkboxTagOptionRef}
+            >
+              <SvgMarkup
+                classList="icon-md icon-active"
+                fragId="list-icon"
+                styles={styles}
+              />
+              <div className={styles["checkbox-text"]}>Tags</div>
+            </div>
+          </ComponentOverlay.Open>
+          <ComponentOverlay.Window
+            name="checkboxTags"
+            objectToOverlay={checkboxTagOptionRef}
+          >
+            <JournalTableBodyItemTagOptionOverlayComponent
+              itemIds={getSelectedItems(selectedTableItems)}
+            />
+          </ComponentOverlay.Window>
+        </ComponentOverlay>
         <div
           className={[
             styles["checkbox-item"],
@@ -1209,22 +1227,30 @@ function JournalTableBodyItemTagsOptionsAvailableComponent({
   );
 }
 
-function JournalTableBodyItemTagOptionOverlayComponent({ itemId, itemTags }) {
+function JournalTableBodyItemTagOptionOverlayComponent({
+  itemIds,
+  itemTags = null, //NOTE:if the itemIds is > 1, no itemTags is supplied
+}) {
   const { journalState } = useContext(AuthContext);
-  const tags = itemTags?.length
+  const isMultipleItemIds = itemIds.length > 1;
+  const tagsValue = isMultipleItemIds
+    ? getTableItemWithMaxTags(getCurrentTable(journalState), itemIds).itemTags
+    : itemTags;
+  const tags = tagsValue?.length
     ? [
-        ...itemTags
+        ...tagsValue
           .map((it) =>
             journalState.tags.find((modelTag) => modelTag.id === it.id),
           )
           .filter((tag) => tag),
       ]
     : [];
+
   const tagsExist = tags?.length;
   return (
     <div
       className={[styles["row-tag-popup"], styles["options-markup"]].join(" ")}
-      data-id={itemId}
+      data-id={!isMultipleItemIds ? itemIds[0] : ""}
     >
       <div className={styles["row-tag-box"]}>
         <div className={styles["tag-input-container"]}>
@@ -1449,7 +1475,7 @@ function JournalTableBodyItemComponent({
                 objectToOverlay={tagRef}
               >
                 <JournalTableBodyItemTagOptionOverlayComponent
-                  itemId={item?.id}
+                  itemIds={[item?.id]}
                   itemTags={item?.itemTags}
                 />
               </ComponentOverlay.Window>

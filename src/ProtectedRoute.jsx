@@ -18,7 +18,7 @@ import { useRef } from "react";
 import { useDeleteTableItems } from "./features/journals/useDeleteTableItems";
 import toast from "react-hot-toast";
 import { useDuplicateTableItems } from "./features/journals/useDuplicateTableItems";
-import { formatAPITableItems } from "./utils/helpers";
+import { formatAPITableItems, getSelectedItems } from "./utils/helpers";
 import { useGetUser } from "./features/users/useGetUser";
 import ComponentOverlay from "./ComponentOverlay";
 
@@ -151,10 +151,7 @@ function ProtectedRoute() {
   }
 
   function deleteSelectedTableItems() {
-    const keys = Object.keys(selectedTableItems);
-    const itemsToDelete = keys
-      .map((key) => (!selectedTableItems[key] ? null : key))
-      .filter((key) => +key);
+    const itemsToDelete = getSelectedItems(selectedTableItems);
     const payload = {
       delete_list: itemsToDelete,
     };

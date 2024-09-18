@@ -297,6 +297,38 @@ export const tableItemOrdering = function (relativeItem, tableItems) {
   };
 };
 
+export const getCurrentTable = (state) => {
+  //returns current table or tableId passed into it
+  const currentTable = state.tables.find(
+    (table) => table.id === state.currentTable,
+  );
+  return currentTable;
+};
+
+export const getSelectedItems = function (items) {
+  //majorly for calculating selected checkbox items
+  const keys = Object.keys(items);
+  const selectedItems = keys
+    .map((key) => (!items[key] ? null : key))
+    .filter((key) => key)
+    .map((key) => +key);
+  return selectedItems;
+};
+
+export const getTableItemWithMaxTags = function (table, itemsId) {
+  const filteredTableItems = [];
+
+  itemsId.forEach((itemId) => {
+    const item = table.tableItems.find((item) => item.id === Number(itemId));
+    if (item) filteredTableItems.push(item);
+  });
+
+  return filteredTableItems.reduce(
+    (acc, item) => (acc.itemTags.length > item.itemTags.length ? acc : item),
+    filteredTableItems[0],
+  );
+};
+
 export const createTableItemAPIRequestPayload = function (
   currentTableId,
   relativeItem = false,
