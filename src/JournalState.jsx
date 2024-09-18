@@ -15,6 +15,7 @@ export const initialState = {
   journalTablesLoaded: false,
   tableItemInputActive: null,
   sideBarClosed: false,
+  // overlayCount: 0,
 };
 
 export function journalReducer(state, action) {
@@ -110,6 +111,10 @@ export function journalReducer(state, action) {
     }
     case "updateSidebarClosed":
       return { ...state, sideBarClosed: !state.sideBarClosed };
+    // case "increaseOverlayCount":
+    //   return { ...state, overlayCount: state.overlayCount + 1 };
+    // case "decreaseOverlayCount":
+    //   return { ...state, overlayCount: state.overlayCount - 1 };
     default:
       throw new Error("Unknown action");
   }

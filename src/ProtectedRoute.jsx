@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import { useDuplicateTableItems } from "./features/journals/useDuplicateTableItems";
 import { formatAPITableItems } from "./utils/helpers";
 import { useGetUser } from "./features/users/useGetUser";
+import ComponentOverlay from "./ComponentOverlay";
 
 export const AuthContext = createContext();
 
@@ -27,6 +28,7 @@ function ProtectedRoute() {
   const navigate = useNavigate();
   const overlayContainerRef = useRef(null);
   const [selectedTableItems, setSelectedTableItems] = useState({});
+  const [overlayCountMap, setOverlayCountMap] = useState({});
   const { token, removeStorageData } = useLocalStorageState(
     {},
     "token",
@@ -182,6 +184,19 @@ function ProtectedRoute() {
     });
   }
 
+  function increaseOverlayCountMap(component) {
+    setOverlayCountMap((m) => ({
+      ...m,
+      [component]: Object.keys(m).length + 1,
+    }));
+  }
+
+  function decreaseOverlayCountMap(component) {
+    const activeOverlays = { ...overlayCountMap };
+    delete activeOverlays[component];
+    setOverlayCountMap((_) => activeOverlays);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -202,6 +217,9 @@ function ProtectedRoute() {
         duplicateSelectedTableItems,
         isDuplicatingTableItems,
         selectAllSelectedTableItems,
+        decreaseOverlayCountMap,
+        increaseOverlayCountMap,
+        overlayCountMap,
       }}
     >
       <Journal />

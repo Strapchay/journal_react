@@ -1058,6 +1058,95 @@ function JournalTableBodyItemSelectedTagsRenderComponent({
   );
 }
 
+function JournalTableBodyItemTagsOptionEditComponent({ tag, onClick }) {
+  const { journalState } = useContext(AuthContext);
+  const tagsColor = journalState.tagsColor;
+  return (
+    <div className={styles["row-tag-options"]} onClick={onClick}>
+      <div className={styles["row-tag-options-box"]}>
+        <div className={styles["row-tag-edit-actions"]}>
+          <input
+            type="text"
+            className={[styles["tag-edit"], styles["component-form"]].join(" ")}
+            value={tag.text}
+            onChange={() => console.log("changing tag name")}
+          />
+
+          <div className={styles["row-tag-delete"]}>
+            <div className={styles["row-tag-icon"]}>
+              <SvgMarkup
+                classList={styles["row-icon"]}
+                fragId="trashcan-icon"
+                styles={styles}
+              />
+            </div>
+            <div className={styles["row-tag-text"]}>Delete</div>
+          </div>
+        </div>
+        <div className={styles["row-tag-colors"]}>
+          <div className={styles["colors-info"]}>COLORS</div>
+          <div className={styles["colors-picker"]}>
+            {tagsColor.map((color) => {
+              const checkmark =
+                color.color_value.toLowerCase() === tag.color.toLowerCase();
+              return (
+                <div className={styles["colors"]} key={color.color}>
+                  <div
+                    className={[
+                      styles["color"],
+                      styles[color.color_value],
+                    ].join(" ")}
+                  ></div>
+                  <div className={styles["color-text"]}>{color.color}</div>
+                  {checkmark ? (
+                    <div className={styles["color-row-icon"]}>
+                      <SvgMarkup
+                        classList="row-icon icon-md"
+                        fragId="checkmark"
+                        styles={styles}
+                      />
+                    </div>
+                  ) : (
+                    ""
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JournalTableBodyItemTagsOpetionsOptionIcon({ tag }) {
+  const tagOptionRef = useRef(null);
+
+  return (
+    <div
+      className={styles["row-option-icon"]}
+      ref={tagOptionRef}
+      data-id={tag?.id}
+    >
+      <ComponentOverlay>
+        <ComponentOverlay.Open opens="tagOptionsEdit">
+          <SvgMarkup
+            classList="row-icon icon-md"
+            fragId="ellipsis"
+            styles={styles}
+          />
+        </ComponentOverlay.Open>
+        <ComponentOverlay.Window
+          name="tagOptionsEdit"
+          objectToOverlay={tagOptionRef}
+        >
+          <JournalTableBodyItemTagsOptionEditComponent tag={tag} key={tag.id} />
+        </ComponentOverlay.Window>
+      </ComponentOverlay>
+    </div>
+  );
+}
+
 function JournalTableBodyItemTagsOptionsAvailableComponent({
   disableOptionsNudge = false,
 }) {
@@ -1067,8 +1156,7 @@ function JournalTableBodyItemTagsOptionsAvailableComponent({
   return (
     <>
       {tags.map((tag) => (
-        <div className={styles["tags-option"]} key={tag?.id}>
-          {console.log("the tags value and tag", tags, tag)}
+        <div className={styles["tags-option"]} key={tag?.id} data-id={tag?.id}>
           <div className={styles["row-drag-icon"]}>
             <SvgMarkup
               classList="row-icon icon-md"
@@ -1082,13 +1170,7 @@ function JournalTableBodyItemTagsOptionsAvailableComponent({
             />
           </div>
           {!disableOptionsNudge ? (
-            <div className={styles["row-option-icon"]}>
-              <SvgMarkup
-                classList="row-icon icon-md"
-                fragId="ellipsis"
-                styles={styles}
-              />
-            </div>
+            <JournalTableBodyItemTagsOpetionsOptionIcon tag={tag} />
           ) : (
             ""
           )}
@@ -1327,7 +1409,6 @@ function JournalTableBodyItemComponent({
             className={[styles["table-item"], styles["table-item-tags"]].join(
               " ",
             )}
-            // onClick={() => console.log("clicked tagOption")}
             ref={tagRef}
           >
             <ComponentOverlay>

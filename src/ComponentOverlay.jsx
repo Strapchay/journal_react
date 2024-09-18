@@ -19,20 +19,34 @@ function ComponentOverlay({ children }) {
   );
 }
 
-function Overlay({ children, objectToOverlay, disableOverlayInterceptor }) {
+function Overlay({
+  children,
+  objectToOverlay,
+  disableOverlayInterceptor,
+  overlayState,
+  decreaseOverlayState,
+}) {
   const { top, left, width, height } =
     objectToOverlay.current.getBoundingClientRect();
-  const { close } = useContext(OverlayContext);
+  const { close, openName } = useContext(OverlayContext);
+
+  function handleCloseOverlay() {
+    close();
+    decreaseOverlayState(openName);
+  }
 
   return (
-    <div className={styles["overlay"]}>
+    <div
+      className={styles["overlay"]}
+      style={{ zIndex: overlayState[openName] }}
+    >
       <div>
         <div
           className={[
             styles["overlay-filler"],
             !disableOverlayInterceptor ? styles["fill"] : "",
           ].join(" ")}
-          onClick={close}
+          onClick={handleCloseOverlay}
         ></div>
         <div
           className={styles["overlay-content"]}
@@ -45,7 +59,7 @@ function Overlay({ children, objectToOverlay, disableOverlayInterceptor }) {
             className={styles["overlay-content-fill"]}
             style={{
               width: `${width}px`,
-              height: `${height}px`,
+              height: `${overlayState[openName] > 1 ? height : "0"}px`,
             }}
           ></div>
           <div className={styles["overlay-content-holder"]}>
@@ -59,10 +73,14 @@ function Overlay({ children, objectToOverlay, disableOverlayInterceptor }) {
 
 function Open({ children, opens, click = true }) {
   const { open } = useContext(OverlayContext);
+  const { increaseOverlayCountMap } = useContext(AuthContext);
 
   if (click)
     return cloneElement(children, {
-      onClick: () => open(opens),
+      onClick: () => {
+        increaseOverlayCountMap(opens);
+        open(opens);
+      },
     });
   if (!click) open(opens);
 }
@@ -74,16 +92,20 @@ function Window({
   disableOverlayInterceptor = false,
 }) {
   const { openName, close } = useContext(OverlayContext);
-  const { overlayContainerRef } = useContext(AuthContext);
+  const { overlayContainerRef, overlayCountMap, decreaseOverlayCountMap } =
+    useContext(AuthContext);
   if (name != openName) return null;
 
   return createPortal(
     <Overlay
       objectToOverlay={objectToOverlay}
       disableOverlayInterceptor={disableOverlayInterceptor}
+      overlayState={overlayCountMap}
+      decreaseOverlayState={decreaseOverlayCountMap}
     >
       {cloneElement(children, {
         onSubmit: () => {
+          decreaseOverlayCountMap(name);
           close();
         },
       })}
