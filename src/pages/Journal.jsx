@@ -5,6 +5,7 @@ import SvgMarkup from "../SvgMarkup";
 import {
   COPY_ALERT,
   HEADER_JOURNAL_TITLE_LENGTH,
+  NOTIFICATION_DELETE_MSG,
   SIDEBAR_JOURNAL_TITLE_LENGTH,
   TABLE_HEAD_LIMIT,
   TABLE_ROW_FILTER_PLACEHOLDER,
@@ -1072,54 +1073,82 @@ function JournalTableBodyItemTagsOptionEditComponent({ tag, onClick }) {
             onChange={() => console.log("changing tag name")}
           />
 
-          <div className={styles["row-tag-delete"]}>
-            <div className={styles["row-tag-icon"]}>
-              <SvgMarkup
-                classList={styles["row-icon"]}
-                fragId="trashcan-icon"
-                styles={styles}
-              />
-            </div>
-            <div className={styles["row-tag-text"]}>Delete</div>
-          </div>
-        </div>
-        <div className={styles["row-tag-colors"]}>
-          <div className={styles["colors-info"]}>COLORS</div>
-          <div className={styles["colors-picker"]}>
-            {tagsColor.map((color) => {
-              const checkmark =
-                color.color_value.toLowerCase() === tag.color.toLowerCase();
-              return (
-                <div className={styles["colors"]} key={color.color}>
+          <ComponentOverlay>
+            <ComponentOverlay.Open opens="deleteNotifier">
+              <div className={styles["row-tag-delete"]}>
+                <div className={styles["row-tag-icon"]}>
+                  <SvgMarkup
+                    classList={styles["row-icon"]}
+                    fragId="trashcan-icon"
+                    styles={styles}
+                  />
+                </div>
+                <div className={styles["row-tag-text"]}>Delete</div>
+              </div>
+            </ComponentOverlay.Open>
+            <ComponentOverlay.Window name="deleteNotifier">
+              <OverlayNotificationComponent text={NOTIFICATION_DELETE_MSG}>
+                <div className={styles["notification-action-container"]}>
                   <div
                     className={[
-                      styles["color"],
-                      styles[color.color_value],
+                      styles["notification-btn"],
+                      styles["notification-cancel-btn"],
+                      styles["hover-deep-dull"],
                     ].join(" ")}
-                  ></div>
-                  <div className={styles["color-text"]}>{color.color}</div>
-                  {checkmark ? (
-                    <div className={styles["color-row-icon"]}>
-                      <SvgMarkup
-                        classList="row-icon icon-md"
-                        fragId="checkmark"
-                        styles={styles}
-                      />
-                    </div>
-                  ) : (
-                    ""
-                  )}
+                  >
+                    Cancel
+                  </div>
+                  <div
+                    className={[
+                      styles["notification-btn"],
+                      styles["notification-delete-btn"],
+                      styles["hover-tomato"],
+                    ].join(" ")}
+                  >
+                    Remove
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+              </OverlayNotificationComponent>
+            </ComponentOverlay.Window>
+          </ComponentOverlay>
+        </div>
+      </div>
+      <div className={styles["row-tag-colors"]}>
+        <div className={styles["colors-info"]}>COLORS</div>
+        <div className={styles["colors-picker"]}>
+          {tagsColor.map((color) => {
+            const checkmark =
+              color.color_value.toLowerCase() === tag.color.toLowerCase();
+            return (
+              <div className={styles["colors"]} key={color.color}>
+                <div
+                  className={[styles["color"], styles[color.color_value]].join(
+                    " ",
+                  )}
+                ></div>
+                <div className={styles["color-text"]}>{color.color}</div>
+                {checkmark ? (
+                  <div className={styles["color-row-icon"]}>
+                    <SvgMarkup
+                      classList="row-icon icon-md"
+                      fragId="checkmark"
+                      styles={styles}
+                    />
+                  </div>
+                ) : (
+                  ""
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
+    // </div>
   );
 }
 
-function JournalTableBodyItemTagsOpetionsOptionIcon({ tag }) {
+function JournalTableBodyItemTagsOptionsOptionIcon({ tag }) {
   const tagOptionRef = useRef(null);
 
   return (
@@ -1170,7 +1199,7 @@ function JournalTableBodyItemTagsOptionsAvailableComponent({
             />
           </div>
           {!disableOptionsNudge ? (
-            <JournalTableBodyItemTagsOpetionsOptionIcon tag={tag} />
+            <JournalTableBodyItemTagsOptionsOptionIcon tag={tag} />
           ) : (
             ""
           )}
@@ -1488,6 +1517,17 @@ function JournalTableBodyItemTagItem({ tags, onClick }) {
             ""
           );
         })}
+    </div>
+  );
+}
+
+function OverlayNotificationComponent({ text, children, onClick }) {
+  return (
+    <div className={styles["notification-render"]} onClick={onClick}>
+      <div className={styles["notification-render-box"]}>
+        <div className={styles["notification-text"]}>{text}</div>
+        {children}
+      </div>
     </div>
   );
 }

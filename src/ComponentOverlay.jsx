@@ -27,7 +27,7 @@ function Overlay({
   decreaseOverlayState,
 }) {
   const { top, left, width, height } =
-    objectToOverlay.current.getBoundingClientRect();
+    objectToOverlay?.current?.getBoundingClientRect() ?? {};
   const { close, openName } = useContext(OverlayContext);
 
   function handleCloseOverlay() {
@@ -47,20 +47,33 @@ function Overlay({
             !disableOverlayInterceptor ? styles["fill"] : "",
           ].join(" ")}
           onClick={handleCloseOverlay}
+          style={
+            !objectToOverlay?.current
+              ? { backgroundColor: "rgba(15,15,15,0.6)" }
+              : {}
+          }
         ></div>
         <div
           className={styles["overlay-content"]}
-          style={{
-            top: `${top}px`,
-            left: `${left}px`,
-          }}
+          style={
+            objectToOverlay?.current
+              ? {
+                  top: `${top}px`,
+                  left: `${left}px`,
+                }
+              : { top: "40%", left: "40%" }
+          }
         >
           <div
             className={styles["overlay-content-fill"]}
-            style={{
-              width: `${width}px`,
-              height: `${overlayState[openName] > 1 ? height : "0"}px`,
-            }}
+            style={
+              objectToOverlay?.current
+                ? {
+                    width: `${width}px`,
+                    height: `${overlayState[openName] > 1 ? height : "0"}px`,
+                  }
+                : {}
+            }
           ></div>
           <div className={styles["overlay-content-holder"]}>
             <div className={styles["overlay-content-content"]}>{children}</div>
@@ -88,7 +101,7 @@ function Open({ children, opens, click = true }) {
 function Window({
   children,
   name,
-  objectToOverlay,
+  objectToOverlay = null,
   disableOverlayInterceptor = false,
 }) {
   const { openName, close } = useContext(OverlayContext);
