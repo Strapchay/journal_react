@@ -1,7 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
 import { createTableItem as createTableItemApi } from "../../services/apiJournals";
-import { useContext } from "react";
-import { AuthContext } from "../../ProtectedRoute";
 import { toast } from "react-hot-toast";
 import { createTableItemAPIRequestPayload } from "../../utils/helpers";
 

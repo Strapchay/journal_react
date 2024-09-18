@@ -6,7 +6,6 @@ import ProtectedRoute from "./ProtectedRoute";
 import PageNotFound from "./pages/PageNotFound";
 import Journal from "./pages/Journal";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-// import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const queryClient = new QueryClient({
   defaultOptions: {

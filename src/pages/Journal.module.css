@@ -418,6 +418,13 @@ svg.hidden {
     height: 1.5rem;
 }
 
+.table-row-column-wrapper {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    border: none;
+}
+
 .table-row-icon .table-icon {
     filter: invert(39%) sepia(6%) saturate(192%) hue-rotate(169deg)
         brightness(91%) contrast(85%);

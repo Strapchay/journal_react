@@ -84,15 +84,17 @@ function Overlay({
   );
 }
 
-function Open({ children, opens, click = true }) {
+function Open({ children, opens, click = true, conditional = null }) {
   const { open } = useContext(OverlayContext);
   const { increaseOverlayCountMap } = useContext(AuthContext);
 
   if (click)
     return cloneElement(children, {
       onClick: () => {
-        increaseOverlayCountMap(opens);
-        open(opens);
+        if (conditional === null || conditional) {
+          increaseOverlayCountMap(opens);
+          open(opens);
+        }
       },
     });
   if (!click) open(opens);

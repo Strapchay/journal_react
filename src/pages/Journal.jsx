@@ -33,7 +33,6 @@ import { useCreateTable } from "../features/journals/useCreateTable";
 import Modal from "../Modal";
 import UpdatePwdForm from "./forms/UpdatePwdForm";
 import UpdateInfoForm from "./forms/UpdateInfoForm";
-import { forwardRef } from "react";
 
 function Journal() {
   const { journalState, overlayContainerRef } = useContext(AuthContext);
@@ -459,7 +458,7 @@ function JournalTableOptionComponent({ tableId }) {
                     placeholder=""
                     className={[
                       styles["table-rename"],
-                      styles[" component-form"],
+                      styles["component-form"],
                     ].join(" ")}
                     name="table-rename"
                   />
@@ -473,33 +472,43 @@ function JournalTableOptionComponent({ tableId }) {
                     styles={styles}
                   />
                 </div>
-                <div className="edit-text">Rename</div>
+                <div className={styles["edit-text"]}>Rename</div>
               </div>
             </div>
           </div>
         </div>
-        <div className="table-options-actions--option">
-          <div className="actions-content-container">
-            <div className="actions-content-box">
-              <div className="action-content action-duplicate">
-                <div className="action-content-icon">
+        <div className={styles["table-options-actions--option"]}>
+          <div className={styles["actions-content-container"]}>
+            <div className={styles["actions-content-box"]}>
+              <div
+                className={[
+                  styles["action-content"],
+                  styles["action-duplicate"],
+                ].join(" ")}
+              >
+                <div className={styles["action-content-icon"]}>
                   <SvgMarkup
                     classList={styles["action-icon"]}
                     fragId="clone"
                     styles={styles}
                   />
                 </div>
-                <div className="action-text">Duplicate</div>
+                <div className={styles["action-text"]}>Duplicate</div>
               </div>
-              <div className="action-content action-delete">
-                <div className="action-icon">
+              <div
+                className={[
+                  styles["action-content"],
+                  styles["action-delete"],
+                ].join(" ")}
+              >
+                <div className={styles["action-icon"]}>
                   <SvgMarkup
                     classList={styles["action-icon"]}
                     fragId="trashcan-icon"
                     styles={styles}
                   />
                 </div>
-                <div className="action-text">Delete</div>
+                <div className={styles["action-text"]}>Delete</div>
               </div>
             </div>
           </div>
@@ -585,14 +594,69 @@ function JournalTableRowHeadComponent() {
   );
 }
 
-function JournalTableRowComponent({ journalItems }) {
-  const { dispatch, journalState } = useContext(AuthContext);
+function JournalTableRowColumnComponent({
+  journalName,
+  activeTable,
+  journalId,
+}) {
   const tableHeadRef = useRef(null);
+  const { journalState, dispatch } = useContext(AuthContext);
 
   function handleSetCurrentTable(journalId) {
     if (journalId !== journalState.currentTable)
       dispatch({ type: "updateCurrentTable", payload: journalId });
   }
+
+  return (
+    <div
+      className={[
+        styles["table-row"],
+        styles["table-journal"],
+        styles[activeTable],
+      ].join(" ")}
+      // key={journalId}
+      data-name={journalName}
+      data-id={journalId}
+      onClick={() => handleSetCurrentTable(journalId)}
+      ref={tableHeadRef}
+    >
+      <ComponentOverlay key={journalId}>
+        <ComponentOverlay.Open
+          opens="tableColumnOption"
+          conditional={activeTable}
+        >
+          <span
+            className={styles["table-row-column-wrapper"]}
+            // onClick={activeTable ? onClick : ""}
+          >
+            <div className={styles["table-row-icon"]}>
+              <SvgMarkup
+                classList={styles["table-icon"]}
+                fragId="list-icon"
+                styles={styles}
+              />
+            </div>
+            <div className={styles["table-row-text"]}>{journalName}</div>
+            <SvgMarkup
+              classList="table-icon table-head-selector"
+              fragId="arrow-down"
+              styles={styles}
+            />
+          </span>
+        </ComponentOverlay.Open>
+        <ComponentOverlay.Window
+          name={activeTable ? "tableColumnOption" : null}
+          objectToOverlay={tableHeadRef}
+        >
+          <JournalTableOptionComponent tableId={journalId} />
+        </ComponentOverlay.Window>
+      </ComponentOverlay>
+    </div>
+  );
+}
+
+function JournalTableRowComponent({ journalItems }) {
+  const { dispatch, journalState } = useContext(AuthContext);
 
   return (
     <>
@@ -607,46 +671,12 @@ function JournalTableRowComponent({ journalItems }) {
         {
           return (
             i < 4 && (
-              <div
-                className={[
-                  styles["table-row"],
-                  styles["table-journal"],
-                  styles[activeTable],
-                ].join(" ")}
+              <JournalTableRowColumnComponent
+                journalName={journalName}
+                activeTable={activeTable}
+                journalId={journalId}
                 key={journalId}
-                data-name={journalName}
-                data-id={journalId}
-                onClick={() => handleSetCurrentTable(journalId)}
-                ref={tableHeadRef}
-              >
-                <ComponentOverlay key={journalId}>
-                  <ComponentOverlay.Open opens="tableColumnOption">
-                    <>
-                      <div className={styles["table-row-icon"]}>
-                        <SvgMarkup
-                          classList={styles["table-icon"]}
-                          fragId="list-icon"
-                          styles={styles}
-                        />
-                      </div>
-                      <div className={styles["table-row-text"]}>
-                        {journalName}
-                      </div>
-                      <SvgMarkup
-                        classList="table-icon table-head-selector"
-                        fragId="arrow-down"
-                        styles={styles}
-                      />
-                    </>
-                  </ComponentOverlay.Open>
-                  <ComponentOverlay.Window
-                    name={activeTable ? "tableColumnOption" : null}
-                    objectToOverlay={tableHeadRef}
-                  >
-                    <JournalTableOptionComponent tableId={journalId} />
-                  </ComponentOverlay.Window>
-                </ComponentOverlay>
-              </div>
+              />
             )
           );
         }
@@ -656,6 +686,7 @@ function JournalTableRowComponent({ journalItems }) {
 }
 
 function JournalTableHeadComponent() {
+  const tableHeadRef = useRef(null);
   const { journalState, token, dispatch, selectedTableItems } =
     useContext(AuthContext);
   const { createTable } = useCreateTable(token);
@@ -706,16 +737,61 @@ function JournalTableHeadComponent() {
         {switchTableAdd && (
           <div className={styles["main-table-heading"]}>
             <JournalTableRowComponent journalItems={tableItems} />
-            <div
-              className={[
-                styles["table-column-options"],
-                styles["table-row"],
-              ].join(" ")}
-            >
-              <div className={styles["table-row-text"]}>
-                {tables.length - TABLE_HEAD_LIMIT} more...
-              </div>
-            </div>
+
+            <ComponentOverlay>
+              <ComponentOverlay.Open opens="tableAction">
+                <div
+                  className={[
+                    styles["table-column-options"],
+                    styles["table-row"],
+                  ].join(" ")}
+                  ref={tableHeadRef}
+                >
+                  <div className={styles["table-row-text"]}>
+                    {tables.length - TABLE_HEAD_LIMIT} more...
+                  </div>
+                </div>
+              </ComponentOverlay.Open>
+              <ComponentOverlay.Window
+                name="tableAction"
+                objectToOverlay={tableHeadRef}
+              >
+                <div
+                  className={[
+                    styles["table-view-list--options"],
+                    styles["component-options"],
+                  ].join(" ")}
+                >
+                  <div className={styles["table-options"]}>
+                    <div className={styles["table-list--option"]}>
+                      <div className={styles["table-list-content-box"]}>
+                        <div className={styles["table-search-input"]}>
+                          <input
+                            type="text"
+                            name="table-search"
+                            className={[
+                              styles["table-search"],
+                              styles["component-form"],
+                            ].join(" ")}
+                            placeholder="Search for a View..."
+                          />
+                        </div>
+                        <div className={styles["table-content"]}>
+                          <div className={styles["add-table-content"]}>
+                            {tableItems.map((item) => (
+                              <JournalTableHeadOptionComponent
+                                tableItem={item}
+                                key={item[1]}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </ComponentOverlay.Window>
+            </ComponentOverlay>
           </div>
         )}
         <JournalTableHeadActionComponent />
@@ -731,9 +807,65 @@ function JournalTableHeadComponent() {
   );
 }
 
-function JournalTableHeadActionComponent() {
+function JournalTableHeadOptionComponent({ tableItem }) {
+  const tableViewOptionRef = useRef(null);
   return (
-    <div className={styles["main-table-actions"]}>
+    <div className={[styles["table-list-content"], styles["hover"]].join(" ")}>
+      <div className={styles["table-view-box"]}>
+        <div className={styles["table-view-content"]}>
+          <div className={styles["table-row-icon"]}>
+            <SvgMarkup
+              classList={styles["icon-active"]}
+              fragId="list-icon"
+              styles={styles}
+            />
+          </div>
+          <div
+            className={[styles["table-row-text"], styles["color-active"]].join(
+              " ",
+            )}
+          >
+            {tableItem[0]}
+          </div>
+        </div>
+
+        <div
+          className={styles["table-view-options"]}
+          data-name={tableItem[0]}
+          data-id={tableItem[1]}
+          ref={tableViewOptionRef}
+        >
+          <ComponentOverlay>
+            <ComponentOverlay.Open opens="tableOptionEdit">
+              <div
+                className={[
+                  styles["table-row-icon"],
+                  styles["hover-dull"],
+                ].join(" ")}
+              >
+                <SvgMarkup
+                  classList="table-icon icon-md"
+                  fragId="ellipsis"
+                  styles={styles}
+                />
+              </div>
+            </ComponentOverlay.Open>
+            <ComponentOverlay.Window
+              name="tableOptionEdit"
+              objectToOverlay={tableViewOptionRef}
+            >
+              <JournalTableOptionComponent tableId={tableItem[1]} />
+            </ComponentOverlay.Window>
+          </ComponentOverlay>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JournalTableHeadActionComponent({ onClick }) {
+  return (
+    <div className={styles["main-table-actions"]} onClick={onClick}>
       <div
         className={[
           styles["table-row"],
