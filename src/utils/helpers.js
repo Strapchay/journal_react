@@ -198,7 +198,7 @@ export const formatAPITableItems = function (APIResp, type) {
         intentions: formatAPISub(resp.intentions, "intentions"),
         happenings: formatAPISub(resp.happenings, "happenings"),
         gratefulFor: formatAPISub(resp.grateful_for, "gratefulFor"),
-        created: Date.now(resp.created),
+        created: Date.parse(resp.created),
       };
       formattedData.push(formatAPITableItem);
     });

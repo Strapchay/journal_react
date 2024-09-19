@@ -27,6 +27,7 @@ export const AuthContext = createContext();
 function ProtectedRoute() {
   const navigate = useNavigate();
   const overlayContainerRef = useRef(null);
+  const tableFuncPositionerRef = useRef(null);
   const [selectedTableItems, setSelectedTableItems] = useState({});
   const [overlayCountMap, setOverlayCountMap] = useState({});
   const { token, removeStorageData } = useLocalStorageState(
@@ -47,6 +48,7 @@ function ProtectedRoute() {
     error: journalTablesError,
     journalTablesFetchedAfterMount,
   } = useGetJournalTables(token);
+  console.log("the journals tab v", journalTables);
   const { deleteTableItems } = useDeleteTableItems(token);
   const { duplicateTableItems, isDuplicatingTableItems } =
     useDuplicateTableItems(token);
@@ -217,6 +219,7 @@ function ProtectedRoute() {
         decreaseOverlayCountMap,
         increaseOverlayCountMap,
         overlayCountMap,
+        tableFuncPositionerRef,
       }}
     >
       <Journal />

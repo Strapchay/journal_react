@@ -6,10 +6,13 @@ import {
   COPY_ALERT,
   HEADER_JOURNAL_TITLE_LENGTH,
   NOTIFICATION_DELETE_MSG,
+  PREPOSITIONS,
   SIDEBAR_JOURNAL_TITLE_LENGTH,
   TABLE_HEAD_LIMIT,
+  TABLE_PROPERTIES,
   TABLE_ROW_FILTER_PLACEHOLDER,
   TABLE_ROW_PLACEHOLDER,
+  TABLE_SORT_TYPE,
   THROTTLE_TIMER,
 } from "../utils/constants";
 import {
@@ -35,7 +38,8 @@ import UpdatePwdForm from "./forms/UpdatePwdForm";
 import UpdateInfoForm from "./forms/UpdateInfoForm";
 
 function Journal() {
-  const { journalState, overlayContainerRef } = useContext(AuthContext);
+  const { journalState, overlayContainerRef, tableFuncPositionerRef } =
+    useContext(AuthContext);
   console.log("the jor state", journalState);
 
   return (
@@ -70,7 +74,10 @@ function Journal() {
                       {/*<!-- end view option markup -->*/}
 
                       <div className={styles["property-container"]}>
-                        <div className={styles["property-actions"]}></div>
+                        <div
+                          className={styles["property-actions"]}
+                          ref={tableFuncPositionerRef}
+                        ></div>
                         <div className={styles["div-filler"]}></div>
                       </div>
                       <div className={styles["main-table-row"]}>
@@ -863,42 +870,492 @@ function JournalTableHeadOptionComponent({ tableItem }) {
   );
 }
 
-function JournalTableHeadActionComponent({ onClick }) {
+function JournalTableHeadActionOptionComponent({
+  componentName,
+  form,
+  properties,
+}) {
+  const placeholder = componentName[0].toUpperCase() + componentName.slice(1);
+
   return (
-    <div className={styles["main-table-actions"]} onClick={onClick}>
-      <div
-        className={[
-          styles["table-row"],
-          styles["table-action-row"],
-          styles["table-filter"],
-        ].join(" ")}
-      >
-        <div className={styles["table-row-text"]}>Filter</div>
-      </div>
-      <div
-        className={[
-          styles["table-row"],
-          styles["table-action-row"],
-          styles["table-sort"],
-        ].join(" ")}
-      >
-        <div className={styles["table-row-text"]}>Sort</div>
-      </div>
-      <div
-        className={[
-          styles["table-row"],
-          styles["table-action-row"],
-          styles["table-row-search"],
-        ].join(" ")}
-      >
-        <div className={styles["table-row-icon"]}>
-          <SvgMarkup
-            classList={styles["table-icon"]}
-            fragId="search-icon"
-            styles={styles}
-          />
+    <div
+      className={[
+        styles[`${componentName}-add-action--options`],
+        styles["property-add-action--options"],
+        styles["component-options"],
+      ].join(" ")}
+    >
+      <div className={styles["property-options"]}>
+        <div className={styles["property-options-property--option"]}>
+          <div className={styles["property-content-box"]}>
+            {form && (
+              <form action="" id="property-content-forms">
+                <input
+                  type="text"
+                  name={`${componentName}-search property-search`}
+                  className={[
+                    styles[`${componentName}-search`],
+                    styles["property-search"],
+                    styles["component-form"],
+                  ].join(" ")}
+                  placeholder={`${placeholder} by...`}
+                />
+              </form>
+            )}
+            <div className={styles["property-content"]}>
+              <div
+                className={[
+                  styles[`${componentName}-content-search`],
+                  styles["property-content-search"],
+                ].join(" ")}
+              >
+                {properties?.map((property) => (
+                  <JournalTableHeadActionPropertyOptionComponent
+                    componentName={componentName}
+                    key={property?.text}
+                    property={property}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PropertyRuleConditionalsComponent({
+  prepositions,
+  selectedPreposition,
+}) {
+  return (
+    <div
+      className={[
+        styles["filter-pre-action--options"],
+        styles["component-options"],
+      ].join(" ")}
+    >
+      <div className={styles["filter-options"]}>
+        <div className={styles["filter-pre-filter--option"]}>
+          <div className={styles["filter-content-box"]}>
+            <div className={styles["filter-content"]}>
+              <div className={styles["add-action-filters"]}>
+                {prepositions.map((preposition) => (
+                  <div
+                    key={preposition.condition}
+                    className={styles["action-filter-content"]}
+                  >
+                    <div className={styles["action-filter-text"]}>
+                      {preposition.condition}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TableFilterRuleComponent({ property, onClick }) {
+  const optionRef = useRef(null);
+  const tagOptionRef = useRef(null);
+  const prepositionRef = useRef(null);
+  const propertyName = property?.[0].toUpperCase() + property?.slice(1);
+  const prepositions = PREPOSITIONS.filter(
+    (preposition) => preposition[property.toLowerCase()] === true,
+  );
+  const removeFilterInput = false;
+  const removeFilterInputOption = ["Is empty", "Is not empty"];
+  const inputValue = "dkalfjdfadf";
+
+  return (
+    <div className={styles["filter-rule-input-box"]} onClick={onClick}>
+      <div className={styles["filter-input-content"]}>
+        <div className={styles["filter-input-content-box"]}>
+          <div className={styles["filter-input-text"]}>{propertyName}</div>
+          <ComponentOverlay>
+            <ComponentOverlay.Open opens="filterConditionals">
+              <div
+                className={[
+                  styles["filter-input-filter"],
+                  styles["hover"],
+                ].join(" ")}
+                ref={prepositionRef}
+              >
+                <div className={styles["filter-input-filter-text"]}>
+                  {/*conditional.condition ?? capitalize(conditional)*/}
+                  Is Not
+                </div>
+                <div className={styles["added-rule-icon"]}>
+                  <SvgMarkup
+                    classList="filter-added-icon icon-sm nav-icon-active"
+                    fragId="arrow-down"
+                    styles={styles}
+                  />
+                </div>
+              </div>
+            </ComponentOverlay.Open>
+            <ComponentOverlay.Window
+              name="filterConditionals"
+              objectToOverlay={prepositionRef}
+            >
+              <PropertyRuleConditionalsComponent prepositions={prepositions} />
+            </ComponentOverlay.Window>
+            <div className={styles["div-filler"]}></div>
+            <ComponentOverlay.Open opens="filterRuleOption">
+              <div
+                className={[
+                  styles["filter-input-option"],
+                  styles["hover"],
+                ].join(" ")}
+                ref={optionRef}
+              >
+                <SvgMarkup
+                  classList="filter-added-icon icon-md nav-icon-active"
+                  fragId="ellipsis"
+                  styles={styles}
+                />
+              </div>
+            </ComponentOverlay.Open>
+            <ComponentOverlay.Window
+              name="filterRuleOption"
+              objectToOverlay={optionRef}
+            >
+              <div className={styles["filter-input-option-option"]}>
+                <div className={styles["filter-option-option"]}>
+                  <div
+                    className={[
+                      styles["filter-option-action"],
+                      styles["filter-option-delete"],
+                      styles["hover"],
+                    ].join(" ")}
+                  >
+                    <div
+                      className={styles["filter-option-icon"]}
+                      ref={tagOptionRef}
+                    >
+                      <SvgMarkup
+                        classList="filter-icon icon-md nav-icon-active"
+                        fragId="trashcan-icon"
+                        styles={styles}
+                      />
+                    </div>
+                    <div className={styles["filter-option-text"]}>
+                      Delete Filter
+                    </div>
+                  </div>
+                  {property?.name === "tags" && (
+                    <ComponentOverlay>
+                      <ComponentOverlay.Open opens="tagOptions">
+                        <div
+                          className={[
+                            styles["filter-option-action"],
+                            styles["filter-option-tags"],
+                            styles["hover"],
+                          ].join(" ")}
+                          ref={tagOptionRef}
+                        >
+                          <div className={styles["filter-option-icon"]}>
+                            <SvgMarkup
+                              classList="filter-icon icon-md nav-icon-active"
+                              fragId="list-icon"
+                              styles={styles}
+                            />
+                          </div>
+                          <div className={styles["filter-option-text"]}>
+                            Select Tags
+                          </div>
+                        </div>
+                      </ComponentOverlay.Open>
+                      <ComponentOverlay.Window
+                        name="tagOptions"
+                        objectToOverlay={tagOptionRef}
+                      >
+                        <JournalTableBodyItemTagOptionOverlayComponent />
+                      </ComponentOverlay.Window>
+                    </ComponentOverlay>
+                  )}
+                </div>
+              </div>
+            </ComponentOverlay.Window>
+          </ComponentOverlay>
+        </div>
+        {!removeFilterInput && property.toLowerCase() === "name" && (
+          <div className={styles["filter-input-container"]}>
+            <input
+              type="text"
+              className={[
+                styles["filter-value"],
+                styles["component-form"],
+              ].join(" ")}
+              placeholder="Type a Value..."
+              defaultValue={inputValue ? inputValue : ""}
+            />
+          </div>
+        )}
+        {!removeFilterInput && property.toLowerCase() === "tags" && (
+          <div className={styles["filter-input-container"]}>
+            <div
+              contentEditable={false}
+              className={styles["filter-value-tags"]}
+              aria-placeholder="Add Tags To Filter By"
+            >
+              {/* add the tag markup from tagItem Markup Factory here*/}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TableSortRuleComponent({ property }) {
+  //TODO: add state to manage current sortType
+  const [sortType, setSortType] = useState(TABLE_SORT_TYPE[0].text);
+  const propertyRef = useRef(null);
+  const sortTypeRef = useRef(null);
+  const propertiesToRender = TABLE_PROPERTIES.properties.filter(
+    (property) => property.text.toLowerCase() !== "created",
+  );
+
+  return (
+    <div className={styles["sort-rules"]}>
+      <div className={styles["sort-rules-container"]}>
+        <div className={styles["sort-action-form"]}>
+          <div className={styles["add-sort-rules-box"]}>
+            <ComponentOverlay>
+              <div
+                className={styles["sort-property-options"]}
+                ref={propertyRef}
+              >
+                <ComponentOverlay.Open opens="propertyOption">
+                  <div
+                    className={[
+                      styles["sort-select"],
+                      styles["sort-property-options-box"],
+                    ].join(" ")}
+                  >
+                    <div className={styles["sort-sort-icon"]}>
+                      <SvgMarkup
+                        classList="sort-icon icon-active icon-md"
+                        fragId={property?.icon}
+                        styles={styles}
+                      />
+                    </div>
+                    <div className={styles["action-filter-text"]}>
+                      {property}
+                    </div>
+                    <div className={styles["sort-dropdown-icon"]}>
+                      <SvgMarkup
+                        classList="sort-icon icon-active icon-sm"
+                        fragId="arrow-down"
+                        styles={styles}
+                      />
+                    </div>
+                  </div>
+                </ComponentOverlay.Open>
+                <ComponentOverlay.Window
+                  name="propertyOption"
+                  objectToOverlay={propertyRef}
+                >
+                  <JournalTableHeadActionOptionComponent
+                    componentName="sort"
+                    form={true}
+                    properties={propertiesToRender}
+                  />
+                </ComponentOverlay.Window>
+              </div>
+              <div className={styles["sort-type"]}>
+                <ComponentOverlay.Open opens="sortTypeOption">
+                  <div className={styles["sort-type-options"]}>
+                    <div
+                      className={[
+                        styles["sort-type-options-box"],
+                        styles["sort-select"],
+                      ].join(" ")}
+                      ref={sortTypeRef}
+                    >
+                      <div className={styles["action-filter-text"]}>
+                        {sortType}
+                      </div>
+                      <div className={styles["sort-dropdown-icon"]}>
+                        <SvgMarkup
+                          classList="sort-icon icon-active icon-sm"
+                          fragId="arrow-down"
+                          styles={styles}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </ComponentOverlay.Open>
+                <ComponentOverlay.Window
+                  name="sortTypeOption"
+                  objectToOverlay={sortTypeRef}
+                >
+                  <>
+                    {TABLE_SORT_TYPE.map((type) => (
+                      <div
+                        key={type.text}
+                        className={[
+                          styles["filter-option-action"],
+                          styles[`filter-option-${type.text.toLowerCase()}`],
+                          styles["hover"],
+                        ].join(" ")}
+                      >
+                        <div className={styles["filter-option-icon"]}>
+                          <SvgMarkup
+                            classList="filter-icon icon-md icon-active"
+                            fragId={type.icon}
+                            styles={styles}
+                          />
+                        </div>
+                        <div className={styles["filter-option-text"]}>
+                          {type.text}
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                </ComponentOverlay.Window>
+              </div>
+            </ComponentOverlay>
+          </div>
+        </div>
+        <div className={styles["sort-delete-container"]}>
+          <div className={styles["sort-action-box"]}>
+            <div className={styles["sort-delete-icon"]}>
+              <div className={styles["sort-sort-icon"]}>
+                <SvgMarkup
+                  classList="icon-active icon-md"
+                  fragId="trashcan-icon"
+                  styles={styles}
+                />
+              </div>
+            </div>
+            <div className={styles["sort-delete-text"]}>Delete Sort</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function JournalTableHeadActionPropertyOptionComponent({
+  componentName,
+  property,
+}) {
+  const { tableFuncPositionerRef } = useContext(AuthContext);
+  return (
+    <ComponentOverlay>
+      <ComponentOverlay.Open opens={`${property?.text}Filter`}>
+        <div
+          className={[
+            styles[`${componentName}-property-content`],
+            styles["action-property-content"],
+            // styles[property?.class ?? ""],
+          ].join(" ")}
+        >
+          <div className={styles["action-property-icon"]}>
+            <SvgMarkup
+              classList={styles["property-icon"]}
+              fragId={property.icon}
+              styles={styles}
+            />
+          </div>
+          <div className={styles["action-property-text"]}>{property.text}</div>
+        </div>
+      </ComponentOverlay.Open>
+      <ComponentOverlay.Window
+        name={`${property?.text}Filter`}
+        objectToOverlay={tableFuncPositionerRef}
+      >
+        <>
+          {componentName.toLowerCase() === "filter" && (
+            <TableFilterRuleComponent property={property?.text} />
+          )}
+
+          {componentName.toLowerCase() === "sort" && (
+            <TableSortRuleComponent property={property?.text} />
+          )}
+        </>
+      </ComponentOverlay.Window>
+    </ComponentOverlay>
+  );
+}
+
+function JournalTableHeadActionComponent({ onClick }) {
+  const filterRef = useRef(null);
+  const sortRef = useRef(null);
+  const propertiesToRender = TABLE_PROPERTIES.properties.filter(
+    (property) => property.text.toLowerCase() !== "created",
+  );
+
+  return (
+    <div className={styles["main-table-actions"]} onClick={onClick}>
+      <ComponentOverlay>
+        <ComponentOverlay.Open opens="filterProperties">
+          <div
+            className={[
+              styles["table-row"],
+              styles["table-action-row"],
+              styles["table-filter"],
+            ].join(" ")}
+            ref={filterRef}
+          >
+            <div className={styles["table-row-text"]}>Filter</div>
+          </div>
+        </ComponentOverlay.Open>
+        <ComponentOverlay.Window
+          name="filterProperties"
+          objectToOverlay={filterRef}
+        >
+          <JournalTableHeadActionOptionComponent
+            componentName="filter"
+            form={true}
+            properties={propertiesToRender}
+          />
+        </ComponentOverlay.Window>
+        <ComponentOverlay.Open opens="sortProperties">
+          <div
+            className={[
+              styles["table-row"],
+              styles["table-action-row"],
+              styles["table-sort"],
+            ].join(" ")}
+            ref={sortRef}
+          >
+            <div className={styles["table-row-text"]}>Sort</div>
+          </div>
+        </ComponentOverlay.Open>
+        <ComponentOverlay.Window
+          name="sortProperties"
+          objectToOverlay={sortRef}
+        >
+          <JournalTableHeadActionOptionComponent
+            componentName="sort"
+            form={true}
+            properties={propertiesToRender}
+          />
+        </ComponentOverlay.Window>
+        <div
+          className={[
+            styles["table-row"],
+            styles["table-action-row"],
+            styles["table-row-search"],
+          ].join(" ")}
+        >
+          <div className={styles["table-row-icon"]}>
+            <SvgMarkup
+              classList={styles["table-icon"]}
+              fragId="search-icon"
+              styles={styles}
+            />
+          </div>
+        </div>
+      </ComponentOverlay>
       <div
         className={[
           styles["table-row-search--form"],
@@ -1362,11 +1819,12 @@ function JournalTableBodyItemTagsOptionsAvailableComponent({
 function JournalTableBodyItemTagOptionOverlayComponent({
   itemIds,
   itemTags = null, //NOTE:if the itemIds is > 1, no itemTags is supplied
+  disableInput = false,
 }) {
   const { journalState } = useContext(AuthContext);
-  const isMultipleItemIds = itemIds.length > 1;
+  const isMultipleItemIds = itemIds?.length > 1;
   const tagsValue = isMultipleItemIds
-    ? getTableItemWithMaxTags(getCurrentTable(journalState), itemIds).itemTags
+    ? getTableItemWithMaxTags(getCurrentTable(journalState), itemIds)?.itemTags
     : itemTags;
   const tags = tagsValue?.length
     ? [
@@ -1385,33 +1843,37 @@ function JournalTableBodyItemTagOptionOverlayComponent({
       data-id={!isMultipleItemIds ? itemIds[0] : ""}
     >
       <div className={styles["row-tag-box"]}>
-        <div className={styles["tag-input-container"]}>
-          <div className={styles["tag-input"]}>
-            <div className={styles["tags-items"]}>
-              {tagsExist
-                ? tags.map((tag) => (
-                    <JournalTableBodyItemSelectedTagsRenderComponent
-                      tagProperty={tag}
-                      addXmark={true}
-                      key={tag?.id}
-                    />
-                  ))
-                : ""}
+        {!disableInput && (
+          <div className={styles["tag-input-container"]}>
+            <div className={styles["tag-input"]}>
+              <div className={styles["tags-items"]}>
+                {tagsExist
+                  ? tags.map((tag) => (
+                      <JournalTableBodyItemSelectedTagsRenderComponent
+                        tagProperty={tag}
+                        addXmark={true}
+                        key={tag?.id}
+                      />
+                    ))
+                  : ""}
 
-              <input
-                type="text"
-                className={styles["tag-input-input"]}
-                placeholder="Search or create tag..."
-              />
+                <input
+                  type="text"
+                  className={styles["tag-input-input"]}
+                  placeholder="Search or create tag..."
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
         <div className={styles["tags-box"]}>
           <div className={styles["tags-info"]}>
             Select an option or create one
           </div>
           <div className={styles["tags-available"]}>
-            <JournalTableBodyItemTagsOptionsAvailableComponent />
+            <JournalTableBodyItemTagsOptionsAvailableComponent
+              disableOptionsNudge={disableInput}
+            />
           </div>
         </div>
       </div>
