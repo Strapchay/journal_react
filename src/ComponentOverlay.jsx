@@ -130,21 +130,6 @@ function Window({
   );
 }
 
-// return createPortal(children, objectToOverlay.current);
-// function ComponentOverlay({
-//   objectToOverlay,
-//   type,
-//   disableOverlayInterceptor,
-// }) {
-//   return (
-//     <Overlay
-//       objectToOverlay={objectToOverlay}
-//       disableOverlayInterceptor={disableOverlayInterceptor}
-//     >
-//       {type === "input" && <InputOverlayComponent />}
-//     </Overlay>
-//   );
-// }
 ComponentOverlay.Open = Open;
 ComponentOverlay.Window = Window;
 export default ComponentOverlay;

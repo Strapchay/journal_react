@@ -127,12 +127,27 @@ export function journalReducer(state, action) {
 
       return { ...state };
     }
+    case "createTag": {
+      return { ...state, tags: [...state.tags, action.payload] };
+    }
+    case "updateTag": {
+      const tagIndex = state.tags.findIndex(
+        (tag) => tag.id === action.payload.id,
+      );
+      const modTags = [...state.tags];
+      modTags.splice(tagIndex, 1, action.payload);
+      return { ...state, tags: [...modTags] };
+    }
+    case "deleteTag": {
+      return {
+        ...state,
+        tags: [...state.tags.filter((tag) => tag.id !== action.payload)],
+      };
+    }
+
     case "updateSidebarClosed":
       return { ...state, sideBarClosed: !state.sideBarClosed };
-    // case "increaseOverlayCount":
-    //   return { ...state, overlayCount: state.overlayCount + 1 };
-    // case "decreaseOverlayCount":
-    //   return { ...state, overlayCount: state.overlayCount - 1 };
+
     default:
       throw new Error("Unknown action");
   }

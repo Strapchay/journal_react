@@ -17,6 +17,7 @@ import {
 } from "../utils/constants";
 import {
   dateTimeFormat,
+  formatAPIRequestTagPayload,
   formatAPIResp,
   formatAPITableItems,
   formatJournalHeadingName,
@@ -37,6 +38,9 @@ import Modal, { ModalContext } from "../Modal";
 import UpdatePwdForm from "./forms/UpdatePwdForm";
 import UpdateInfoForm from "./forms/UpdateInfoForm";
 import { useDuplicateTable } from "../features/journals/useDuplicateTable";
+import { useUpdateTags } from "../features/tags/useUpdateTags";
+import { useDeleteTags } from "../features/tags/useDeleteTags";
+import { useCreateTags } from "../features/tags/useCreateTags";
 
 function Journal() {
   const { journalState, overlayContainerRef, tableFuncPositionerRef } =
@@ -779,8 +783,6 @@ function JournalTableHeadComponent() {
   const tableItemsToRender = searchTable.length
     ? tableItems?.filter((item) => item[0].toLowerCase().includes(searchTable))
     : tableItems;
-
-  console.log("the table items to render", tableItemsToRender);
 
   function handleAddTableEvent(e) {
     createTable(journalState.id, {
@@ -1715,6 +1717,7 @@ function JournalTableBodyItemInputOverlayComponent({ itemId, onSubmit }) {
 function JournalTableBodyItemSelectedTagsRenderComponent({
   tagProperty,
   addXmark = false,
+  onRemoveTag,
 }) {
   return (
     <>
@@ -1727,7 +1730,10 @@ function JournalTableBodyItemSelectedTagsRenderComponent({
       >
         {formatTagRenderedText(tagProperty?.text)}
         {addXmark ? (
-          <div className={styles["row-tag-icon"]}>
+          <div
+            className={styles["row-tag-icon"]}
+            onClick={() => onRemoveTag(tagProperty.id)}
+          >
             <SvgMarkup
               classList={styles["tags-items-icon"]}
               fragId="xmark"
@@ -1742,9 +1748,56 @@ function JournalTableBodyItemSelectedTagsRenderComponent({
   );
 }
 
-function JournalTableBodyItemTagsOptionEditComponent({ tag, onClick }) {
-  const { journalState } = useContext(AuthContext);
+function JournalTableBodyItemTagsOptionEditComponent({
+  tag,
+  onClick,
+  onSubmit,
+}) {
+  const { journalState, dispatch } = useContext(AuthContext);
+  const [tagName, setTagName] = useState(tag.text);
   const tagsColor = journalState.tagsColor;
+  const { updateTag } = useUpdateTags();
+  const { deleteTags } = useDeleteTags();
+
+  function handleTagNameUpdate(e) {
+    if (e.key === "Enter") {
+      const tagToUpdate = { ...tag };
+      tagToUpdate.text = tagName;
+      const updateObj = formatAPIRequestTagPayload(
+        { tag: tagToUpdate },
+        "tagsValue",
+      );
+      updateTag(updateObj, {
+        onSuccess: (data) => {
+          onSubmit?.();
+          dispatch({ type: "updateTag", payload: tagToUpdate });
+        },
+      });
+    } else setTagName((t) => e.target.value);
+  }
+
+  function handleTagDelete() {
+    deleteTags(tag.id, {
+      onSuccess: () => {
+        dispatch({ type: "deleteTag", payload: tag.id });
+      },
+    });
+  }
+
+  function handleColorSelect(colorValue) {
+    const tagToUpdate = { ...tag };
+    tagToUpdate.color = colorValue;
+    const updateObj = formatAPIRequestTagPayload(
+      { tag: tagToUpdate },
+      "tagsValue",
+    );
+    updateTag(updateObj, {
+      onSuccess: (data) => {
+        dispatch({ type: "updateTag", payload: tagToUpdate });
+      },
+    });
+  }
+
   return (
     <div className={styles["row-tag-options"]} onClick={onClick}>
       <div className={styles["row-tag-options-box"]}>
@@ -1752,8 +1805,8 @@ function JournalTableBodyItemTagsOptionEditComponent({ tag, onClick }) {
           <input
             type="text"
             className={[styles["tag-edit"], styles["component-form"]].join(" ")}
-            value={tag.text}
-            onChange={() => console.log("changing tag name")}
+            defaultValue={tag.text}
+            onKeyUp={handleTagNameUpdate}
           />
 
           <ComponentOverlay>
@@ -1769,30 +1822,15 @@ function JournalTableBodyItemTagsOptionEditComponent({ tag, onClick }) {
                 <div className={styles["row-tag-text"]}>Delete</div>
               </div>
             </ComponentOverlay.Open>
-            <ComponentOverlay.Window name="deleteNotifier">
-              <OverlayNotificationComponent text={NOTIFICATION_DELETE_MSG}>
-                <div className={styles["notification-action-container"]}>
-                  <div
-                    className={[
-                      styles["notification-btn"],
-                      styles["notification-cancel-btn"],
-                      styles["hover-deep-dull"],
-                    ].join(" ")}
-                  >
-                    Cancel
-                  </div>
-                  <div
-                    className={[
-                      styles["notification-btn"],
-                      styles["notification-delete-btn"],
-                      styles["hover-tomato"],
-                    ].join(" ")}
-                  >
-                    Remove
-                  </div>
-                </div>
-              </OverlayNotificationComponent>
-            </ComponentOverlay.Window>
+            {
+              <ComponentOverlay.Window name="deleteNotifier">
+                <OverlayNotificationComponent
+                  text={NOTIFICATION_DELETE_MSG}
+                  type="deleteNotifier"
+                  onComplete={handleTagDelete}
+                />
+              </ComponentOverlay.Window>
+            }
           </ComponentOverlay>
         </div>
       </div>
@@ -1803,7 +1841,11 @@ function JournalTableBodyItemTagsOptionEditComponent({ tag, onClick }) {
             const checkmark =
               color.color_value.toLowerCase() === tag.color.toLowerCase();
             return (
-              <div className={styles["colors"]} key={color.color}>
+              <div
+                className={styles["colors"]}
+                key={color.color}
+                onClick={() => handleColorSelect(color.color_value)}
+              >
                 <div
                   className={[styles["color"], styles[color.color_value]].join(
                     " ",
@@ -1861,13 +1903,24 @@ function JournalTableBodyItemTagsOptionsOptionIcon({ tag }) {
 
 function JournalTableBodyItemTagsOptionsAvailableComponent({
   disableOptionsNudge = false,
+  searchTags = "",
+  onSelectTag,
+  onCreateTag,
+  randomColorRef,
+  renderedTags,
 }) {
-  const { journalState } = useContext(AuthContext);
+  const { journalState, dispatch } = useContext(AuthContext);
   const tags = journalState?.tags;
+
+  function getRandomColor() {
+    const randomColor = Math.trunc(Math.random() * 9) + 1;
+    randomColorRef.current = journalState.tagsColor[randomColor].color_value;
+    return randomColorRef.current;
+  }
 
   return (
     <>
-      {tags.map((tag) => (
+      {renderedTags?.map((tag) => (
         <div className={styles["tags-option"]} key={tag?.id} data-id={tag?.id}>
           <div className={styles["row-drag-icon"]}>
             <SvgMarkup
@@ -1876,7 +1929,10 @@ function JournalTableBodyItemTagsOptionsAvailableComponent({
               styles={styles}
             />
           </div>
-          <div className={styles["row-option-tag"]}>
+          <div
+            className={styles["row-option-tag"]}
+            onClick={() => onSelectTag(tag.id)}
+          >
             <JournalTableBodyItemSelectedTagsRenderComponent
               tagProperty={tag}
             />
@@ -1888,6 +1944,16 @@ function JournalTableBodyItemTagsOptionsAvailableComponent({
           )}
         </div>
       ))}
+      {renderedTags?.length === 0 && (
+        <div className={styles["tag-create"]} onClick={onCreateTag}>
+          Create
+          <div
+            className={[styles["tag-tag"], styles[getRandomColor()]].join(" ")}
+          >
+            {formatTagRenderedText(searchTags)}
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -1897,22 +1963,67 @@ function JournalTableBodyItemTagOptionOverlayComponent({
   itemTags = null, //NOTE:if the itemIds is > 1, no itemTags is supplied
   disableInput = false,
 }) {
-  const { journalState } = useContext(AuthContext);
+  const { journalState, dispatch } = useContext(AuthContext);
+  const [searchTagValue, setSearchTagValue] = useState("");
+  const randomColorRef = useRef("");
+  const { createTag } = useCreateTags();
   const isMultipleItemIds = itemIds?.length > 1;
   const tagsValue = isMultipleItemIds
     ? getTableItemWithMaxTags(getCurrentTable(journalState), itemIds)?.itemTags
     : itemTags;
-  const tags = tagsValue?.length
-    ? [
-        ...tagsValue
-          .map((it) =>
-            journalState.tags.find((modelTag) => modelTag.id === it.id),
-          )
-          .filter((tag) => tag),
-      ]
-    : [];
+  const tagIds = tagsValue?.length ? tagsValue.map((v) => v.id) : [];
+  const [selectedTagIds, setSelectedTagIds] = useState(tagIds);
+  const selectedTagsToRender = selectedTagIds
+    .map((id) => journalState.tags.find((modelTag) => modelTag.id === id))
+    .filter((tag) => tag);
+  const tagsExist = selectedTagsToRender?.length;
+  const renderedTags = searchTagValue.length
+    ? journalState?.tags?.filter((tag) =>
+        tag.text.toLowerCase().includes(searchTagValue),
+      )
+    : journalState?.tags;
 
-  const tagsExist = tags?.length;
+  function onSelectTag(tagId) {
+    const tagAlreadySelected = selectedTagIds.find((tId) => tId === tagId);
+    if (!tagAlreadySelected) {
+      setSelectedTagIds((tagIds) => [...tagIds, tagId]);
+    }
+  }
+
+  function onCreateTag(createdTag) {
+    setSearchTagValue(" ");
+    setSelectedTagIds((v) => [...v, createdTag]);
+  }
+
+  function onRemoveTag(tagId) {
+    setSelectedTagIds((tagIds) => [...tagIds.filter((tId) => tId !== tagId)]);
+  }
+
+  function handleCreateTag() {
+    const tagColor = journalState.tagsColor.find(
+      (color) => color.color_value === randomColorRef.current,
+    );
+    const payload = {
+      tag_name: searchTagValue,
+      tag_color: tagColor.color,
+      tag_class: tagColor.color_value,
+    };
+    createTag(payload, {
+      onSuccess: (data) => {
+        const res = formatAPIResp(data, "apiTags");
+        dispatch({ type: "createTag", payload: res });
+        setSearchTagValue(" ");
+        setSelectedTagIds((v) => [...v, res.id]);
+      },
+    });
+  }
+
+  function handleSetOrCreateTagValue(e) {
+    if (e.key === "Enter") {
+      if (!renderedTags?.length) handleCreateTag();
+    } else setSearchTagValue((v) => e.target.value);
+  }
+
   return (
     <div
       className={[styles["row-tag-popup"], styles["options-markup"]].join(" ")}
@@ -1924,10 +2035,11 @@ function JournalTableBodyItemTagOptionOverlayComponent({
             <div className={styles["tag-input"]}>
               <div className={styles["tags-items"]}>
                 {tagsExist
-                  ? tags.map((tag) => (
+                  ? selectedTagsToRender.map((tag) => (
                       <JournalTableBodyItemSelectedTagsRenderComponent
                         tagProperty={tag}
                         addXmark={true}
+                        onRemoveTag={onRemoveTag}
                         key={tag?.id}
                       />
                     ))
@@ -1937,6 +2049,8 @@ function JournalTableBodyItemTagOptionOverlayComponent({
                   type="text"
                   className={styles["tag-input-input"]}
                   placeholder="Search or create tag..."
+                  defaultValue={searchTagValue}
+                  onKeyUp={handleSetOrCreateTagValue}
                 />
               </div>
             </div>
@@ -1949,6 +2063,11 @@ function JournalTableBodyItemTagOptionOverlayComponent({
           <div className={styles["tags-available"]}>
             <JournalTableBodyItemTagsOptionsAvailableComponent
               disableOptionsNudge={disableInput}
+              searchTags={searchTagValue}
+              onSelectTag={onSelectTag}
+              onCreateTag={handleCreateTag}
+              randomColorRef={randomColorRef}
+              renderedTags={renderedTags}
             />
           </div>
         </div>
@@ -2217,12 +2336,50 @@ function JournalTableBodyItemTagItem({ tags, onClick }) {
   );
 }
 
-function OverlayNotificationComponent({ text, children, onClick }) {
+function OverlayNotificationComponent({
+  text,
+  onClick,
+  onSubmit,
+  type,
+  onComplete = null,
+}) {
   return (
     <div className={styles["notification-render"]} onClick={onClick}>
       <div className={styles["notification-render-box"]}>
         <div className={styles["notification-text"]}>{text}</div>
-        {children}
+        {type === "deleteNotifier" && (
+          <OverlayNotificationDeleteNotifierComponent
+            onCancel={onSubmit}
+            onComplete={onComplete}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OverlayNotificationDeleteNotifierComponent({ onCancel, onComplete }) {
+  return (
+    <div className={styles["notification-action-container"]}>
+      <div
+        className={[
+          styles["notification-btn"],
+          styles["notification-cancel-btn"],
+          styles["hover-deep-dull"],
+        ].join(" ")}
+        onClick={onCancel}
+      >
+        Cancel
+      </div>
+      <div
+        className={[
+          styles["notification-btn"],
+          styles["notification-delete-btn"],
+          styles["hover-tomato"],
+        ].join(" ")}
+        onClick={onComplete}
+      >
+        Remove
       </div>
     </div>
   );

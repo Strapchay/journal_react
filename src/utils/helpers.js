@@ -3,6 +3,7 @@ import {
   LOCALE_TIME,
   successCodes,
   TAG_TEXT_RENDER_LENGTH,
+  TAGS_COLORS,
 } from "./constants";
 
 export const valueEclipser = (value, len) => {
@@ -90,6 +91,22 @@ export function formRenderInfo(formType) {
 export const formatJournalHeadingName = (username) => {
   const headingName = `${username?.slice(0, 1).toUpperCase() + username?.slice(1)}'s Journal`;
   return `${headingName?.slice(0, 15)}...`;
+};
+
+export const formatAPIRequestTagPayload = function (payload, type) {
+  let formattedRequest;
+  if (type === "tagsValue") {
+    formattedRequest = {
+      tag_class: payload.tag.color,
+      tag_name: payload.tag.text,
+      tag_color: TAGS_COLORS.colors.find(
+        (color) => color.color_value == payload.tag.color,
+      ).color,
+    };
+
+    if (payload.tag.id) formattedRequest["id"] = payload.tag.id;
+  }
+  return formattedRequest;
 };
 
 export const formatTagRenderedText = (tagText) => {
