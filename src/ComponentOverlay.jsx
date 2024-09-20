@@ -120,6 +120,7 @@ function Window({
     >
       {cloneElement(children, {
         onSubmit: () => {
+          console.log("submitting and closing component", openName);
           decreaseOverlayCountMap(name);
           close();
         },

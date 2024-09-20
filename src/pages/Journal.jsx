@@ -443,7 +443,7 @@ function JournalInfoContentComponent() {
   );
 }
 
-function JournalTableOptionComponent({ table, onSubmit }) {
+function JournalTableOptionComponent({ table, onSubmit, hasParent = false }) {
   const [renameActive, setRenameActive] = useState(false);
   const {
     renameTable,
@@ -459,18 +459,23 @@ function JournalTableOptionComponent({ table, onSubmit }) {
   const toastInst = toast;
 
   function handleTableNameChange(e) {
-    e.preventDefault();
-    const data = {
-      table_name: tableNameInput,
-      journal: table[1],
-    };
+    if (e.key === "Enter") {
+      const data = {
+        table_name: tableNameInput,
+        journal: table[1],
+      };
 
-    renameTable(data, {
-      onSuccess: () => {
-        dispatch({ type: "updateTableName", payload: tableNameInput });
-        setRenameActive((v) => false);
-      },
-    });
+      renameTable(data, {
+        onSuccess: () => {
+          if (hasParent) onSubmit?.();
+          dispatch({ type: "updateTableName", payload: tableNameInput });
+          setRenameActive((v) => false);
+        },
+        onError: () => {
+          if (hasParent) onSubmit?.();
+        },
+      });
+    } else setTableNameInput((i) => e.target.value);
   }
 
   function handleTableDuplicate() {
@@ -516,23 +521,17 @@ function JournalTableOptionComponent({ table, onSubmit }) {
             <div className={styles["edit-content-box"]}>
               {renameActive && (
                 <div className={[styles["edit-content-form"]].join(" ")}>
-                  <form
-                    action=""
-                    id="table-rename-form"
-                    onSubmit={(e) => handleTableNameChange(e)}
-                  >
-                    <input
-                      type="text"
-                      placeholder=""
-                      className={[
-                        styles["table-rename"],
-                        styles["component-form"],
-                      ].join(" ")}
-                      name="table-rename"
-                      value={tableNameInput}
-                      onChange={(e) => setTableNameInput((v) => e.target.value)}
-                    />
-                  </form>
+                  <input
+                    type="text"
+                    placeholder=""
+                    className={[
+                      styles["table-rename"],
+                      styles["component-form"],
+                    ].join(" ")}
+                    name="table-rename"
+                    defaultValue={tableNameInput}
+                    onKeyUp={handleTableNameChange}
+                  />
                 </div>
               )}
               <div
@@ -776,6 +775,12 @@ function JournalTableHeadComponent() {
   const selectedTableItemsLength = Object.values(selectedTableItems).filter(
     (v) => v,
   ).length;
+  const [searchTable, setSearchTable] = useState("");
+  const tableItemsToRender = searchTable.length
+    ? tableItems?.filter((item) => item[0].toLowerCase().includes(searchTable))
+    : tableItems;
+
+  console.log("the table items to render", tableItemsToRender);
 
   function handleAddTableEvent(e) {
     createTable(journalState.id, {
@@ -849,12 +854,14 @@ function JournalTableHeadComponent() {
                               styles["table-search"],
                               styles["component-form"],
                             ].join(" ")}
+                            value={searchTable}
                             placeholder="Search for a View..."
+                            onChange={(e) => setSearchTable(e.target.value)}
                           />
                         </div>
                         <div className={styles["table-content"]}>
                           <div className={styles["add-table-content"]}>
-                            {tableItems.map((item) => (
+                            {tableItemsToRender.map((item) => (
                               <JournalTableHeadOptionComponent
                                 tableItem={item}
                                 key={item[1]}
@@ -930,7 +937,7 @@ function JournalTableHeadOptionComponent({ tableItem }) {
               name="tableOptionEdit"
               objectToOverlay={tableViewOptionRef}
             >
-              <JournalTableOptionComponent table={tableItem} />
+              <JournalTableOptionComponent table={tableItem} hasParent={true} />
             </ComponentOverlay.Window>
           </ComponentOverlay>
         </div>
