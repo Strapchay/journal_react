@@ -22,6 +22,24 @@ export function journalReducer(state, action) {
   switch (action.type) {
     case "createTable":
       return { ...state, tables: [...state.tables, action.payload] };
+    case "updateTableName": {
+      const currentTableIndex = state.tables.findIndex(
+        (table) => table.id === state.currentTable,
+      );
+      state.tables[currentTableIndex] = {
+        ...state.tables[currentTableIndex],
+        tableTitle: action.payload,
+      };
+      return { ...state };
+    }
+    case "deleteTable": {
+      //TODO: make sure to add checks from deleting last table
+      state.tables = [
+        ...state.tables.filter((table) => table.id !== action.payload),
+      ];
+      state.currentTable = state.tables[0].id;
+      return { ...state };
+    }
     case "updateState":
       if (!state.journalsLoaded || !state.journalTablesLoaded) {
         return { ...state, ...action.payload };

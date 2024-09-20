@@ -6,11 +6,6 @@ import Journal from "./pages/Journal";
 import { useGetJournals } from "./features/journals/useGetJournals";
 import { useGetJournalTables } from "./features/journals/useGetJournalTables";
 import { useState } from "react";
-import {
-  DEFAULT_JOURNAL_DESC,
-  TABLE_TAGS,
-  TAGS_COLORS,
-} from "./utils/constants";
 import { useReducer } from "react";
 import { initialState, journalReducer } from "./JournalState";
 import { useCreateTableItem } from "./features/journals/useCreateTableItem";
@@ -21,6 +16,9 @@ import { useDuplicateTableItems } from "./features/journals/useDuplicateTableIte
 import { formatAPITableItems, getSelectedItems } from "./utils/helpers";
 import { useGetUser } from "./features/users/useGetUser";
 import ComponentOverlay from "./ComponentOverlay";
+import { useUpdateTableRename } from "./features/journals/useUpdateTableRename";
+import { useDuplicateTable } from "./features/journals/useDuplicateTable";
+import { useDeleteTable } from "./features/journals/useDeleteTable";
 
 export const AuthContext = createContext();
 
@@ -55,7 +53,9 @@ function ProtectedRoute() {
   const [journalState, dispatch] = useReducer(journalReducer, initialState);
   const { isCreatingTableItem, createTableItem, createTableItemError } =
     useCreateTableItem(token);
-
+  const { renameTable, isRenaming, renameError } = useUpdateTableRename(token);
+  const { duplicateTable } = useDuplicateTable(token);
+  const { deleteTable } = useDeleteTable(token);
   const currentTableIndex = journalState.tables.findIndex(
     (table) => table.id === journalState.currentTable,
   );
@@ -220,6 +220,9 @@ function ProtectedRoute() {
         increaseOverlayCountMap,
         overlayCountMap,
         tableFuncPositionerRef,
+        renameTable,
+        duplicateTable,
+        deleteTable,
       }}
     >
       <Journal />

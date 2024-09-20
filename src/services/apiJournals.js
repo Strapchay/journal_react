@@ -35,6 +35,36 @@ export function createTable(token, payload) {
   );
 }
 
+export function renameTable(token, payload) {
+  return makeAPIRequest(
+    API.APIEnum.JOURNAL_TABLES.PATCH(payload.journal),
+    payload,
+    "updateTableName",
+    token,
+    "PATCH",
+  );
+}
+
+export function duplicateTable(token, payload) {
+  return makeAPIRequest(
+    API.APIEnum.JOURNAL_TABLES.CREATE,
+    payload,
+    "duplicateTable",
+    token,
+    "POST",
+  );
+}
+
+export function deleteTable(token, tableId) {
+  return makeAPIRequest(
+    API.APIEnum.JOURNAL_TABLES.DELETE(tableId),
+    null,
+    "deleteTable",
+    token,
+    "DELETE",
+  );
+}
+
 export async function updateJournalInfo(token, payload, journalsId) {
   return makeAPIRequest(
     API.APIEnum.JOURNAL.PATCH(journalsId),

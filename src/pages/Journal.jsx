@@ -33,9 +33,10 @@ import ComponentOverlay from "../ComponentOverlay";
 import { useUpdateTableItem } from "../features/journals/useUpdateTableItem";
 import toast from "react-hot-toast";
 import { useCreateTable } from "../features/journals/useCreateTable";
-import Modal from "../Modal";
+import Modal, { ModalContext } from "../Modal";
 import UpdatePwdForm from "./forms/UpdatePwdForm";
 import UpdateInfoForm from "./forms/UpdateInfoForm";
+import { useDuplicateTable } from "../features/journals/useDuplicateTable";
 
 function Journal() {
   const { journalState, overlayContainerRef, tableFuncPositionerRef } =
@@ -442,7 +443,66 @@ function JournalInfoContentComponent() {
   );
 }
 
-function JournalTableOptionComponent({ tableId }) {
+function JournalTableOptionComponent({ table, onSubmit }) {
+  const [renameActive, setRenameActive] = useState(false);
+  const {
+    renameTable,
+    dispatch,
+    token,
+    journalState,
+    duplicateTable,
+    deleteTable,
+  } = useContext(AuthContext);
+
+  const [tableNameInput, setTableNameInput] = useState(table[0]);
+
+  const toastInst = toast;
+
+  function handleTableNameChange(e) {
+    e.preventDefault();
+    const data = {
+      table_name: tableNameInput,
+      journal: table[1],
+    };
+
+    renameTable(data, {
+      onSuccess: () => {
+        dispatch({ type: "updateTableName", payload: tableNameInput });
+        setRenameActive((v) => false);
+      },
+    });
+  }
+
+  function handleTableDuplicate() {
+    toastInst.loading("Duplicating table...");
+    const payload = {
+      journal_table: table[1],
+      journal: journalState?.id,
+      duplicate: true,
+    };
+    duplicateTable(payload, {
+      onSuccess: (data) => {
+        onSubmit?.();
+        toastInst.remove();
+        const res = formatAPIResp(data, "journalTables");
+        dispatch({ type: "createTable", payload: res });
+      },
+      onError: (_) => {
+        onSubmit?.();
+        toastInst.remove();
+      },
+    });
+  }
+
+  function handleTableDelete() {
+    deleteTable(table[1], {
+      onSuccess: () => {
+        onSubmit?.();
+        dispatch({ type: "deleteTable", payload: table[1] });
+      },
+    });
+  }
+
   return (
     <div
       className={[
@@ -454,24 +514,31 @@ function JournalTableOptionComponent({ tableId }) {
         <div className={styles["table-options-edits--option"]}>
           <div className={styles["edit-content-container"]}>
             <div className={styles["edit-content-box"]}>
+              {renameActive && (
+                <div className={[styles["edit-content-form"]].join(" ")}>
+                  <form
+                    action=""
+                    id="table-rename-form"
+                    onSubmit={(e) => handleTableNameChange(e)}
+                  >
+                    <input
+                      type="text"
+                      placeholder=""
+                      className={[
+                        styles["table-rename"],
+                        styles["component-form"],
+                      ].join(" ")}
+                      name="table-rename"
+                      value={tableNameInput}
+                      onChange={(e) => setTableNameInput((v) => e.target.value)}
+                    />
+                  </form>
+                </div>
+              )}
               <div
-                className={[styles["edit-content-form"], styles["hidden"]].join(
-                  " ",
-                )}
+                className={styles["edit-content"]}
+                onClick={() => setRenameActive((r) => !r)}
               >
-                <form action="" id="table-rename-form">
-                  <input
-                    type="text"
-                    placeholder=""
-                    className={[
-                      styles["table-rename"],
-                      styles["component-form"],
-                    ].join(" ")}
-                    name="table-rename"
-                  />
-                </form>
-              </div>
-              <div className={styles["edit-content"]}>
                 <div className={styles["edit-content-icon"]}>
                   <SvgMarkup
                     classList={styles["edit-icon"]}
@@ -492,6 +559,7 @@ function JournalTableOptionComponent({ tableId }) {
                   styles["action-content"],
                   styles["action-duplicate"],
                 ].join(" ")}
+                onClick={handleTableDuplicate}
               >
                 <div className={styles["action-content-icon"]}>
                   <SvgMarkup
@@ -507,6 +575,7 @@ function JournalTableOptionComponent({ tableId }) {
                   styles["action-content"],
                   styles["action-delete"],
                 ].join(" ")}
+                onClick={handleTableDelete}
               >
                 <div className={styles["action-icon"]}>
                   <SvgMarkup
@@ -655,7 +724,7 @@ function JournalTableRowColumnComponent({
           name={activeTable ? "tableColumnOption" : null}
           objectToOverlay={tableHeadRef}
         >
-          <JournalTableOptionComponent tableId={journalId} />
+          <JournalTableOptionComponent table={[journalName, journalId]} />
         </ComponentOverlay.Window>
       </ComponentOverlay>
     </div>
@@ -861,7 +930,7 @@ function JournalTableHeadOptionComponent({ tableItem }) {
               name="tableOptionEdit"
               objectToOverlay={tableViewOptionRef}
             >
-              <JournalTableOptionComponent tableId={tableItem[1]} />
+              <JournalTableOptionComponent table={tableItem} />
             </ComponentOverlay.Window>
           </ComponentOverlay>
         </div>
