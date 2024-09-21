@@ -2,13 +2,14 @@ import { useMutation } from "@tanstack/react-query";
 import { deleteTableItems as deleteTableItemsApi } from "../../services/apiJournals";
 import { toast } from "react-hot-toast";
 
-export function useDeleteTableItems(token) {
+export function useDeleteTableItems(token, removeToken) {
   const {
     isPending: isDeletingTableItems,
     mutate: deleteTableItems,
     error: deleteTableItemsError,
   } = useMutation({
-    mutationFn: (payload) => deleteTableItemsApi(token?.token, payload),
+    mutationFn: (payload) =>
+      deleteTableItemsApi(token?.token, payload, removeToken),
     onError: (err) => {
       toast.error(err.message);
     },

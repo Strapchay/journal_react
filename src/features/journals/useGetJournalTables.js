@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getJournalTables } from "../../services/apiJournals";
 import { formatAPIResp } from "../../utils/helpers";
 
-export function useGetJournalTables(token) {
+export function useGetJournalTables(token, removeToken) {
   // const { token } = useContext(AuthContext);
   const {
     isPending: isLoading,
@@ -13,7 +13,7 @@ export function useGetJournalTables(token) {
     queryKey: ["journalTables"],
     queryFn: async () => {
       const tableItems = [];
-      const journalTables = await getJournalTables(token?.token);
+      const journalTables = await getJournalTables(token?.token, removeToken);
       journalTables.forEach((tableItem) =>
         tableItems.push(formatAPIResp(tableItem, "journalTables")),
       );

@@ -4,6 +4,7 @@ import {
   TABLE_TAGS,
   TAGS_COLORS,
 } from "../utils/constants";
+import toast from "react-hot-toast";
 
 export function useLocalStorageState(
   initialState,
@@ -20,13 +21,13 @@ export function useLocalStorageState(
     return storedJournal
       ? JSON.parse(storedJournal)
       : {
-          name: "",
-          description: DEFAULT_JOURNAL_DESC,
-          tables: [],
-          tableHeads: [],
-          tags: TABLE_TAGS.tags,
-          tagsColor: TAGS_COLORS.colors,
-        };
+        name: "",
+        description: DEFAULT_JOURNAL_DESC,
+        tables: [],
+        tableHeads: [],
+        tags: TABLE_TAGS.tags,
+        tagsColor: TAGS_COLORS.colors,
+      };
   });
 
   useEffect(
@@ -43,9 +44,10 @@ export function useLocalStorageState(
     [persistedJournal, journal],
   );
 
-  const removeStorageData = useCallback((tokenName) => {
-    localStorage.removeItem(tokenName);
-    localStorage.removeItem("journal");
-  }, []);
+  function removeStorageData() {
+    localStorage.removeItem(authToken);
+    localStorage.removeItem(persistedJournal);
+    toast.error("Invalid authorization, please re-authenticate!");
+  }
   return { token, setToken, removeStorageData, journal, setJournal };
 }

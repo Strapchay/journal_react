@@ -3,7 +3,7 @@ import { createTableItem as createTableItemApi } from "../../services/apiJournal
 import { toast } from "react-hot-toast";
 import { createTableItemAPIRequestPayload } from "../../utils/helpers";
 
-export function useCreateTableItem(token) {
+export function useCreateTableItem(token, removeToken) {
   const {
     isPending: isCreatingTableItem,
     mutate: createTableItem,
@@ -17,6 +17,7 @@ export function useCreateTableItem(token) {
           relativeItem,
           tableItems,
         ),
+        removeToken,
       ),
     onError: (err) => {
       toast.error(err.message);

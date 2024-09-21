@@ -1,101 +1,130 @@
 import { API } from "../utils/api";
 import { makeAPIRequest } from "../utils/helpers";
 
-export async function createJournal(user) {
-  return makeAPIRequest(API.APIEnum.USER.CREATE, user, "create", null, "POST");
+export async function createJournal(user, removeToken) {
+  return makeAPIRequest(
+    API.APIEnum.USER.CREATE,
+    user,
+    "create",
+    null,
+    "POST",
+    removeToken,
+  );
 }
 
-export async function getJournalList(token) {
+export async function getJournalList(token, removeToken) {
   return makeAPIRequest(
     API.APIEnum.JOURNAL.LIST,
     null,
     "getJournal",
     token,
     "GET",
+    removeToken,
   );
 }
 
-export async function getJournalTables(token) {
+export async function getJournalTables(token, removeToken) {
   return makeAPIRequest(
     API.APIEnum.JOURNAL_TABLES.LIST,
     null,
     "getActiveTable",
     token,
     "GET",
+    removeToken,
   );
 }
 
-export function createTable(token, payload) {
+export function createTable(token, payload, removeToken) {
   return makeAPIRequest(
     API.APIEnum.JOURNAL_TABLES.CREATE,
     payload,
     "createNewTable",
     token,
     "POST",
+    removeToken,
   );
 }
 
-export function renameTable(token, payload) {
+export function renameTable(token, payload, removeToken) {
   return makeAPIRequest(
     API.APIEnum.JOURNAL_TABLES.PATCH(payload.journal),
     payload,
     "updateTableName",
     token,
     "PATCH",
+    removeToken,
   );
 }
 
-export function duplicateTable(token, payload) {
+export function duplicateTable(token, payload, removeToken) {
   return makeAPIRequest(
     API.APIEnum.JOURNAL_TABLES.CREATE,
     payload,
     "duplicateTable",
     token,
     "POST",
+    removeToken,
   );
 }
 
-export function deleteTable(token, tableId) {
+export function deleteTable(token, tableId, removeToken) {
   return makeAPIRequest(
     API.APIEnum.JOURNAL_TABLES.DELETE(tableId),
     null,
     "deleteTable",
     token,
     "DELETE",
+    removeToken,
   );
 }
 
-export async function updateJournalInfo(token, payload, journalsId) {
+export async function updateJournalInfo(
+  token,
+  payload,
+  journalsId,
+  removeToken,
+) {
   return makeAPIRequest(
     API.APIEnum.JOURNAL.PATCH(journalsId),
     payload,
     "updateJournalInfo",
     token,
     "PATCH",
+    removeToken,
   );
 }
 
-export function createTableItem(token, payload) {
+export function createTableItem(token, payload, removeToken) {
   return makeAPIRequest(
     API.APIEnum.ACTIVITIES.CREATE,
     payload,
     "createTableItem",
     token,
     "POST",
+    removeToken,
   );
 }
 
-export async function updateTableItem(token, payload, itemId) {
+export async function updateTableItem(
+  token,
+  payload,
+  itemId,
+  removeToken,
+  payloadType,
+) {
   return makeAPIRequest(
-    API.APIEnum.ACTIVITIES.PATCH(itemId),
+    payloadType === "selectTags"
+      ? API.APIEnum.ACTIVITIES.BATCH_UPDATE_ACTIVITIES
+      : API.APIEnum.ACTIVITIES.PATCH(itemId),
     payload,
     "updateTableItem",
     token,
     "PATCH",
+    removeToken,
   );
 }
 
-export function deleteTableItems(token, payload) {
+export function deleteTableItems(token, payload, removeToken) {
   return makeAPIRequest(
     payload.delete_list.length > 1
       ? API.getBatchEndpoint("deleteTableItems")
@@ -104,15 +133,17 @@ export function deleteTableItems(token, payload) {
     "deleteTableItem",
     token,
     "DELETE",
+    removeToken,
   );
 }
 
-export function duplicateTableItems(token, payload) {
+export function duplicateTableItems(token, payload, removeToken) {
   return makeAPIRequest(
     API.APIEnum.ACTIVITIES.BATCH_DUPLICATE_ACTIVITIES,
     payload,
     "duplicateTableItems",
     token,
     "POST",
+    removeToken,
   );
 }

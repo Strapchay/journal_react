@@ -33,29 +33,32 @@ function ProtectedRoute() {
     "token",
     "journal",
   );
-  const { user } = useGetUser(token);
+  const { user } = useGetUser(token, removeStorageData);
   const {
     journals,
     isLoading: journalsLoading,
     error: journalsError,
     journalsFetchedAfterMount,
-  } = useGetJournals(token);
+  } = useGetJournals(token, removeStorageData);
   const {
     journalTables,
     isLoading: journalTablesLoading,
     error: journalTablesError,
     journalTablesFetchedAfterMount,
-  } = useGetJournalTables(token);
+  } = useGetJournalTables(token, removeStorageData);
   console.log("the journals tab v", journalTables);
-  const { deleteTableItems } = useDeleteTableItems(token);
+  const { deleteTableItems } = useDeleteTableItems(token, removeStorageData);
   const { duplicateTableItems, isDuplicatingTableItems } =
-    useDuplicateTableItems(token);
+    useDuplicateTableItems(token, removeStorageData);
   const [journalState, dispatch] = useReducer(journalReducer, initialState);
   const { isCreatingTableItem, createTableItem, createTableItemError } =
-    useCreateTableItem(token);
-  const { renameTable, isRenaming, renameError } = useUpdateTableRename(token);
-  const { duplicateTable } = useDuplicateTable(token);
-  const { deleteTable } = useDeleteTable(token);
+    useCreateTableItem(token, removeStorageData);
+  const { renameTable, isRenaming, renameError } = useUpdateTableRename(
+    token,
+    removeStorageData,
+  );
+  const { duplicateTable } = useDuplicateTable(token, removeStorageData);
+  const { deleteTable } = useDeleteTable(token, removeStorageData);
   const currentTableIndex = journalState.tables.findIndex(
     (table) => table.id === journalState.currentTable,
   );
@@ -134,7 +137,7 @@ function ProtectedRoute() {
   }, [currentTableItems, selectedTableItems]);
 
   function removeTokenAndLogout() {
-    removeStorageData("token");
+    removeStorageData();
     navigate("/");
   }
 

@@ -7,7 +7,7 @@ import { cloneElement } from "react";
 import { AuthContext } from "./ProtectedRoute";
 import { useRef } from "react";
 
-const OverlayContext = createContext();
+export const OverlayContext = createContext();
 
 function ComponentOverlay({ children }) {
   const [openName, setOpenName] = useState("");
@@ -21,6 +21,7 @@ function ComponentOverlay({ children }) {
 
   function executeExtraAction() {
     extraActionRef.current?.();
+    console.log("completed execution");
     extraActionRef.current = null;
   }
 
@@ -42,10 +43,10 @@ function Overlay({
 }) {
   const { top, left, width, height } =
     objectToOverlay?.current?.getBoundingClientRect() ?? {};
-  const { close, openName } = useContext(OverlayContext);
+  const { close, openName, executeExtraAction } = useContext(OverlayContext);
 
   function handleCloseOverlay() {
-    extraAction?.();
+    executeExtraAction?.();
     close();
     decreaseOverlayState(openName);
   }

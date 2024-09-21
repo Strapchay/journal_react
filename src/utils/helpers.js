@@ -452,15 +452,17 @@ export const formatAPIRequestUpdateTableItemPayload = function (payload, type) {
   }
 
   if (type === "tags") {
-    formattedRequest = getIdsFromTagsDiv(payload.tags);
+    formattedRequest = {
+      tags: payload?.tags ?? [],
+    };
   }
 
   if (type === "selectTags") {
     formattedRequest = {
       activities_list: [
         {
-          ids: payload.itemIds.map((id) => +id),
-          tags: getIdsFromTagsDiv(payload.tags),
+          ids: payload.itemIds,
+          tags: payload.tags ?? [],
         },
       ],
     };

@@ -30,7 +30,7 @@ import {
   valueEclipser,
 } from "../utils/helpers";
 import styles from "./Journal.module.css";
-import ComponentOverlay from "../ComponentOverlay";
+import ComponentOverlay, { OverlayContext } from "../ComponentOverlay";
 import { useUpdateTableItem } from "../features/journals/useUpdateTableItem";
 import toast from "react-hot-toast";
 import { useCreateTable } from "../features/journals/useCreateTable";
@@ -1964,12 +1964,17 @@ function JournalTableBodyItemTagOptionOverlayComponent({
   disableInput = false,
 }) {
   const { journalState, dispatch } = useContext(AuthContext);
-  const { addExtraAction } = useContext(ModalContext);
+  const { addExtraAction } = useContext(OverlayContext);
   const [searchTagValue, setSearchTagValue] = useState("");
   const searchTagRef = useRef(null);
   const randomColorRef = useRef("");
   const { createTag } = useCreateTags();
   const isMultipleItemIds = itemIds?.length > 1;
+  const { updateTableItem } = useUpdateTableItem(
+    null,
+    isMultipleItemIds,
+    itemIds,
+  );
   const tagsValue = isMultipleItemIds
     ? getTableItemWithMaxTags(getCurrentTable(journalState), itemIds)?.itemTags
     : itemTags;
@@ -1986,24 +1991,34 @@ function JournalTableBodyItemTagOptionOverlayComponent({
     : journalState?.tags;
 
   useEffect(() => {
-    addExtraAction();
-  }, []);
+    function handleSelectedTagsSaveToTableItem() {
+      const payload = {
+        payload: {
+          tags: selectedTagIds,
+        },
+      };
+      if (isMultipleItemIds) {
+        payload.payload.itemIds = itemIds;
+        payload.type = "selectTags";
+      }
+      if (!isMultipleItemIds) {
+        payload.payload.itemId = itemIds[0];
+        payload.type = "tags";
+      }
 
-  // useEffect(() => {
-  //   selectedTagsToRender;
-  //   return () => {
-  //     if (initiallyMountedRef.current) {
-  //       console.log("the eselected tag ids", selectedTagIds);
-  //       dispatch({
-  //         type: "updateTableItemTags",
-  //         payload: { id: itemIds[0], tags: selectedTagsToRender },
-  //       }); //only for single item update
-  //       //trigger the save of the tags to their tableItems
-  //     }
+      updateTableItem(payload);
+    }
 
-  //     if (!initiallyMountedRef.current) initiallyMountedRef.current = true; //keeps track of the clean up being run for the initial mount
-  //   };
-  // }, []);
+    addExtraAction(handleSelectedTagsSaveToTableItem);
+  }, [
+    dispatch,
+    addExtraAction,
+    isMultipleItemIds,
+    itemIds,
+    selectedTagIds,
+    updateTableItem,
+    selectedTagsToRender,
+  ]);
 
   function onSelectTag(tagId) {
     const tagAlreadySelected = selectedTagIds.find((tId) => tId === tagId);

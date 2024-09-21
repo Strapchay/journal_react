@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getJournalList } from "../../services/apiJournals";
 import { formatAPIResp } from "../../utils/helpers";
 
-export function useGetJournals(token) {
+export function useGetJournals(token, removeToken) {
   // const { token } = useContext(AuthContext);
   const {
     isPending: isLoading,
@@ -12,7 +12,7 @@ export function useGetJournals(token) {
   } = useQuery({
     queryKey: ["journals"],
     queryFn: async () => {
-      const journalList = await getJournalList(token?.token);
+      const journalList = await getJournalList(token?.token, removeToken);
       const formattedJournalList = formatAPIResp(...journalList, "journal");
       return formattedJournalList;
     },
@@ -21,23 +21,3 @@ export function useGetJournals(token) {
   });
   return { journals, isLoading, error, journalsFetchedAfterMount };
 }
-
-export const replaceStateJournalDataWithAPIData = function (
-  formattedAPIData,
-  type,
-) {
-  // if (type === "journal") {
-  //   state.name = formattedAPIData.name;
-  //   state.description = formattedAPIData.description;
-  //   state.tableHeads = formattedAPIData.tableHeads;
-  //   state.currentTable = formattedAPIData.currentTable;
-  //   state.tags = formattedAPIData.tags;
-  //   state.id = formattedAPIData.id;
-  //   state.username = formattedAPIData.username;
-  //   tableFunc = formattedAPIData.tableFunc;
-  // }
-  // if (type === "journalTables") {
-  //   state.tables.splice(0, state.tables.length);
-  //   state.tables.push(...formattedAPIData);
-  // }
-};
