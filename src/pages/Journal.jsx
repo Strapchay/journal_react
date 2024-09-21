@@ -1964,8 +1964,8 @@ function JournalTableBodyItemTagOptionOverlayComponent({
   disableInput = false,
 }) {
   const { journalState, dispatch } = useContext(AuthContext);
+  const { addExtraAction } = useContext(ModalContext);
   const [searchTagValue, setSearchTagValue] = useState("");
-  const initiallyMountedRef = useRef(false);
   const searchTagRef = useRef(null);
   const randomColorRef = useRef("");
   const { createTag } = useCreateTags();
@@ -1984,6 +1984,10 @@ function JournalTableBodyItemTagOptionOverlayComponent({
         tag.text.toLowerCase().includes(searchTagValue),
       )
     : journalState?.tags;
+
+  useEffect(() => {
+    addExtraAction();
+  }, []);
 
   // useEffect(() => {
   //   selectedTagsToRender;
