@@ -25,12 +25,14 @@ function Overlay({
   disableOverlayInterceptor,
   overlayState,
   decreaseOverlayState,
+  extraAction,
 }) {
   const { top, left, width, height } =
     objectToOverlay?.current?.getBoundingClientRect() ?? {};
   const { close, openName } = useContext(OverlayContext);
 
   function handleCloseOverlay() {
+    extraAction?.();
     close();
     decreaseOverlayState(openName);
   }
@@ -105,6 +107,7 @@ function Window({
   name,
   objectToOverlay = null,
   disableOverlayInterceptor = false,
+  extraAction = null,
 }) {
   const { openName, close } = useContext(OverlayContext);
   const { overlayContainerRef, overlayCountMap, decreaseOverlayCountMap } =
@@ -120,7 +123,6 @@ function Window({
     >
       {cloneElement(children, {
         onSubmit: () => {
-          console.log("submitting and closing component", openName);
           decreaseOverlayCountMap(name);
           close();
         },

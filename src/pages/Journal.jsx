@@ -1965,6 +1965,8 @@ function JournalTableBodyItemTagOptionOverlayComponent({
 }) {
   const { journalState, dispatch } = useContext(AuthContext);
   const [searchTagValue, setSearchTagValue] = useState("");
+  const initiallyMountedRef = useRef(false);
+  const searchTagRef = useRef(null);
   const randomColorRef = useRef("");
   const { createTag } = useCreateTags();
   const isMultipleItemIds = itemIds?.length > 1;
@@ -1983,6 +1985,22 @@ function JournalTableBodyItemTagOptionOverlayComponent({
       )
     : journalState?.tags;
 
+  // useEffect(() => {
+  //   selectedTagsToRender;
+  //   return () => {
+  //     if (initiallyMountedRef.current) {
+  //       console.log("the eselected tag ids", selectedTagIds);
+  //       dispatch({
+  //         type: "updateTableItemTags",
+  //         payload: { id: itemIds[0], tags: selectedTagsToRender },
+  //       }); //only for single item update
+  //       //trigger the save of the tags to their tableItems
+  //     }
+
+  //     if (!initiallyMountedRef.current) initiallyMountedRef.current = true; //keeps track of the clean up being run for the initial mount
+  //   };
+  // }, []);
+
   function onSelectTag(tagId) {
     const tagAlreadySelected = selectedTagIds.find((tId) => tId === tagId);
     if (!tagAlreadySelected) {
@@ -1990,16 +2008,12 @@ function JournalTableBodyItemTagOptionOverlayComponent({
     }
   }
 
-  function onCreateTag(createdTag) {
-    setSearchTagValue(" ");
-    setSelectedTagIds((v) => [...v, createdTag]);
-  }
-
   function onRemoveTag(tagId) {
     setSelectedTagIds((tagIds) => [...tagIds.filter((tId) => tId !== tagId)]);
   }
 
   function handleCreateTag() {
+    searchTagRef.current.value = "";
     const tagColor = journalState.tagsColor.find(
       (color) => color.color_value === randomColorRef.current,
     );
@@ -2020,7 +2034,11 @@ function JournalTableBodyItemTagOptionOverlayComponent({
 
   function handleSetOrCreateTagValue(e) {
     if (e.key === "Enter") {
-      if (!renderedTags?.length) handleCreateTag();
+      if (!renderedTags?.length) {
+        handleCreateTag();
+      }
+    } else if (e.key === "Backspace" && !searchTagRef.current.value.length) {
+      setSelectedTagIds((ids) => [...ids.slice(0, ids.length - 1)]);
     } else setSearchTagValue((v) => e.target.value);
   }
 
@@ -2050,7 +2068,8 @@ function JournalTableBodyItemTagOptionOverlayComponent({
                   className={styles["tag-input-input"]}
                   placeholder="Search or create tag..."
                   defaultValue={searchTagValue}
-                  onKeyUp={handleSetOrCreateTagValue}
+                  ref={searchTagRef}
+                  onKeyDown={handleSetOrCreateTagValue}
                 />
               </div>
             </div>

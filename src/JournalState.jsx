@@ -100,6 +100,25 @@ export function journalReducer(state, action) {
 
       return { ...state, tableItemInputActive: null };
     }
+    case "updateTableItemTags": {
+      const currentTableIndex = state.tables.findIndex(
+        (table) => table.id === state.currentTable,
+      );
+
+      const itemIndex = state.tables[currentTableIndex].tableItems.findIndex(
+        (item) => item.id === action.payload.id,
+      );
+      console.log(
+        "the v",
+        state.tables[currentTableIndex].tableItems[itemIndex],
+        action.payload,
+      );
+      state.tables[currentTableIndex].tableItems[itemIndex] = {
+        ...state.tables[currentTableIndex].tableItems[itemIndex],
+        itemTags: [...action.payload.tags],
+      };
+      return { ...state };
+    }
     case "deleteTableItems": {
       const currentTableIndex = state.tables.findIndex(
         (table) => table.id === state.currentTable,
