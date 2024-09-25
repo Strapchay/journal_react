@@ -195,7 +195,12 @@ export const timeoutWithoutPromise = (sec, fn) => {
 
 export const formatAPISub = function (APIResp, type) {
   let formatList = [];
-  if (type === "apiTags")
+  // if (type === "apiTags")
+  if (
+    ["apiTags", "actionItems", "intentions", "happenings", "gratefulFor"].find(
+      (opt) => opt === type,
+    )
+  )
     if (APIResp.length > 1 || APIResp.length === 1) {
       APIResp.forEach((resp) => formatList.push(formatAPIResp(resp, type)));
       return formatList;
@@ -292,6 +297,16 @@ export const formatAPIResp = function (APIResp, type) {
   return formattedData;
 };
 
+export const formatInputTypeCamelCase = function (inputType) {
+  const shouldFormatInput = inputType?.includes("-");
+  const formatInput = inputType?.split("-");
+  return shouldFormatInput
+    ? formatInput[0] +
+        (formatInput[1][0].toUpperCase() +
+          formatInput[1].slice(1).toLowerCase())
+    : inputType;
+};
+
 export const tableItemOrdering = function (relativeItem, tableItems) {
   //TODO: switch functionality implementation
   let incrementOrderingIndex = false;
@@ -384,10 +399,7 @@ const createSubModelPayload = function (payload, submodel) {
   //add update value
   payload?.modelProperty?.property?.update
     ? (formattedRequest[submodel].update = {
-        id:
-          payload?.modelProperty?.property?.update?.propertyId.length > 0
-            ? Number(payload?.modelProperty?.property?.update?.propertyId)
-            : null,
+        id: payload?.modelProperty?.property?.update?.propertyId ?? null,
       })
     : null;
 

@@ -19,6 +19,7 @@ import ComponentOverlay from "./ComponentOverlay";
 import { useUpdateTableRename } from "./features/journals/useUpdateTableRename";
 import { useDuplicateTable } from "./features/journals/useDuplicateTable";
 import { useDeleteTable } from "./features/journals/useDeleteTable";
+import { COPY_ALERT } from "./utils/constants";
 
 export const AuthContext = createContext();
 
@@ -28,6 +29,7 @@ function ProtectedRoute() {
   const tableFuncPositionerRef = useRef(null);
   const [selectedTableItems, setSelectedTableItems] = useState({});
   const [overlayCountMap, setOverlayCountMap] = useState({});
+  const [sidePeek, setSidePeek] = useState({ isActive: false, itemId: null });
   const { token, removeStorageData } = useLocalStorageState(
     {},
     "token",
@@ -136,9 +138,9 @@ function ProtectedRoute() {
     }
   }, [currentTableItems, selectedTableItems]);
 
-  function removeTokenAndLogout() {
-    removeStorageData();
-    navigate("/");
+  function handleCopyToClipboardEvent(textToCopyRef) {
+    navigator.clipboard.writeText(textToCopyRef.current.textContent.trim());
+    toast.success(COPY_ALERT);
   }
 
   function unselectAllSelectedTableItems() {
@@ -202,7 +204,7 @@ function ProtectedRoute() {
   return (
     <AuthContext.Provider
       value={{
-        removeTokenAndLogout,
+        removeTokenAndLogout: removeStorageData,
         token,
         user,
         journalState,
@@ -226,6 +228,9 @@ function ProtectedRoute() {
         renameTable,
         duplicateTable,
         deleteTable,
+        sidePeek,
+        setSidePeek,
+        handleCopyToClipboardEvent,
       }}
     >
       <Journal />

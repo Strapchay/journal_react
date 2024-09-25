@@ -1729,6 +1729,10 @@ svg.hidden {
     word-break: break-all;
 }
 
+.row-tag-tag {
+    color: #bec1be;
+}
+
 .tags-items-icon {
     filter: invert(56%) sepia(1%) saturate(325%) hue-rotate(329deg)
         brightness(95%) contrast(97%);

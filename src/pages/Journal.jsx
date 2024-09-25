@@ -41,10 +41,15 @@ import { useDuplicateTable } from "../features/journals/useDuplicateTable";
 import { useUpdateTags } from "../features/tags/useUpdateTags";
 import { useDeleteTags } from "../features/tags/useDeleteTags";
 import { useCreateTags } from "../features/tags/useCreateTags";
+import ContainerSidePeek from "../ContainerSidePeek";
 
 function Journal() {
-  const { journalState, overlayContainerRef, tableFuncPositionerRef } =
-    useContext(AuthContext);
+  const {
+    journalState,
+    overlayContainerRef,
+    tableFuncPositionerRef,
+    sidePeek,
+  } = useContext(AuthContext);
   console.log("the jor state", journalState);
 
   return (
@@ -103,6 +108,8 @@ function Journal() {
             </div>
           </div>
         </div>
+        {console.log("the sidepeek value", sidePeek)}
+        {sidePeek.isActive && <ContainerSidePeek itemId={sidePeek.itemId} />}
       </div>
       <div className={styles["overlay-container"]} ref={overlayContainerRef}>
         <div className={styles["overlay-container-base"]}>
@@ -1681,7 +1688,7 @@ function JournalTableBodyPlaceholder({ placeholder, onClick }) {
 }
 
 function JournalTableBodyItemInputOverlayComponent({ itemId, onSubmit }) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(""); //TODO: should pass the title here as the default
   const { updateTableItem } = useUpdateTableItem(onSubmit);
   const { dispatch } = useContext(AuthContext);
 
@@ -1958,7 +1965,7 @@ function JournalTableBodyItemTagsOptionsAvailableComponent({
   );
 }
 
-function JournalTableBodyItemTagOptionOverlayComponent({
+export function JournalTableBodyItemTagOptionOverlayComponent({
   itemIds,
   itemTags = null, //NOTE:if the itemIds is > 1, no itemTags is supplied
   disableInput = false,
@@ -2044,8 +2051,8 @@ function JournalTableBodyItemTagOptionOverlayComponent({
     createTag(payload, {
       onSuccess: (data) => {
         const res = formatAPIResp(data, "apiTags");
+        setSearchTagValue("");
         dispatch({ type: "createTag", payload: res });
-        setSearchTagValue(" ");
         setSelectedTagIds((v) => [...v, res.id]);
       },
     });
@@ -2056,7 +2063,7 @@ function JournalTableBodyItemTagOptionOverlayComponent({
       if (!renderedTags?.length) {
         handleCreateTag();
       }
-    } else if (e.key === "Backspace" && !searchTagRef.current.value.length) {
+    } else if (e.key === "Backspace" && !searchTagValue.length) {
       setSelectedTagIds((ids) => [...ids.slice(0, ids.length - 1)]);
     } else setSearchTagValue((v) => e.target.value);
   }
@@ -2088,7 +2095,7 @@ function JournalTableBodyItemTagOptionOverlayComponent({
                   placeholder="Search or create tag..."
                   defaultValue={searchTagValue}
                   ref={searchTagRef}
-                  onKeyDown={handleSetOrCreateTagValue}
+                  onKeyUp={handleSetOrCreateTagValue}
                 />
               </div>
             </div>
@@ -2114,7 +2121,9 @@ function JournalTableBodyItemTagOptionOverlayComponent({
   );
 }
 
-function JournalTableBodyItemHoverComponent() {
+function JournalTableBodyItemHoverComponent({ item }) {
+  const { sidePeek, setSidePeek } = useContext(AuthContext);
+
   return (
     <div className={[styles["row-actions-render"]].join(" ")}>
       <div className={styles["row-actions-render-icon"]}>
@@ -2124,7 +2133,14 @@ function JournalTableBodyItemHoverComponent() {
           styles={styles}
         />
       </div>
-      <div className={styles["row-actions-render-text"]}>OPEN</div>
+      <div
+        className={styles["row-actions-render-text"]}
+        onClick={() =>
+          setSidePeek((_) => ({ isActive: true, itemId: item?.id }))
+        }
+      >
+        OPEN
+      </div>
       <div className={styles["row-actions-tooltip"]}>
         <div className={styles["tooltip-text"]}>Open in side peek</div>
       </div>
@@ -2142,12 +2158,12 @@ function JournalTableBodyItemComponent({
   const [hoverActive, setHoverActive] = useState(false);
   // const [itemSelected, setItemSelected] = useState(false);
   const textToCopyRef = useRef(null);
-  const { createTableItem, journalState, dispatch } = useContext(AuthContext);
-
-  function handleCopyToClipboardEvent() {
-    navigator.clipboard.writeText(textToCopyRef.current.textContent.trim());
-    toast.success(COPY_ALERT);
-  }
+  const {
+    createTableItem,
+    journalState,
+    dispatch,
+    handleCopyToClipboardEvent,
+  } = useContext(AuthContext);
 
   function handleAddRelativeTableBodyItemEvent(e) {
     const currentTableId = journalState.currentTable;
@@ -2245,7 +2261,9 @@ function JournalTableBodyItemComponent({
                   <JournalTableBodyItemInputOverlayComponent itemId={item.id} />
                 </ComponentOverlay.Window>
               </ComponentOverlay>
-              {hoverActive && <JournalTableBodyItemHoverComponent />}
+              {hoverActive && (
+                <JournalTableBodyItemHoverComponent item={item} />
+              )}
             </div>
           </span>
           <span
@@ -2269,7 +2287,7 @@ function JournalTableBodyItemComponent({
                 <div className={[styles["row-actions-render"]].join(" ")}>
                   <div
                     className={styles["row-actions-render-icon"]}
-                    onClick={handleCopyToClipboardEvent}
+                    onClick={() => handleCopyToClipboardEvent(textToCopyRef)}
                   >
                     <SvgMarkup
                       classList={styles["row-icon"]}
