@@ -245,3 +245,12 @@ export const PREVENT_DESTRUCTURING_FROM_API_ENDPOINT_RESP = [
 ];
 
 export const THROTTLE_TIMER = 2 * 1000;
+
+export const INPUT_SELECTION_REF_DEFAULTS = {
+  active: false,
+  index: null,
+  inputType: null,
+  next: false,
+};
+
+export const SIDE_PEEK_DEFAULTS = { isActive: false, itemId: null };

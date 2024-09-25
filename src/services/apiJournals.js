@@ -112,7 +112,6 @@ export async function updateTableItem(
   removeToken,
   payloadType,
 ) {
-  console.log("about to make request table api");
   return makeAPIRequest(
     payloadType === "selectTags"
       ? API.APIEnum.ACTIVITIES.BATCH_UPDATE_ACTIVITIES
@@ -125,12 +124,16 @@ export async function updateTableItem(
   );
 }
 
-export function deleteTableItems(token, payload, removeToken) {
-  return makeAPIRequest(
-    payload.delete_list.length > 1
+export function deleteTableItems(token, payload, removeToken, type, typeId) {
+  const url = type
+    ? API.APIEnum.SUBMODEL.DELETE(type, typeId)
+    : payload.delete_list.length > 1
       ? API.getBatchEndpoint("deleteTableItems")
-      : API.APIEnum.ACTIVITIES.DELETE(payload.delete_list[0]),
-    payload.delete_list.length > 1 ? payload : null,
+      : API.APIEnum.ACTIVITIES.DELETE(payload.delete_list[0]);
+
+  return makeAPIRequest(
+    url,
+    type || payload.delete_list.length > 1 ? payload : null,
     "deleteTableItem",
     token,
     "DELETE",

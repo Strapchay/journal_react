@@ -3,9 +3,14 @@ import styles from "./pages/Journal.module.css";
 import SvgMarkup from "./SvgMarkup";
 import {
   dateTimeFormat,
+  formatAPIRequestUpdateTableItemPayload,
   formatAPITableItems,
   formatInputTypeCamelCase,
   formatTagRenderedText,
+  getItemsOrdering,
+  moveCursorToTextEnd,
+  setCreatePayloadValue,
+  setInputUpdateTextContent,
 } from "./utils/helpers";
 import { AuthContext } from "./ProtectedRoute";
 import ComponentOverlay from "./ComponentOverlay";
@@ -13,16 +18,47 @@ import { useRef } from "react";
 import { JournalTableBodyItemTagOptionOverlayComponent } from "./pages/Journal";
 import { useState } from "react";
 import { useUpdateTableItem } from "./features/journals/useUpdateTableItem";
-import { THROTTLE_TIMER } from "./utils/constants";
+import {
+  INPUT_SELECTION_REF_DEFAULTS,
+  SIDE_PEEK_DEFAULTS,
+  THROTTLE_TIMER,
+} from "./utils/constants";
 import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 function ContainerSidePeek({ itemId }) {
-  const { journalState } = useContext(AuthContext);
+  const { journalState, setSidePeek, sidePeek } = useContext(AuthContext);
   const currentTable = journalState.tables.find(
     (table) => table.id === journalState.currentTable,
   );
-  const tableItem = currentTable.tableItems.find((item) => item.id === itemId);
-  const position = 0;
+  const [currentItemId, setCurrentItemId] = useState(itemId);
+  const tableItem = currentTable.tableItems.find(
+    (item) => item.id === currentItemId,
+  );
+  const tableItemIndex = currentTable.tableItems.findIndex(
+    (item) => item.id === currentItemId,
+  );
+  const shouldPrev = tableItemIndex > 0;
+  const shouldNext = tableItemIndex < currentTable.tableItems.length - 1;
+
+  useEffect(() => {
+    if (sidePeek.itemId !== currentItemId)
+      setCurrentItemId((v) => sidePeek.itemId);
+  }, [sidePeek, currentItemId]);
+
+  function handleNavigateItems(type = "") {
+    if (type === "prev" && shouldPrev) {
+      const prevTableItemId = currentTable.tableItems[tableItemIndex - 1].id;
+      setCurrentItemId((_) => prevTableItemId);
+      setSidePeek((v) => ({ ...v, itemId: prevTableItemId }));
+    }
+    if (type === "next" && shouldNext) {
+      const nextTableItemId = currentTable.tableItems[tableItemIndex + 1].id;
+      setCurrentItemId((_) => nextTableItemId);
+      setSidePeek((v) => ({ ...v, itemId: nextTableItemId }));
+    }
+  }
+
   return (
     <div className={styles["container-slide-template"]}>
       <div className={styles["container-slide"]}>
@@ -34,6 +70,7 @@ function ContainerSidePeek({ itemId }) {
                 styles["slide-nav-close"],
                 styles["hover"],
               ].join(" ")}
+              onClick={() => setSidePeek((_) => SIDE_PEEK_DEFAULTS)}
             >
               <SvgMarkup
                 classList="icon-md nav-icon nav-icon-active"
@@ -48,9 +85,10 @@ function ContainerSidePeek({ itemId }) {
                 styles["slide-nav-next"],
                 styles["hover"],
               ].join(" ")}
+              onClick={() => handleNavigateItems("next")}
             >
               <SvgMarkup
-                classList={`icon-md ${position === -1 || position === 0 || position === "only" ? "nav-icon-inactive" : "nav-icon-active"}`}
+                classList={`icon-md ${!shouldNext ? "nav-icon-inactive" : "nav-icon-active"}`}
                 fragId="arrow-down"
                 styles={styles}
               />
@@ -61,9 +99,10 @@ function ContainerSidePeek({ itemId }) {
                 styles["slide-nav-prev"],
                 styles["hover"],
               ].join(" ")}
+              onClick={() => handleNavigateItems("prev")}
             >
               <SvgMarkup
-                classList={`icon-md ${position === 1 || position === "only" ? "nav-icon-inactive" : "nav-icon-active"}`}
+                classList={`icon-md ${!shouldPrev ? "nav-icon-inactive" : "nav-icon-active"}`}
                 fragId="arrow-up"
                 styles={styles}
               />
@@ -88,6 +127,10 @@ function SlideContent({ tableItem }) {
   const textToCopyRef = useRef(null);
   const [title, setTitle] = useState(tableItem.itemTitle);
   const { updateTableItem } = useUpdateTableItem();
+
+  useEffect(() => {
+    setTitle((_) => tableItem.itemTitle);
+  }, [tableItem]);
 
   function handleTitleUpdate(e) {
     setTitle((_) => e.target.value);
@@ -263,7 +306,24 @@ function SlideContent({ tableItem }) {
 }
 
 function SliceContentProperties({ tableItem }) {
-  const inputSelectionExistRef = useRef(false);
+  const inputSelectionExistRef = useRef(INPUT_SELECTION_REF_DEFAULTS);
+
+  useEffect(() => {
+    const { active, index, inputType, next } = inputSelectionExistRef.current;
+    if (active) {
+      const indexValue = next ? index + 1 : index - 1;
+      const inputElItem = tableItem[inputType][indexValue];
+      const inputTypeEl = document
+        .querySelector(
+          `.${styles["slide-list"]} li[data-id='${inputElItem.id}'
+            `,
+        )
+        .querySelector(`.${styles["slide-input"]}`);
+      inputTypeEl.focus();
+      moveCursorToTextEnd(inputTypeEl);
+      inputSelectionExistRef.current = INPUT_SELECTION_REF_DEFAULTS;
+    }
+  }, [tableItem]);
 
   return (
     <div className={styles["container-slide-content"]}>
@@ -288,6 +348,7 @@ function SliceContentProperties({ tableItem }) {
                 type={item}
                 tableItem={tableItem}
                 typeIndex={i}
+                selectionRef={inputSelectionExistRef}
                 inputType="intentions"
               />
             ))}
@@ -314,6 +375,7 @@ function SliceContentProperties({ tableItem }) {
                 checkbox={false}
                 type={item}
                 typeIndex={i}
+                selectionRef={inputSelectionExistRef}
                 tableItem={tableItem}
                 inputType="happenings"
               />
@@ -342,8 +404,9 @@ function SliceContentProperties({ tableItem }) {
                 checkbox={false}
                 type={item}
                 typeIndex={i}
+                selectionRef={inputSelectionExistRef}
                 tableItem={tableItem}
-                inputType="gratefulFor"
+                inputType="grateful-for"
               />
             ))}
           </ol>
@@ -369,8 +432,9 @@ function SliceContentProperties({ tableItem }) {
                 checkbox={true}
                 type={item}
                 typeIndex={i}
+                selectionRef={inputSelectionExistRef}
                 tableItem={tableItem}
-                inputType="actionItems"
+                inputType="action-items"
               />
             ))}
           </ol>
@@ -386,8 +450,9 @@ function InputContent({
   tableItem,
   typeIndex, //to get the index of the type to allow selecting the next input if necessary
   inputType,
+  selectionRef,
 }) {
-  const { dispatch } = useContext(AuthContext);
+  const { dispatch, deleteTableItems } = useContext(AuthContext);
   const throttleTimerRef = useRef(null);
   const inputRef = useRef(null);
   const checkboxRef = useRef(null);
@@ -399,73 +464,82 @@ function InputContent({
       inputRef.current.textContent = type?.text?.trim() ?? "";
   }, [type]);
 
-  useEffect(() => {
-    if (inputSelectionExistRef.current) {
-      const nextInputType = tableItem[inputType][typeIndex + 1];
-      console.log(
-        "the next input type val",
-        nextInputType,
-        type.id,
-        typeIndex + 1,
-        typeIndex,
-      );
-      const nextInputTypeEl =
-        document.querySelector(`.${styles["slide-list"]} li[data-id='${nextInputType.id}'
-        `);
-      nextInputTypeEl.focus();
-      inputSelectionExistRef.current = false;
-      // document.querySelector("._slide-list_1kcmm_1993 li[data-id='2211']");
-    }
-  }, [tableItem, typeIndex]);
+  function handleCheckboxChange(e) {
+    const payload = {
+      itemId: tableItem.id,
+      modelProperty: {
+        property: {
+          updateActionItem: {
+            checked: checkboxRef.current.checked,
+            propertyId: type.id,
+            value: inputRef.current.textContent,
+            key: inputModelKey,
+          },
+        },
+      },
+    };
 
-  function handleCheckboxChange(e) {}
+    updateTableItem(
+      { payload, type: inputModelKey },
+      {
+        onSuccess: (data) => {
+          const res = formatAPITableItems([data]);
+          dispatch({ type: "updateTableItem", payload: res });
+        },
+      },
+    );
+  }
+
+  function handleItemDelete() {
+    clearThrottle();
+    const payload = {
+      itemId: tableItem.id,
+      modelProperty: {
+        property: {
+          delete: {
+            propertyId: type.id,
+            key: inputModelKey,
+          },
+        },
+      },
+    };
+
+    deleteTableItems(
+      {
+        payload: formatAPIRequestUpdateTableItemPayload(payload, inputModelKey),
+        type: inputType,
+        typeId: type.id,
+      },
+      {
+        onSuccess: (_) => {
+          selectionRef.current = {
+            active: true,
+            index: typeIndex,
+            inputType: inputModelKey,
+            next: false,
+          };
+          dispatch({
+            type: "deleteTableItemType",
+            payload: {
+              id: tableItem.id,
+              type: { type: inputModelKey, id: type.id },
+            },
+          });
+        },
+      },
+    );
+  }
 
   function handleInputContentEvent(e) {
-    if (e.key === "Enter") handleInputContentUpdateAndCreate(e);
-    else handleInputContentUpdate(e);
-  }
-
-  function setInputUpdateTextContent(
-    inputSelection,
-    inputSelectionExists,
-    selectionAnchorOffset,
-  ) {
-    if (inputSelectionExists && selectionAnchorOffset === 0)
-      inputRef.current.textContent = inputRef.current.textContent
-        .split(inputSelection)[0]
-        .trim();
-  }
-
-  function getItemsOrdering(inputType, createRelativeProperty) {
-    let incrementOrderingIndex = false;
-    let createItemOrdering = null;
-    const itemsOrdering = tableItem[inputType].map((item, i) => {
-      if (createRelativeProperty && item.id === createRelativeProperty) {
-        incrementOrderingIndex = true;
-        createItemOrdering = i + 2;
-        return { id: item.id, ordering: i + 1 };
+    if (e.key === "Enter") return handleInputContentUpdateAndCreate(e);
+    if (e.key === "Backspace" && !inputRef.current?.textContent?.length) {
+      if (tableItem[inputModelKey].length > 1) return handleItemDelete();
+      else {
+        toast.error("You can't delete the only item relating to an activity");
+        clearThrottle();
+        return;
       }
-      return {
-        id: item.id,
-        ordering: incrementOrderingIndex ? i + 2 : i + 1,
-      };
-    });
-
-    return { createItemOrdering: createItemOrdering, itemsOrdering };
-  }
-
-  function setCreatePayloadValue(
-    inputSelection,
-    inputSelectionExists,
-    selectionAnchorOffset,
-  ) {
-    if (
-      (inputSelectionExists && selectionAnchorOffset > 0) ||
-      !inputSelectionExists
-    )
-      return "";
-    if (inputSelectionExists && selectionAnchorOffset === 0)
-      return inputSelection.trim();
+    } else return handleInputContentUpdate(e);
   }
 
   function handleInputContentUpdateAndCreate(e) {
@@ -475,40 +549,39 @@ function InputContent({
     };
 
     if (throttleTimerRef.current) {
-      console.log("clearing interval");
       clearInterval(throttleTimerRef.current);
       throttleTimerRef.current = null;
-      console.log("interval cleared");
     }
 
     const selectionAnchorOffset = document.getSelection().anchorOffset;
     const inputSelection = document.getSelection().getRangeAt(0)
-      .startContainer?.data;
-    inputSelectionExistRef.current = inputSelection?.length > 0;
-    const createRelativeProperty = inputSelectionExistRef.current
-      ? type.id
-      : null;
+      ?.startContainer?.data;
+    const currentInputTextContent = inputRef.current.textContent;
+    const inputSelectionExists = inputSelection?.length > 0;
+    const nextItemExists = tableItem[inputModelKey][typeIndex + 1] ?? null;
+    const createRelativeProperty =
+      inputSelectionExists || nextItemExists ? type.id : null;
 
     setInputUpdateTextContent(
-      inputSelection,
-      inputSelectionExistRef.current,
+      inputSelectionExists,
       selectionAnchorOffset,
+      inputRef,
     );
 
     const { createItemOrdering, itemsOrdering } = getItemsOrdering(
-      inputType,
+      tableItem,
+      inputModelKey,
       createRelativeProperty,
     );
-
     const payload = {
       itemId: tableItem.id,
       modelProperty: {
         property: {
           create: {
             value: setCreatePayloadValue(
-              inputSelection,
-              inputSelectionExistRef.current,
+              inputSelectionExists,
               selectionAnchorOffset,
+              currentInputTextContent,
             ),
             relativeProperty: createRelativeProperty,
             ordering: createItemOrdering,
@@ -529,22 +602,31 @@ function InputContent({
       payload.modelProperty = { ...payload.modelProperty, checkedPayload };
 
     updateTableItem(
-      { payload, type: inputType },
+      { payload, type: inputModelKey },
       {
         onSuccess: (data) => {
           const res = formatAPITableItems([data]);
+          selectionRef.current = {
+            active: true,
+            index: typeIndex,
+            inputType: inputModelKey,
+            next: true,
+          };
           dispatch({ type: "updateTableItem", payload: res });
         },
       },
     );
   }
 
-  function handleInputContentUpdate(e) {
+  function clearThrottle() {
     if (throttleTimerRef.current) {
       clearInterval(throttleTimerRef.current);
       throttleTimerRef.current = null;
     }
+  }
 
+  function handleInputContentUpdate(e) {
+    clearThrottle();
     const checkedPayload = {
       checkbox,
       checked: checkboxRef.current?.checked ?? false,
@@ -569,7 +651,7 @@ function InputContent({
 
     throttleTimerRef.current = setTimeout(() => {
       updateTableItem(
-        { payload, type: inputType },
+        { payload, type: inputModelKey },
         {
           onSuccess: (data) => {
             const res = formatAPITableItems([data]);
@@ -603,7 +685,7 @@ function InputContent({
         suppressContentEditableWarning={true}
         contentEditable={true}
         ref={inputRef}
-        onKeyUp={handleInputContentEvent}
+        onKeyDown={handleInputContentEvent}
       >
         {/*type?.text ?? ""*/}
       </div>

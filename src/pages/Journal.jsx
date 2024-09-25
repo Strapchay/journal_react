@@ -7,6 +7,7 @@ import {
   HEADER_JOURNAL_TITLE_LENGTH,
   NOTIFICATION_DELETE_MSG,
   PREPOSITIONS,
+  SIDE_PEEK_DEFAULTS,
   SIDEBAR_JOURNAL_TITLE_LENGTH,
   TABLE_HEAD_LIMIT,
   TABLE_PROPERTIES,
@@ -25,6 +26,7 @@ import {
   getCurrentTable,
   getSelectedItems,
   getTableItemWithMaxTags,
+  moveCursorToTextEnd,
   swapItemIndexInPlace,
   tableRowActivator,
   valueEclipser,
@@ -108,7 +110,6 @@ function Journal() {
             </div>
           </div>
         </div>
-        {console.log("the sidepeek value", sidePeek)}
         {sidePeek.isActive && <ContainerSidePeek itemId={sidePeek.itemId} />}
       </div>
       <div className={styles["overlay-container"]} ref={overlayContainerRef}>
@@ -686,11 +687,13 @@ function JournalTableRowColumnComponent({
   journalId,
 }) {
   const tableHeadRef = useRef(null);
-  const { journalState, dispatch } = useContext(AuthContext);
+  const { journalState, dispatch, setSidePeek } = useContext(AuthContext);
 
   function handleSetCurrentTable(journalId) {
-    if (journalId !== journalState.currentTable)
+    if (journalId !== journalState.currentTable) {
+      setSidePeek((_) => SIDE_PEEK_DEFAULTS);
       dispatch({ type: "updateCurrentTable", payload: journalId });
+    }
   }
 
   return (
@@ -1687,10 +1690,16 @@ function JournalTableBodyPlaceholder({ placeholder, onClick }) {
   );
 }
 
-function JournalTableBodyItemInputOverlayComponent({ itemId, onSubmit }) {
-  const [text, setText] = useState(""); //TODO: should pass the title here as the default
+function JournalTableBodyItemInputOverlayComponent({ item, onSubmit }) {
+  const [text, setText] = useState("");
+  const inputRef = useRef(null);
   const { updateTableItem } = useUpdateTableItem(onSubmit);
   const { dispatch } = useContext(AuthContext);
+
+  useEffect(() => {
+    inputRef.current.textContent = item.itemTitle;
+    moveCursorToTextEnd(inputRef.current);
+  }, [item]);
 
   function handleInputEvent(e) {
     if (e.key !== "Enter") setText(e.target.textContent);
@@ -1698,7 +1707,7 @@ function JournalTableBodyItemInputOverlayComponent({ itemId, onSubmit }) {
       updateTableItem(
         {
           payload: {
-            itemId,
+            itemId: item?.id,
             title: text,
           },
           type: "title",
@@ -1716,6 +1725,7 @@ function JournalTableBodyItemInputOverlayComponent({ itemId, onSubmit }) {
     <div
       className={styles["row-actions-text-input"]}
       contentEditable={true}
+      ref={inputRef}
       onKeyUp={handleInputEvent}
     ></div>
   );
@@ -2122,10 +2132,15 @@ export function JournalTableBodyItemTagOptionOverlayComponent({
 }
 
 function JournalTableBodyItemHoverComponent({ item }) {
-  const { sidePeek, setSidePeek } = useContext(AuthContext);
+  const { setSidePeek, sidePeek } = useContext(AuthContext);
 
   return (
-    <div className={[styles["row-actions-render"]].join(" ")}>
+    <div
+      className={[styles["row-actions-render"]].join(" ")}
+      onClick={() =>
+        setSidePeek((v) => ({ ...v, isActive: true, itemId: item?.id }))
+      }
+    >
       <div className={styles["row-actions-render-icon"]}>
         <SvgMarkup
           classList={styles["row-icon"]}
@@ -2133,14 +2148,7 @@ function JournalTableBodyItemHoverComponent({ item }) {
           styles={styles}
         />
       </div>
-      <div
-        className={styles["row-actions-render-text"]}
-        onClick={() =>
-          setSidePeek((_) => ({ isActive: true, itemId: item?.id }))
-        }
-      >
-        OPEN
-      </div>
+      <div className={styles["row-actions-render-text"]}>OPEN</div>
       <div className={styles["row-actions-tooltip"]}>
         <div className={styles["tooltip-text"]}>Open in side peek</div>
       </div>
@@ -2190,8 +2198,6 @@ function JournalTableBodyItemComponent({
       },
     );
   }
-
-  function handleTagRenderEvent() {}
 
   return (
     <div
@@ -2258,7 +2264,7 @@ function JournalTableBodyItemComponent({
                   name="nameInput"
                   objectToOverlay={inputRef}
                 >
-                  <JournalTableBodyItemInputOverlayComponent itemId={item.id} />
+                  <JournalTableBodyItemInputOverlayComponent item={item} />
                 </ComponentOverlay.Window>
               </ComponentOverlay>
               {hoverActive && (

@@ -8,8 +8,8 @@ export function useDeleteTableItems(token, removeToken) {
     mutate: deleteTableItems,
     error: deleteTableItemsError,
   } = useMutation({
-    mutationFn: (payload) =>
-      deleteTableItemsApi(token?.token, payload, removeToken),
+    mutationFn: ({ payload, type = null, typeId = null }) =>
+      deleteTableItemsApi(token?.token, payload, removeToken, type, typeId),
     onError: (err) => {
       toast.error(err.message);
     },

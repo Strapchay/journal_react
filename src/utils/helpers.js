@@ -506,3 +506,60 @@ export const formatAPIRequestUpdateTableItemPayload = function (payload, type) {
 
   return formattedRequest;
 };
+
+export function moveCursorToTextEnd(textContainer) {
+  const selection = document.getSelection();
+  selection.selectAllChildren(textContainer);
+  selection.collapseToEnd();
+}
+
+export function getItemsOrdering(tableItem, inputType, createRelativeProperty) {
+  let incrementOrderingIndex = false;
+  let createItemOrdering = null;
+  const itemsOrdering = tableItem[inputType].map((item, i) => {
+    if (createRelativeProperty && item.id === createRelativeProperty) {
+      incrementOrderingIndex = true;
+      createItemOrdering = i + 2;
+      return { id: item.id, ordering: i + 1 };
+    }
+    return {
+      id: item.id,
+      ordering: incrementOrderingIndex ? i + 2 : i + 1,
+    };
+  });
+
+  return { createItemOrdering: createItemOrdering, itemsOrdering };
+}
+
+export function setInputUpdateTextContent(
+  inputSelectionExists,
+  selectionAnchorOffset,
+  inputRef,
+) {
+  if (inputSelectionExists && selectionAnchorOffset > 0)
+    inputRef.current.textContent = inputRef.current.textContent
+      .slice(0, selectionAnchorOffset)
+      .trim();
+
+  if (!inputSelectionExists)
+    inputRef.current.textContent = inputRef.current.textContent.trim();
+
+  if (inputSelectionExists && selectionAnchorOffset === 0)
+    inputRef.current.textContent = "";
+}
+
+export function setCreatePayloadValue(
+  inputSelectionExists,
+  selectionAnchorOffset,
+  textContent,
+) {
+  if (inputSelectionExists && selectionAnchorOffset > 0)
+    return textContent.slice(selectionAnchorOffset).trim();
+  if (
+    inputSelectionExists &&
+    selectionAnchorOffset === 0 &&
+    textContent?.length > 0
+  )
+    return textContent.slice(selectionAnchorOffset).trim();
+  return "";
+}

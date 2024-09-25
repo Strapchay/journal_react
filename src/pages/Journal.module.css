@@ -2458,6 +2458,10 @@ svg.hidden {
 .checkbox-item:not(:last-of-type) {
     border-right: 1px solid #606264;
 }
+
+.add-strikethrough {
+    text-decoration: line-through;
+}
 /* #262728 */
 
 /* filler rgba(15, 15, 15, 0.6); */

@@ -158,6 +158,23 @@ export function journalReducer(state, action) {
 
       return { ...state };
     }
+    case "deleteTableItemType": {
+      const currentTable = state.tables.find(
+        (table) => table.id === state.currentTable,
+      );
+      const tableItemIndex = currentTable.tableItems.findIndex(
+        (item) => action.payload.id === item.id,
+      );
+      const modTableItem = { ...currentTable.tableItems[tableItemIndex] };
+
+      modTableItem[action.payload.type.type] = [
+        ...modTableItem[action.payload.type.type].filter(
+          (type) => type.id !== action.payload.type.id,
+        ),
+      ];
+      currentTable.tableItems[tableItemIndex] = { ...modTableItem };
+      return { ...state };
+    }
     case "createTag": {
       return { ...state, tags: [...state.tags, action.payload] };
     }

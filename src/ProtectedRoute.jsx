@@ -19,7 +19,7 @@ import ComponentOverlay from "./ComponentOverlay";
 import { useUpdateTableRename } from "./features/journals/useUpdateTableRename";
 import { useDuplicateTable } from "./features/journals/useDuplicateTable";
 import { useDeleteTable } from "./features/journals/useDeleteTable";
-import { COPY_ALERT } from "./utils/constants";
+import { COPY_ALERT, SIDE_PEEK_DEFAULTS } from "./utils/constants";
 
 export const AuthContext = createContext();
 
@@ -29,7 +29,7 @@ function ProtectedRoute() {
   const tableFuncPositionerRef = useRef(null);
   const [selectedTableItems, setSelectedTableItems] = useState({});
   const [overlayCountMap, setOverlayCountMap] = useState({});
-  const [sidePeek, setSidePeek] = useState({ isActive: false, itemId: null });
+  const [sidePeek, setSidePeek] = useState(SIDE_PEEK_DEFAULTS);
   const { token, removeStorageData } = useLocalStorageState(
     {},
     "token",
@@ -162,12 +162,15 @@ function ProtectedRoute() {
     const payload = {
       delete_list: itemsToDelete,
     };
-    deleteTableItems(payload, {
-      onSuccess: (data) => {
-        toast.success("Items deleted successfully");
-        dispatch({ type: "deleteTableItems", payload: itemsToDelete });
+    deleteTableItems(
+      { payload },
+      {
+        onSuccess: (data) => {
+          toast.success("Items deleted successfully");
+          dispatch({ type: "deleteTableItems", payload: itemsToDelete });
+        },
       },
-    });
+    );
   }
 
   function duplicateSelectedTableItems() {
@@ -231,6 +234,7 @@ function ProtectedRoute() {
         sidePeek,
         setSidePeek,
         handleCopyToClipboardEvent,
+        deleteTableItems,
       }}
     >
       <Journal />
