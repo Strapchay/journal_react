@@ -15,7 +15,6 @@ import { useState } from "react";
 import { useUpdateTableItem } from "./features/journals/useUpdateTableItem";
 import { THROTTLE_TIMER } from "./utils/constants";
 import { useEffect } from "react";
-import { updateTableItem } from "./services/apiJournals";
 
 function ContainerSidePeek({ itemId }) {
   const { journalState } = useContext(AuthContext);
@@ -264,6 +263,8 @@ function SlideContent({ tableItem }) {
 }
 
 function SliceContentProperties({ tableItem }) {
+  const inputSelectionExistRef = useRef(false);
+
   return (
     <div className={styles["container-slide-content"]}>
       <div className={styles["slide-intentions"]}>
@@ -280,12 +281,13 @@ function SliceContentProperties({ tableItem }) {
               styles["slide-list"],
             ].join(" ")}
           >
-            {tableItem?.intentions?.map((item) => (
+            {tableItem?.intentions?.map((item, i) => (
               <InputContent
                 key={item.id}
                 checkbox={false}
                 type={item}
                 tableItem={tableItem}
+                typeIndex={i}
                 inputType="intentions"
               />
             ))}
@@ -306,11 +308,12 @@ function SliceContentProperties({ tableItem }) {
               styles["slide-list"],
             ].join(" ")}
           >
-            {tableItem?.happenings?.map((item) => (
+            {tableItem?.happenings?.map((item, i) => (
               <InputContent
                 key={item.id}
                 checkbox={false}
                 type={item}
+                typeIndex={i}
                 tableItem={tableItem}
                 inputType="happenings"
               />
@@ -333,11 +336,12 @@ function SliceContentProperties({ tableItem }) {
               styles["slide-list"],
             ].join(" ")}
           >
-            {tableItem?.gratefulFor?.map((item) => (
+            {tableItem?.gratefulFor?.map((item, i) => (
               <InputContent
                 key={item.id}
                 checkbox={false}
                 type={item}
+                typeIndex={i}
                 tableItem={tableItem}
                 inputType="gratefulFor"
               />
@@ -359,11 +363,12 @@ function SliceContentProperties({ tableItem }) {
               styles["slide-list"],
             ].join(" ")}
           >
-            {tableItem?.actionItems?.map((item) => (
+            {tableItem?.actionItems?.map((item, i) => (
               <InputContent
                 key={item.id}
                 checkbox={true}
                 type={item}
+                typeIndex={i}
                 tableItem={tableItem}
                 inputType="actionItems"
               />
@@ -375,7 +380,13 @@ function SliceContentProperties({ tableItem }) {
   );
 }
 
-function InputContent({ checkbox, type, tableItem, inputType }) {
+function InputContent({
+  checkbox,
+  type,
+  tableItem,
+  typeIndex, //to get the index of the type to allow selecting the next input if necessary
+  inputType,
+}) {
   const { dispatch } = useContext(AuthContext);
   const throttleTimerRef = useRef(null);
   const inputRef = useRef(null);
@@ -387,6 +398,25 @@ function InputContent({ checkbox, type, tableItem, inputType }) {
     if (!inputRef.current.textContent)
       inputRef.current.textContent = type?.text?.trim() ?? "";
   }, [type]);
+
+  useEffect(() => {
+    if (inputSelectionExistRef.current) {
+      const nextInputType = tableItem[inputType][typeIndex + 1];
+      console.log(
+        "the next input type val",
+        nextInputType,
+        type.id,
+        typeIndex + 1,
+        typeIndex,
+      );
+      const nextInputTypeEl =
+        document.querySelector(`.${styles["slide-list"]} li[data-id='${nextInputType.id}'
+        `);
+      nextInputTypeEl.focus();
+      inputSelectionExistRef.current = false;
+      // document.querySelector("._slide-list_1kcmm_1993 li[data-id='2211']");
+    }
+  }, [tableItem, typeIndex]);
 
   function handleCheckboxChange(e) {}
 
@@ -445,19 +475,23 @@ function InputContent({ checkbox, type, tableItem, inputType }) {
     };
 
     if (throttleTimerRef.current) {
+      console.log("clearing interval");
       clearInterval(throttleTimerRef.current);
       throttleTimerRef.current = null;
+      console.log("interval cleared");
     }
 
     const selectionAnchorOffset = document.getSelection().anchorOffset;
     const inputSelection = document.getSelection().getRangeAt(0)
       .startContainer?.data;
-    const inputSelectionExists = inputSelection?.length > 0;
-    const createRelativeProperty = inputSelectionExists ? type.id : null;
+    inputSelectionExistRef.current = inputSelection?.length > 0;
+    const createRelativeProperty = inputSelectionExistRef.current
+      ? type.id
+      : null;
 
     setInputUpdateTextContent(
       inputSelection,
-      inputSelectionExists,
+      inputSelectionExistRef.current,
       selectionAnchorOffset,
     );
 
@@ -473,7 +507,7 @@ function InputContent({ checkbox, type, tableItem, inputType }) {
           create: {
             value: setCreatePayloadValue(
               inputSelection,
-              inputSelectionExists,
+              inputSelectionExistRef.current,
               selectionAnchorOffset,
             ),
             relativeProperty: createRelativeProperty,
@@ -494,17 +528,15 @@ function InputContent({ checkbox, type, tableItem, inputType }) {
     if (checkbox)
       payload.modelProperty = { ...payload.modelProperty, checkedPayload };
 
-    throttleTimerRef.current = setTimeout(() => {
-      updateTableItem(
-        { payload, type: inputType },
-        {
-          onSuccess: (data) => {
-            const res = formatAPITableItems([data]);
-            dispatch({ type: "updateTableItem", payload: res });
-          },
+    updateTableItem(
+      { payload, type: inputType },
+      {
+        onSuccess: (data) => {
+          const res = formatAPITableItems([data]);
+          dispatch({ type: "updateTableItem", payload: res });
         },
-      );
-    }, THROTTLE_TIMER);
+      },
+    );
   }
 
   function handleInputContentUpdate(e) {

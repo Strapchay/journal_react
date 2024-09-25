@@ -112,6 +112,7 @@ export async function updateTableItem(
   removeToken,
   payloadType,
 ) {
+  console.log("about to make request table api");
   return makeAPIRequest(
     payloadType === "selectTags"
       ? API.APIEnum.ACTIVITIES.BATCH_UPDATE_ACTIVITIES

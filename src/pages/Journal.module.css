@@ -2018,6 +2018,10 @@ svg.hidden {
     outline: none;
 }
 
+.slide-input > div {
+    display: none;
+}
+
 .slide-list {
     font-size: 1.4rem;
     display: flex;
