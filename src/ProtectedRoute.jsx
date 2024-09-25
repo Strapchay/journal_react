@@ -28,6 +28,7 @@ function ProtectedRoute() {
   const overlayContainerRef = useRef(null);
   const tableFuncPositionerRef = useRef(null);
   const [selectedTableItems, setSelectedTableItems] = useState({});
+  const [searchTableItemText, setSearchTableItemText] = useState("");
   const [overlayCountMap, setOverlayCountMap] = useState({});
   const [sidePeek, setSidePeek] = useState(SIDE_PEEK_DEFAULTS);
   const { token, removeStorageData } = useLocalStorageState(
@@ -65,7 +66,11 @@ function ProtectedRoute() {
     (table) => table.id === journalState.currentTable,
   );
   const currentTable = journalState?.tables?.[currentTableIndex];
-  const currentTableItems = currentTable?.tableItems;
+  const currentTableItems = searchTableItemText.length
+    ? currentTable?.tableItems.filter((tableItem) =>
+        tableItem.itemTitle.includes(searchTableItemText),
+      )
+    : currentTable?.tableItems;
 
   useEffect(() => {
     if (Object.keys(token)?.length === 0 || !token)
@@ -235,6 +240,8 @@ function ProtectedRoute() {
         setSidePeek,
         handleCopyToClipboardEvent,
         deleteTableItems,
+        searchTableItemText,
+        setSearchTableItemText,
       }}
     >
       <Journal />

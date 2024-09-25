@@ -120,16 +120,16 @@ function ContainerSidePeek({ itemId }) {
 
 function SlideContent({ tableItem }) {
   const tableItemTags = "Empty";
-  const tagExists = tableItem.itemTags.length > 0;
+  const tagExists = tableItem?.itemTags?.length > 0;
   const tagOptionRef = useRef(null);
   const throttleTimerRef = useRef(null);
   const { handleCopyToClipboardEvent, dispatch } = useContext(AuthContext);
   const textToCopyRef = useRef(null);
-  const [title, setTitle] = useState(tableItem.itemTitle);
+  const [title, setTitle] = useState(tableItem?.itemTitle);
   const { updateTableItem } = useUpdateTableItem();
 
   useEffect(() => {
-    setTitle((_) => tableItem.itemTitle);
+    setTitle((_) => tableItem?.itemTitle);
   }, [tableItem]);
 
   function handleTitleUpdate(e) {
@@ -229,7 +229,7 @@ function SlideContent({ tableItem }) {
                 >
                   <JournalTableBodyItemTagOptionOverlayComponent
                     itemIds={[tableItem?.id]}
-                    itemTags={tableItem.itemTags}
+                    itemTags={tableItem?.itemTags}
                   />
                 </ComponentOverlay.Window>
               </ComponentOverlay>
@@ -272,11 +272,11 @@ function SlideContent({ tableItem }) {
                   className={[
                     styles["slide-property-text"],
                     styles["slide-created-text"],
-                    styles[tableItem.id ? "active" : ""],
+                    styles[tableItem?.id ? "active" : ""],
                   ].join(" ")}
                   ref={textToCopyRef}
                 >
-                  {dateTimeFormat(tableItem.created ?? "Empty")}
+                  {dateTimeFormat(tableItem?.created ?? "Empty")}
                 </div>
                 <div className={styles["row-actions-render"]}>
                   <div

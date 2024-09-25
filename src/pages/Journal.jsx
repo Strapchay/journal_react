@@ -1375,11 +1375,33 @@ function JournalTableHeadActionPropertyOptionComponent({
 }
 
 function JournalTableHeadActionComponent({ onClick }) {
+  const {
+    createTableItem,
+    journalState,
+    dispatch,
+    setSidePeek,
+    setSearchTableItemText,
+    searchTableItemText,
+  } = useContext(AuthContext);
   const filterRef = useRef(null);
   const sortRef = useRef(null);
   const propertiesToRender = TABLE_PROPERTIES.properties.filter(
     (property) => property.text.toLowerCase() !== "created",
   );
+  const [allowSearch, setAllowSearch] = useState(false);
+
+  function handleCreateAndOpenSidePeek() {
+    createTableItem(
+      { currentTableId: journalState.currentTable },
+      {
+        onSuccess: (data) => {
+          const formatResp = formatAPITableItems([data]);
+          dispatch({ type: "createTableItem", payload: formatResp });
+          setSidePeek((_) => ({ isActive: true, itemId: formatResp[0].id }));
+        },
+      },
+    );
+  }
 
   return (
     <div className={styles["main-table-actions"]} onClick={onClick}>
@@ -1428,22 +1450,26 @@ function JournalTableHeadActionComponent({ onClick }) {
             properties={propertiesToRender}
           />
         </ComponentOverlay.Window>
-        <div
-          className={[
-            styles["table-row"],
-            styles["table-action-row"],
-            styles["table-row-search"],
-          ].join(" ")}
-        >
-          <div className={styles["table-row-icon"]}>
-            <SvgMarkup
-              classList={styles["table-icon"]}
-              fragId="search-icon"
-              styles={styles}
-            />
-          </div>
-        </div>
       </ComponentOverlay>
+      <div
+        className={[
+          styles["table-row"],
+          styles["table-action-row"],
+          styles["table-row-search"],
+        ].join(" ")}
+        onClick={() => {
+          setAllowSearch((v) => !v);
+          setSearchTableItemText((_) => "");
+        }}
+      >
+        <div className={styles["table-row-icon"]}>
+          <SvgMarkup
+            classList={styles["table-icon"]}
+            fragId="search-icon"
+            styles={styles}
+          />
+        </div>
+      </div>
       <div
         className={[
           styles["table-row-search--form"],
@@ -1452,9 +1478,12 @@ function JournalTableHeadActionComponent({ onClick }) {
       >
         <input
           type="text"
-          className={[styles["search-input"], styles["hide-search-input"]].join(
-            " ",
-          )}
+          className={[
+            styles["search-input"],
+            styles[!allowSearch ? "hide-search-input" : ""],
+          ].join(" ")}
+          value={searchTableItemText}
+          onChange={(e) => setSearchTableItemText(e.target.value)}
           placeholder="Type to search..."
         />
       </div>
@@ -1464,7 +1493,10 @@ function JournalTableHeadActionComponent({ onClick }) {
           styles["table-action-row"],
         ].join(" ")}
       >
-        <div className={styles["table-button"]}>
+        <div
+          className={styles["table-button"]}
+          onClick={handleCreateAndOpenSidePeek}
+        >
           <div className={styles["table-button-content"]}>
             <div
               className={[
