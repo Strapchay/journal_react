@@ -962,8 +962,18 @@ function JournalTableHeadActionOptionComponent({
   componentName,
   form,
   properties,
+  onSubmit,
 }) {
   const placeholder = componentName[0].toUpperCase() + componentName.slice(1);
+  const [searchText, setSearchText] = useState("");
+  const renderedProperties = properties.filter((property) =>
+    property.text.toLowerCase().includes(searchText?.toLowerCase()),
+  );
+  const [selectedProperty, setSelectedProperty] = useState(false);
+
+  useEffect(() => {
+    if (selectedProperty) onSubmit?.();
+  }, [selectedProperty, onSubmit]);
 
   return (
     <div
@@ -986,6 +996,8 @@ function JournalTableHeadActionOptionComponent({
                     styles["property-search"],
                     styles["component-form"],
                   ].join(" ")}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
                   placeholder={`${placeholder} by...`}
                 />
               </form>
@@ -997,11 +1009,12 @@ function JournalTableHeadActionOptionComponent({
                   styles["property-content-search"],
                 ].join(" ")}
               >
-                {properties?.map((property) => (
+                {renderedProperties?.map((property) => (
                   <JournalTableHeadActionPropertyOptionComponent
                     componentName={componentName}
                     key={property?.text}
                     property={property}
+                    onOpen={setSelectedProperty}
                   />
                 ))}
               </div>
@@ -1334,11 +1347,20 @@ function TableSortRuleComponent({ property }) {
 function JournalTableHeadActionPropertyOptionComponent({
   componentName,
   property,
+  onOpen = null,
 }) {
   const { tableFuncPositionerRef } = useContext(AuthContext);
+
+  function onRenderChild() {
+    onOpen((v) => true);
+  }
+
   return (
     <ComponentOverlay>
-      <ComponentOverlay.Open opens={`${property?.text}Filter`}>
+      <ComponentOverlay.Open
+        opens={`${property?.text}Filter`}
+        beforeRender={onRenderChild}
+      >
         <div
           className={[
             styles[`${componentName}-property-content`],
