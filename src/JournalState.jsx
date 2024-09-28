@@ -15,6 +15,7 @@ export const initialState = {
   journalTablesLoaded: false,
   tableItemInputActive: null,
   sideBarClosed: false,
+  persistTableFunc: false,
   // overlayCount: 0,
 };
 
@@ -195,7 +196,7 @@ export function journalReducer(state, action) {
     case "updateTableFunc": {
       const currentTableFunc = state.tableFunc[state.currentTable];
       if (currentTableFunc) {
-        const stateC = {
+        return {
           ...state,
           tableFunc: {
             ...state.tableFunc,
@@ -205,8 +206,6 @@ export function journalReducer(state, action) {
             },
           },
         };
-        console.log("state being returned", stateC);
-        return stateC;
       } else
         return {
           ...state,
@@ -221,6 +220,8 @@ export function journalReducer(state, action) {
 
     case "updateSidebarClosed":
       return { ...state, sideBarClosed: !state.sideBarClosed };
+    case "updatePersistFunc":
+      return { ...state, persistTableFunc: action.payload ?? false };
 
     default:
       throw new Error("Unknown action");

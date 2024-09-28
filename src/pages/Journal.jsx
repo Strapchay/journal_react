@@ -47,7 +47,6 @@ import { useUpdateTags } from "../features/tags/useUpdateTags";
 import { useDeleteTags } from "../features/tags/useDeleteTags";
 import { useCreateTags } from "../features/tags/useCreateTags";
 import ContainerSidePeek from "../ContainerSidePeek";
-import { useUpdateJournals } from "../features/journals/useUpdateJournals";
 
 function Journal() {
   const { journalState, overlayContainerRef, sidePeek } =
@@ -1270,7 +1269,7 @@ function TableFilterRuleOptionComponent({
   onSubmit,
   onTagsFilter,
 }) {
-  const { dispatch, handleUpdateTableFunc } = useContext(AuthContext);
+  const { dispatch, activateTableFuncPersist } = useContext(AuthContext);
   const tagOptionRef = useRef(null);
 
   function handleDeleteFilter() {
@@ -1280,7 +1279,7 @@ function TableFilterRuleOptionComponent({
         filter: {},
       },
     });
-    handleUpdateTableFunc();
+    activateTableFuncPersist();
     if (setSelectedComponentState)
       setSelectedComponentState(SELECTED_COMPONENT_STATE_DEFAULTS);
   }
@@ -1349,7 +1348,7 @@ function TableFilterRuleComponent({
   onClick,
   setSelectedComponentState = null,
 }) {
-  const { currentTableFunc, dispatch, journalState, handleUpdateTableFunc } =
+  const { currentTableFunc, dispatch, journalState, activateTableFuncPersist } =
     useContext(AuthContext);
   const { addExtraAction } = useContext(OverlayContext);
   const optionRef = useRef(null);
@@ -1368,8 +1367,8 @@ function TableFilterRuleComponent({
   );
 
   useEffect(() => {
-    addExtraAction(handleUpdateTableFunc);
-  }, [addExtraAction, handleUpdateTableFunc]);
+    addExtraAction(activateTableFuncPersist);
+  }, [activateTableFuncPersist, addExtraAction]);
 
   function handleFilterText(e) {
     dispatch({
@@ -1390,7 +1389,6 @@ function TableFilterRuleComponent({
         },
       },
     });
-    // setTagFilterIds((tagIds) => [...tagIds.filter((id) => id !== tagId)]);
   }
 
   function onTagsFilter(tagId) {
@@ -1548,7 +1546,7 @@ function TableSortRuleComponent({
   property,
   setSelectedComponentState = null,
 }) {
-  const { currentTableFunc, dispatch, handleUpdateTableFunc } =
+  const { currentTableFunc, dispatch, activateTableFuncPersist } =
     useContext(AuthContext);
   const { addExtraAction } = useContext(OverlayContext);
   const propertyRef = useRef(null);
@@ -1558,8 +1556,8 @@ function TableSortRuleComponent({
   );
 
   useEffect(() => {
-    addExtraAction(handleUpdateTableFunc);
-  }, [addExtraAction, handleUpdateTableFunc]);
+    addExtraAction(activateTableFuncPersist);
+  }, [activateTableFuncPersist, addExtraAction]);
 
   function handleSortAction(e) {
     dispatch({
@@ -1570,16 +1568,17 @@ function TableSortRuleComponent({
     });
   }
 
-  async function handleDeleteSort() {
-    await dispatch({
+  function handleDeleteSort() {
+    dispatch({
       type: "updateTableFunc",
       payload: {
         sort: {},
       },
     });
+    activateTableFuncPersist();
+
     if (setSelectedComponentState)
       setSelectedComponentState(SELECTED_COMPONENT_STATE_DEFAULTS);
-    handleUpdateTableFunc();
   }
 
   return (

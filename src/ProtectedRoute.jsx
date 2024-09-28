@@ -152,6 +152,29 @@ function ProtectedRoute() {
     }
   }, [currentTableItems, selectedTableItems]);
 
+  useEffect(() => {
+    function handleUpdateTableFunc() {
+      const payload = {
+        journal_table_func: journalState.tableFunc,
+      };
+      if (journalState.persistTableFunc) {
+        updateJournal(
+          { payload, journalId: journalState.id },
+          {
+            onSuccess: () => {
+              dispatch({ type: "updatePersistFunc" });
+            },
+          },
+        );
+      }
+    }
+    handleUpdateTableFunc();
+  }, [journalState, updateJournal]);
+
+  function activateTableFuncPersist() {
+    dispatch({ type: "updatePersistFunc", payload: true });
+  }
+
   function handleCopyToClipboardEvent(textToCopyRef) {
     navigator.clipboard.writeText(textToCopyRef.current.textContent.trim());
     toast.success(COPY_ALERT);
@@ -218,19 +241,6 @@ function ProtectedRoute() {
     setOverlayCountMap((_) => activeOverlays);
   }
 
-  function handleUpdateTableFunc() {
-    console.log("before update table func", journalState);
-    const payload = {
-      journal_table_func: journalState.tableFunc,
-    };
-    console.log(
-      "payload before update table func",
-      payload,
-      journalState.currentTable,
-    );
-    updateJournal({ payload, journalId: journalState.id });
-  }
-
   return (
     <AuthContext.Provider
       value={{
@@ -265,7 +275,7 @@ function ProtectedRoute() {
         deleteTableItems,
         searchTableItemText,
         setSearchTableItemText,
-        handleUpdateTableFunc,
+        activateTableFuncPersist,
       }}
     >
       <Journal />
