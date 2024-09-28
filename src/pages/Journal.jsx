@@ -47,6 +47,7 @@ import { useUpdateTags } from "../features/tags/useUpdateTags";
 import { useDeleteTags } from "../features/tags/useDeleteTags";
 import { useCreateTags } from "../features/tags/useCreateTags";
 import ContainerSidePeek from "../ContainerSidePeek";
+import { useUpdateJournals } from "../features/journals/useUpdateJournals";
 
 function Journal() {
   const { journalState, overlayContainerRef, sidePeek } =
@@ -1098,14 +1099,13 @@ function PropertyRuleItemComponent({ rule, multipleRulesExist, index }) {
   const { journalState } = useContext(AuthContext);
 
   function getRuleTextToRender(rule) {
-    console.log("the rule val getruletextrend", rule);
     if (rule.component.toLowerCase() === "filter") {
       if (rule.tags.length > 0) {
         const tagValues = rule.tags.map(
           (tagId) => journalState.tags.find((tag) => tag.id === tagId).text,
         );
-        return tagValues.join(", ");
-      } else return rule.text;
+        return tagValues.length > 0 ? tagValues.join(", ") : rule.conditional;
+      } else return rule.text.length > 0 ? rule.text : rule.conditional;
     } else return rule.type;
   }
 
@@ -1157,8 +1157,6 @@ function PropertyRuleItemComponent({ rule, multipleRulesExist, index }) {
             >
               {getRuleTextToRender(rule)}
             </div>
-            {/*rule.component.toLowerCase() === "filter" && (
-            )*/}
             <div className={styles["added-rule-icon"]}>
               <SvgMarkup
                 classList="rule-icon icon-sm"
@@ -1216,12 +1214,18 @@ function PropertyRuleConditionalsComponent({ prepositions, onSubmit }) {
   const { currentTableFunc, dispatch } = useContext(AuthContext);
 
   function handlePrepositionSelect(e) {
+    const tagsValue =
+      e.target.textContent.toLowerCase() === "is empty"
+        ? []
+        : [...currentTableFunc.filter.tags];
+
     dispatch({
       type: "updateTableFunc",
       payload: {
         filter: {
           ...currentTableFunc.filter,
-          conditional: e.target.textContent.trim(),
+          conditional: e.target.textContent,
+          tags: tagsValue,
         },
       },
     });
@@ -1266,7 +1270,7 @@ function TableFilterRuleOptionComponent({
   onSubmit,
   onTagsFilter,
 }) {
-  const { dispatch } = useContext(AuthContext);
+  const { dispatch, handleUpdateTableFunc } = useContext(AuthContext);
   const tagOptionRef = useRef(null);
 
   function handleDeleteFilter() {
@@ -1276,6 +1280,7 @@ function TableFilterRuleOptionComponent({
         filter: {},
       },
     });
+    handleUpdateTableFunc();
     if (setSelectedComponentState)
       setSelectedComponentState(SELECTED_COMPONENT_STATE_DEFAULTS);
   }
@@ -1344,7 +1349,9 @@ function TableFilterRuleComponent({
   onClick,
   setSelectedComponentState = null,
 }) {
-  const { currentTableFunc, dispatch, journalState } = useContext(AuthContext);
+  const { currentTableFunc, dispatch, journalState, handleUpdateTableFunc } =
+    useContext(AuthContext);
+  const { addExtraAction } = useContext(OverlayContext);
   const optionRef = useRef(null);
   const prepositionRef = useRef(null);
   const selectedTagFiltersToRender = currentTableFunc?.filter?.tags
@@ -1359,6 +1366,10 @@ function TableFilterRuleComponent({
   const removeFilterInput = removeFilterInputOption.includes(
     currentTableFunc?.filter?.conditional?.toLowerCase(),
   );
+
+  useEffect(() => {
+    addExtraAction(handleUpdateTableFunc);
+  }, [addExtraAction, handleUpdateTableFunc]);
 
   function handleFilterText(e) {
     dispatch({
@@ -1383,7 +1394,6 @@ function TableFilterRuleComponent({
   }
 
   function onTagsFilter(tagId) {
-    // if (!remove) {
     const tagAlreadySelected = currentTableFunc?.filter?.tags?.find(
       (tId) => tId === tagId,
     );
@@ -1399,7 +1409,6 @@ function TableFilterRuleComponent({
       });
       // setTagFilterIds((tIds) => [...tIds, tagId]);}
     }
-    // if (remove) onRemoveTag(tagId);
   }
   return (
     <div className={styles["filter-rule-input-box"]} onClick={onClick}>
@@ -1539,12 +1548,18 @@ function TableSortRuleComponent({
   property,
   setSelectedComponentState = null,
 }) {
-  const { currentTableFunc, dispatch } = useContext(AuthContext);
+  const { currentTableFunc, dispatch, handleUpdateTableFunc } =
+    useContext(AuthContext);
+  const { addExtraAction } = useContext(OverlayContext);
   const propertyRef = useRef(null);
   const sortTypeRef = useRef(null);
   const propertiesToRender = TABLE_PROPERTIES.properties.filter(
     (property) => property.text.toLowerCase() !== "created",
   );
+
+  useEffect(() => {
+    addExtraAction(handleUpdateTableFunc);
+  }, [addExtraAction, handleUpdateTableFunc]);
 
   function handleSortAction(e) {
     dispatch({
@@ -1555,8 +1570,8 @@ function TableSortRuleComponent({
     });
   }
 
-  function handleDeleteSort() {
-    dispatch({
+  async function handleDeleteSort() {
+    await dispatch({
       type: "updateTableFunc",
       payload: {
         sort: {},
@@ -1564,6 +1579,7 @@ function TableSortRuleComponent({
     });
     if (setSelectedComponentState)
       setSelectedComponentState(SELECTED_COMPONENT_STATE_DEFAULTS);
+    handleUpdateTableFunc();
   }
 
   return (

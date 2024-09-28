@@ -661,9 +661,7 @@ export function queryConditionalTags(filterDict) {
     filterMethod = (property, input, tableItems) =>
       tableItems.filter((items) =>
         items[getPropertyValue(property)].find((tag) =>
-          getInputVal(input).find(
-            (filteredTag) => Number(filteredTag.id) === tag,
-          ),
+          getInputVal(input).find((filteredTagId) => filteredTagId === tag.id),
         ),
       );
   }
@@ -674,7 +672,7 @@ export function queryConditionalTags(filterDict) {
         (items) =>
           !items[getPropertyValue(property)].find((tag) =>
             getInputVal(input).find(
-              (filteredTag) => Number(filteredTag.id) === tag,
+              (filteredTagId) => filteredTagId === tag.id,
             ),
           ),
       );
@@ -695,7 +693,8 @@ export function queryConditionalTags(filterDict) {
   }
 
   //bind the property and input search and return the bound method
-  return filterMethod.bind(null, filterDict.property, filterDict.text);
+  console.log("the filterDict tags", filterDict);
+  return filterMethod.bind(null, filterDict.property, filterDict.tags);
 }
 
 export function queryConditional(filterDict) {
@@ -713,14 +712,14 @@ export function querySort(sortDict) {
       tableItems.sort((a, d) => {
         if (sortType.toLowerCase() === "ascending") {
           if (a.itemTags[0] && d.itemTags[0]) {
-            if (a.itemTags[0].text < d.itemTags[0].text) return -1;
+            if (a.itemTags[0].tag_name < d.itemTags[0].tag_name) return -1;
             else return 1;
           } else return -1;
         }
 
         if (sortType.toLowerCase() === "descending") {
           if (a.itemTags[0] && d.itemTags[0]) {
-            if (a.itemTags[0].text > d.itemTags[0].text) return -1;
+            if (a.itemTags[0].tag_name > d.itemTags[0].tag_name) return -1;
             else return 1;
           } else return 1;
         }

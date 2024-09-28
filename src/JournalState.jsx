@@ -195,19 +195,26 @@ export function journalReducer(state, action) {
     case "updateTableFunc": {
       const currentTableFunc = state.tableFunc[state.currentTable];
       if (currentTableFunc) {
-        return {
+        const stateC = {
           ...state,
           tableFunc: {
             ...state.tableFunc,
-            [state.currentTable]: { ...currentTableFunc, ...action.payload },
+            [state.currentTable]: {
+              ...currentTableFunc,
+              ...action.payload,
+            },
           },
         };
+        console.log("state being returned", stateC);
+        return stateC;
       } else
         return {
           ...state,
           tableFunc: {
             ...state.tableFunc,
-            [state.currentTable]: { ...action.payload },
+            [state.currentTable]: {
+              ...action.payload,
+            },
           },
         };
     }

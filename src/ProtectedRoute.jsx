@@ -26,6 +26,7 @@ import { useDuplicateTable } from "./features/journals/useDuplicateTable";
 import { useDeleteTable } from "./features/journals/useDeleteTable";
 import { COPY_ALERT, SIDE_PEEK_DEFAULTS } from "./utils/constants";
 import { useTableDataSupllier } from "./hooks/useTableDataSupplier";
+import { useUpdateJournals } from "./features/journals/useUpdateJournals";
 
 export const AuthContext = createContext();
 
@@ -60,6 +61,7 @@ function ProtectedRoute() {
   const { deleteTableItems } = useDeleteTableItems(token, removeStorageData);
   const { duplicateTableItems, isDuplicatingTableItems } =
     useDuplicateTableItems(token, removeStorageData);
+  const { updateJournal } = useUpdateJournals(token, removeStorageData);
   const [journalState, dispatch] = useReducer(journalReducer, initialState);
   const { isCreatingTableItem, createTableItem, createTableItemError } =
     useCreateTableItem(token, removeStorageData);
@@ -216,6 +218,19 @@ function ProtectedRoute() {
     setOverlayCountMap((_) => activeOverlays);
   }
 
+  function handleUpdateTableFunc() {
+    console.log("before update table func", journalState);
+    const payload = {
+      journal_table_func: journalState.tableFunc,
+    };
+    console.log(
+      "payload before update table func",
+      payload,
+      journalState.currentTable,
+    );
+    updateJournal({ payload, journalId: journalState.id });
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -250,6 +265,7 @@ function ProtectedRoute() {
         deleteTableItems,
         searchTableItemText,
         setSearchTableItemText,
+        handleUpdateTableFunc,
       }}
     >
       <Journal />

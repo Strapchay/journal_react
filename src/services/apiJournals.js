@@ -12,6 +12,17 @@ export async function createJournal(user, removeToken) {
   );
 }
 
+export async function updateJournal(token, journalId, payload, removeToken) {
+  return makeAPIRequest(
+    API.APIEnum.JOURNAL.PATCH(journalId),
+    payload,
+    "updateJournal",
+    token,
+    "PATCH",
+    removeToken,
+  );
+}
+
 export async function getJournalList(token, removeToken) {
   return makeAPIRequest(
     API.APIEnum.JOURNAL.LIST,
