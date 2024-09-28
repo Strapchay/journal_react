@@ -3,12 +3,15 @@ import { useUpdateJournalInfo } from "../features/journals/useUpdateJournalInfo"
 import { AuthContext } from "../ProtectedRoute";
 import SvgMarkup from "../SvgMarkup";
 import {
-  COPY_ALERT,
+  FILTER_FUNC_DEFAULTS,
   HEADER_JOURNAL_TITLE_LENGTH,
   NOTIFICATION_DELETE_MSG,
   PREPOSITIONS,
+  SELECTED_COMPONENT_STATE_DEFAULTS,
   SIDE_PEEK_DEFAULTS,
   SIDEBAR_JOURNAL_TITLE_LENGTH,
+  SORT_FUNC_DEFAULTS,
+  TABLE_ACTION_OPTIONS,
   TABLE_HEAD_LIMIT,
   TABLE_PROPERTIES,
   TABLE_ROW_FILTER_PLACEHOLDER,
@@ -17,6 +20,7 @@ import {
   THROTTLE_TIMER,
 } from "../utils/constants";
 import {
+  capitalize,
   dateTimeFormat,
   formatAPIRequestTagPayload,
   formatAPIResp,
@@ -36,22 +40,17 @@ import ComponentOverlay, { OverlayContext } from "../ComponentOverlay";
 import { useUpdateTableItem } from "../features/journals/useUpdateTableItem";
 import toast from "react-hot-toast";
 import { useCreateTable } from "../features/journals/useCreateTable";
-import Modal, { ModalContext } from "../Modal";
+import Modal from "../Modal";
 import UpdatePwdForm from "./forms/UpdatePwdForm";
 import UpdateInfoForm from "./forms/UpdateInfoForm";
-import { useDuplicateTable } from "../features/journals/useDuplicateTable";
 import { useUpdateTags } from "../features/tags/useUpdateTags";
 import { useDeleteTags } from "../features/tags/useDeleteTags";
 import { useCreateTags } from "../features/tags/useCreateTags";
 import ContainerSidePeek from "../ContainerSidePeek";
 
 function Journal() {
-  const {
-    journalState,
-    overlayContainerRef,
-    tableFuncPositionerRef,
-    sidePeek,
-  } = useContext(AuthContext);
+  const { journalState, overlayContainerRef, sidePeek } =
+    useContext(AuthContext);
   console.log("the jor state", journalState);
 
   return (
@@ -85,13 +84,7 @@ function Journal() {
 
                       {/*<!-- end view option markup -->*/}
 
-                      <div className={styles["property-container"]}>
-                        <div
-                          className={styles["property-actions"]}
-                          ref={tableFuncPositionerRef}
-                        ></div>
-                        <div className={styles["div-filler"]}></div>
-                      </div>
+                      <PropertyRuleComponent />
                       <div className={styles["main-table-row"]}>
                         {/*<!-- swith table to div start -->*/}
 
@@ -127,9 +120,6 @@ function Journal() {
           </div>
         </div>
       </div>
-      {/* <!-- <div className="alert-box">
-        <div className={styles["alert-msg"]}>ksdlfjsldf</div>
-      </div> --> */}
     </main>
   );
 }
@@ -962,18 +952,74 @@ function JournalTableHeadActionOptionComponent({
   componentName,
   form,
   properties,
+  setSelectedComponentState = null,
+  switchSortProp = null,
   onSubmit,
 }) {
+  const { currentTableFunc, dispatch, journalState } = useContext(AuthContext);
   const placeholder = componentName[0].toUpperCase() + componentName.slice(1);
   const [searchText, setSearchText] = useState("");
   const renderedProperties = properties.filter((property) =>
     property.text.toLowerCase().includes(searchText?.toLowerCase()),
   );
-  const [selectedProperty, setSelectedProperty] = useState(false);
+  const namePrepositions = PREPOSITIONS.filter((pre) => pre.name);
+  const tagPrepositions = PREPOSITIONS.filter((pre) => pre.tags);
 
-  useEffect(() => {
-    if (selectedProperty) onSubmit?.();
-  }, [selectedProperty, onSubmit]);
+  function onSelectProperty(property) {
+    if (setSelectedComponentState)
+      setSelectedComponentState((v) => ({
+        componentName,
+        property,
+      }));
+    if (
+      componentName.toLowerCase() === "filter" &&
+      !currentTableFunc?.filter?.active
+    )
+      dispatch({
+        type: "updateTableFunc",
+        payload: {
+          filter: {
+            ...FILTER_FUNC_DEFAULTS,
+            conditional:
+              property.toLowerCase() === "name"
+                ? namePrepositions[0].condition
+                : property.toLowerCase() === "tags"
+                  ? tagPrepositions[0].condition
+                  : null,
+            active: true,
+            // tags: [],
+            property: property.toLowerCase(),
+            component: componentName.toLowerCase(),
+          },
+        },
+      });
+    if (
+      componentName.toLowerCase() === "sort" &&
+      !currentTableFunc?.sort?.active
+    )
+      dispatch({
+        type: "updateTableFunc",
+        payload: {
+          sort: {
+            ...SORT_FUNC_DEFAULTS,
+            active: true,
+            type: TABLE_SORT_TYPE[0].text,
+            property: property.toLowerCase(),
+            component: componentName.toLowerCase(),
+          },
+        },
+      });
+
+    if (switchSortProp && currentTableFunc?.sort?.active) {
+      dispatch({
+        type: "updateTableFunc",
+        payload: {
+          sort: { ...currentTableFunc.sort, property: property.toLowerCase() },
+        },
+      });
+      onSubmit?.();
+    }
+  }
 
   return (
     <div
@@ -1010,12 +1056,33 @@ function JournalTableHeadActionOptionComponent({
                 ].join(" ")}
               >
                 {renderedProperties?.map((property) => (
-                  <JournalTableHeadActionPropertyOptionComponent
-                    componentName={componentName}
+                  <ComponentOverlay.Open
                     key={property?.text}
-                    property={property}
-                    onOpen={setSelectedProperty}
-                  />
+                    opens={`${property?.text?.toLowerCase()}Filter`}
+                    beforeRender={onSelectProperty.bind(
+                      this,
+                      property.text.toLowerCase(),
+                    )}
+                  >
+                    <div
+                      className={[
+                        styles[`${componentName}-property-content`],
+                        styles["action-property-content"],
+                        // styles[property?.class ?? ""],
+                      ].join(" ")}
+                    >
+                      <div className={styles["action-property-icon"]}>
+                        <SvgMarkup
+                          classList={styles["property-icon"]}
+                          fragId={property.icon}
+                          styles={styles}
+                        />
+                      </div>
+                      <div className={styles["action-property-text"]}>
+                        {property.text}
+                      </div>
+                    </div>
+                  </ComponentOverlay.Open>
                 ))}
               </div>
             </div>
@@ -1026,10 +1093,141 @@ function JournalTableHeadActionOptionComponent({
   );
 }
 
-function PropertyRuleConditionalsComponent({
-  prepositions,
-  selectedPreposition,
-}) {
+function PropertyRuleItemComponent({ rule, multipleRulesExist, index }) {
+  const ruleItemRef = useRef(null);
+  const { journalState } = useContext(AuthContext);
+
+  function getRuleTextToRender(rule) {
+    console.log("the rule val getruletextrend", rule);
+    if (rule.component.toLowerCase() === "filter") {
+      if (rule.tags.length > 0) {
+        const tagValues = rule.tags.map(
+          (tagId) => journalState.tags.find((tag) => tag.id === tagId).text,
+        );
+        return tagValues.join(", ");
+      } else return rule.text;
+    } else return rule.type;
+  }
+
+  return (
+    <div
+      className={[
+        styles[index === 0 && multipleRulesExist && "first-action-container"],
+        styles[`${rule?.component?.toLowerCase()}-action-container`],
+        styles["property-action-container"],
+      ].join(" ")}
+      key={rule?.component}
+    >
+      <ComponentOverlay>
+        <ComponentOverlay.Open opens={`${rule?.property}FilterRule`}>
+          <div
+            className={[
+              styles[`${rule.component.toLowerCase()}-added-rule-box`],
+              styles["property-added-rule-box"],
+            ].join(" ")}
+            ref={ruleItemRef}
+          >
+            <div className={styles["property-added-rule-property"]}>
+              <div className={styles["property-rule-icon"]}>
+                <SvgMarkup
+                  classList={styles["property-added-rule-icon"]}
+                  fragId={
+                    TABLE_PROPERTIES.properties.find(
+                      (prop) =>
+                        prop.text.toLowerCase() === rule.property.toLowerCase(),
+                    ).icon
+                  }
+                  styles={styles}
+                />
+              </div>
+              <div
+                className={[
+                  styles[`${rule.component.toLowerCase()}-added-rule-name`],
+                  styles["property-added-rule-name"],
+                ].join(" ")}
+              >
+                {capitalize(rule.property)}:
+              </div>
+            </div>
+            <div
+              className={[
+                styles[`${rule.component.toLowerCase()}-added-rule`],
+                styles["added-rule"],
+              ].join(" ")}
+            >
+              {getRuleTextToRender(rule)}
+            </div>
+            {/*rule.component.toLowerCase() === "filter" && (
+            )*/}
+            <div className={styles["added-rule-icon"]}>
+              <SvgMarkup
+                classList="rule-icon icon-sm"
+                fragId="arrow-down"
+                styles={styles}
+              />
+            </div>
+          </div>
+        </ComponentOverlay.Open>
+        <ComponentOverlay.Window
+          name={`${rule?.property}FilterRule`}
+          objectToOverlay={ruleItemRef}
+        >
+          <>
+            {rule?.component?.toLowerCase() === "filter" && (
+              <TableFilterRuleComponent property={rule?.property} />
+            )}
+
+            {rule?.component?.toLowerCase() === "sort" && (
+              <TableSortRuleComponent property={rule?.property} />
+            )}
+          </>
+        </ComponentOverlay.Window>
+      </ComponentOverlay>
+    </div>
+  );
+}
+
+function PropertyRuleComponent() {
+  const { tableFuncPositionerRef, currentTableFunc } = useContext(AuthContext);
+  const funcKeys = currentTableFunc ? Object.keys(currentTableFunc) : [];
+  const rules = funcKeys
+    .map((key) => currentTableFunc[key])
+    .filter((func) => func.active);
+  const multipleRulesExist = rules.length > 1;
+
+  return (
+    <div className={styles["property-container"]}>
+      <div className={styles["property-actions"]} ref={tableFuncPositionerRef}>
+        {rules.map((rule, i) => (
+          <PropertyRuleItemComponent
+            key={rule.component}
+            rule={rule}
+            multipleRulesExist={multipleRulesExist}
+            index={i}
+          />
+        ))}
+      </div>
+      <div className={styles["div-filler"]}></div>
+    </div>
+  );
+}
+
+function PropertyRuleConditionalsComponent({ prepositions, onSubmit }) {
+  const { currentTableFunc, dispatch } = useContext(AuthContext);
+
+  function handlePrepositionSelect(e) {
+    dispatch({
+      type: "updateTableFunc",
+      payload: {
+        filter: {
+          ...currentTableFunc.filter,
+          conditional: e.target.textContent.trim(),
+        },
+      },
+    });
+    onSubmit?.();
+  }
+
   return (
     <div
       className={[
@@ -1046,6 +1244,7 @@ function PropertyRuleConditionalsComponent({
                   <div
                     key={preposition.condition}
                     className={styles["action-filter-content"]}
+                    onClick={handlePrepositionSelect}
                   >
                     <div className={styles["action-filter-text"]}>
                       {preposition.condition}
@@ -1061,18 +1260,147 @@ function PropertyRuleConditionalsComponent({
   );
 }
 
-function TableFilterRuleComponent({ property, onClick }) {
-  const optionRef = useRef(null);
+function TableFilterRuleOptionComponent({
+  setSelectedComponentState,
+  property,
+  onSubmit,
+  onTagsFilter,
+}) {
+  const { dispatch } = useContext(AuthContext);
   const tagOptionRef = useRef(null);
+
+  function handleDeleteFilter() {
+    dispatch({
+      type: "updateTableFunc",
+      payload: {
+        filter: {},
+      },
+    });
+    if (setSelectedComponentState)
+      setSelectedComponentState(SELECTED_COMPONENT_STATE_DEFAULTS);
+  }
+
+  return (
+    <div className={styles["filter-input-option-option"]}>
+      <div className={styles["filter-option-option"]}>
+        <div
+          className={[
+            styles["filter-option-action"],
+            styles["filter-option-delete"],
+            styles["hover"],
+          ].join(" ")}
+          onClick={handleDeleteFilter}
+        >
+          <div className={styles["filter-option-icon"]} ref={tagOptionRef}>
+            <SvgMarkup
+              classList="filter-icon icon-md nav-icon-active"
+              fragId="trashcan-icon"
+              styles={styles}
+            />
+          </div>
+          <div className={styles["filter-option-text"]}>Delete Filter</div>
+        </div>
+        {property.toLowerCase() === "tags" && (
+          <ComponentOverlay>
+            <ComponentOverlay.Open opens="tagOptions">
+              <div
+                className={[
+                  styles["filter-option-action"],
+                  styles["filter-option-tags"],
+                  styles["hover"],
+                ].join(" ")}
+                ref={tagOptionRef}
+              >
+                <div className={styles["filter-option-icon"]}>
+                  <SvgMarkup
+                    classList="filter-icon icon-md nav-icon-active"
+                    fragId="list-icon"
+                    styles={styles}
+                  />
+                </div>
+                <div className={styles["filter-option-text"]}>Select Tags</div>
+              </div>
+            </ComponentOverlay.Open>
+            <ComponentOverlay.Window
+              name="tagOptions"
+              objectToOverlay={tagOptionRef}
+            >
+              <JournalTableBodyItemTagOptionOverlayComponent
+                itemIds={[]}
+                disableInput={true}
+                onTagsFilter={onTagsFilter}
+                onFilterComplete={onSubmit}
+              />
+            </ComponentOverlay.Window>
+          </ComponentOverlay>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TableFilterRuleComponent({
+  property,
+  onClick,
+  setSelectedComponentState = null,
+}) {
+  const { currentTableFunc, dispatch, journalState } = useContext(AuthContext);
+  const optionRef = useRef(null);
   const prepositionRef = useRef(null);
+  const selectedTagFiltersToRender = currentTableFunc?.filter?.tags
+    ?.map((id) => journalState.tags.find((modelTag) => modelTag.id === id))
+    .filter((tag) => tag);
+  const tagFiltersExist = selectedTagFiltersToRender?.length;
   const propertyName = property?.[0].toUpperCase() + property?.slice(1);
   const prepositions = PREPOSITIONS.filter(
     (preposition) => preposition[property.toLowerCase()] === true,
   );
-  const removeFilterInput = false;
-  const removeFilterInputOption = ["Is empty", "Is not empty"];
-  const inputValue = "dkalfjdfadf";
+  const removeFilterInputOption = ["is empty", "is not empty"];
+  const removeFilterInput = removeFilterInputOption.includes(
+    currentTableFunc?.filter?.conditional?.toLowerCase(),
+  );
 
+  function handleFilterText(e) {
+    dispatch({
+      type: "updateTableFunc",
+      payload: {
+        filter: { ...currentTableFunc.filter, text: e.target.value },
+      },
+    });
+  }
+
+  function onRemoveTag(tagId) {
+    dispatch({
+      type: "updateTableFunc",
+      payload: {
+        filter: {
+          ...currentTableFunc.filter,
+          tags: [...currentTableFunc.filter.tags.filter((id) => id !== tagId)],
+        },
+      },
+    });
+    // setTagFilterIds((tagIds) => [...tagIds.filter((id) => id !== tagId)]);
+  }
+
+  function onTagsFilter(tagId) {
+    // if (!remove) {
+    const tagAlreadySelected = currentTableFunc?.filter?.tags?.find(
+      (tId) => tId === tagId,
+    );
+    if (!tagAlreadySelected) {
+      dispatch({
+        type: "updateTableFunc",
+        payload: {
+          filter: {
+            ...currentTableFunc.filter,
+            tags: [...currentTableFunc.filter.tags, tagId],
+          },
+        },
+      });
+      // setTagFilterIds((tIds) => [...tIds, tagId]);}
+    }
+    // if (remove) onRemoveTag(tagId);
+  }
   return (
     <div className={styles["filter-rule-input-box"]} onClick={onClick}>
       <div className={styles["filter-input-content"]}>
@@ -1088,8 +1416,7 @@ function TableFilterRuleComponent({ property, onClick }) {
                 ref={prepositionRef}
               >
                 <div className={styles["filter-input-filter-text"]}>
-                  {/*conditional.condition ?? capitalize(conditional)*/}
-                  Is Not
+                  {currentTableFunc?.filter?.conditional}
                 </div>
                 <div className={styles["added-rule-icon"]}>
                   <SvgMarkup
@@ -1126,62 +1453,11 @@ function TableFilterRuleComponent({ property, onClick }) {
               name="filterRuleOption"
               objectToOverlay={optionRef}
             >
-              <div className={styles["filter-input-option-option"]}>
-                <div className={styles["filter-option-option"]}>
-                  <div
-                    className={[
-                      styles["filter-option-action"],
-                      styles["filter-option-delete"],
-                      styles["hover"],
-                    ].join(" ")}
-                  >
-                    <div
-                      className={styles["filter-option-icon"]}
-                      ref={tagOptionRef}
-                    >
-                      <SvgMarkup
-                        classList="filter-icon icon-md nav-icon-active"
-                        fragId="trashcan-icon"
-                        styles={styles}
-                      />
-                    </div>
-                    <div className={styles["filter-option-text"]}>
-                      Delete Filter
-                    </div>
-                  </div>
-                  {property?.name === "tags" && (
-                    <ComponentOverlay>
-                      <ComponentOverlay.Open opens="tagOptions">
-                        <div
-                          className={[
-                            styles["filter-option-action"],
-                            styles["filter-option-tags"],
-                            styles["hover"],
-                          ].join(" ")}
-                          ref={tagOptionRef}
-                        >
-                          <div className={styles["filter-option-icon"]}>
-                            <SvgMarkup
-                              classList="filter-icon icon-md nav-icon-active"
-                              fragId="list-icon"
-                              styles={styles}
-                            />
-                          </div>
-                          <div className={styles["filter-option-text"]}>
-                            Select Tags
-                          </div>
-                        </div>
-                      </ComponentOverlay.Open>
-                      <ComponentOverlay.Window
-                        name="tagOptions"
-                        objectToOverlay={tagOptionRef}
-                      >
-                        <JournalTableBodyItemTagOptionOverlayComponent />
-                      </ComponentOverlay.Window>
-                    </ComponentOverlay>
-                  )}
-                </div>
-              </div>
+              <TableFilterRuleOptionComponent
+                setSelectedComponentState={setSelectedComponentState}
+                property={property}
+                onTagsFilter={onTagsFilter}
+              />
             </ComponentOverlay.Window>
           </ComponentOverlay>
         </div>
@@ -1194,7 +1470,8 @@ function TableFilterRuleComponent({ property, onClick }) {
                 styles["component-form"],
               ].join(" ")}
               placeholder="Type a Value..."
-              defaultValue={inputValue ? inputValue : ""}
+              value={currentTableFunc?.filter?.text ?? ""}
+              onChange={handleFilterText}
             />
           </div>
         )}
@@ -1205,7 +1482,16 @@ function TableFilterRuleComponent({ property, onClick }) {
               className={styles["filter-value-tags"]}
               aria-placeholder="Add Tags To Filter By"
             >
-              {/* add the tag markup from tagItem Markup Factory here*/}
+              {tagFiltersExist
+                ? selectedTagFiltersToRender.map((tag) => (
+                    <JournalTableBodyItemSelectedTagsRenderComponent
+                      tagProperty={tag}
+                      addXmark={true}
+                      onRemoveTag={onRemoveTag}
+                      key={tag?.id}
+                    />
+                  ))
+                : ""}
             </div>
           </div>
         )}
@@ -1214,14 +1500,71 @@ function TableFilterRuleComponent({ property, onClick }) {
   );
 }
 
-function TableSortRuleComponent({ property }) {
-  //TODO: add state to manage current sortType
-  const [sortType, setSortType] = useState(TABLE_SORT_TYPE[0].text);
+function TableSortRuleOptionComponent({ onSubmit, onSelect }) {
+  function handleSelection(e) {
+    onSelect?.(e);
+    onSubmit?.();
+  }
+
+  return (
+    <>
+      {TABLE_SORT_TYPE.map((type) => (
+        <div className={styles["filter-input-option-option"]} key={type.text}>
+          <div className={styles["filter-option-option"]}>
+            <div
+              className={[
+                styles["filter-option-action"],
+                styles[`filter-option-${type.text.toLowerCase()}`],
+                styles["hover"],
+              ].join(" ")}
+              onClick={handleSelection}
+            >
+              <div className={styles["filter-option-icon"]}>
+                <SvgMarkup
+                  classList="filter-icon icon-md icon-active"
+                  fragId={type.icon}
+                  styles={styles}
+                />
+              </div>
+              <div className={styles["filter-option-text"]}>{type.text}</div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function TableSortRuleComponent({
+  property,
+  setSelectedComponentState = null,
+}) {
+  const { currentTableFunc, dispatch } = useContext(AuthContext);
   const propertyRef = useRef(null);
   const sortTypeRef = useRef(null);
   const propertiesToRender = TABLE_PROPERTIES.properties.filter(
     (property) => property.text.toLowerCase() !== "created",
   );
+
+  function handleSortAction(e) {
+    dispatch({
+      type: "updateTableFunc",
+      payload: {
+        sort: { ...currentTableFunc.sort, type: e.target.textContent.trim() },
+      },
+    });
+  }
+
+  function handleDeleteSort() {
+    dispatch({
+      type: "updateTableFunc",
+      payload: {
+        sort: {},
+      },
+    });
+    if (setSelectedComponentState)
+      setSelectedComponentState(SELECTED_COMPONENT_STATE_DEFAULTS);
+  }
 
   return (
     <div className={styles["sort-rules"]}>
@@ -1248,7 +1591,7 @@ function TableSortRuleComponent({ property }) {
                       />
                     </div>
                     <div className={styles["action-filter-text"]}>
-                      {property}
+                      {capitalize(property)}
                     </div>
                     <div className={styles["sort-dropdown-icon"]}>
                       <SvgMarkup
@@ -1267,6 +1610,7 @@ function TableSortRuleComponent({ property }) {
                     componentName="sort"
                     form={true}
                     properties={propertiesToRender}
+                    switchSortProp={true}
                   />
                 </ComponentOverlay.Window>
               </div>
@@ -1281,7 +1625,8 @@ function TableSortRuleComponent({ property }) {
                       ref={sortTypeRef}
                     >
                       <div className={styles["action-filter-text"]}>
-                        {sortType}
+                        {currentTableFunc?.sort?.type ||
+                          TABLE_SORT_TYPE[0].text}
                       </div>
                       <div className={styles["sort-dropdown-icon"]}>
                         <SvgMarkup
@@ -1297,36 +1642,14 @@ function TableSortRuleComponent({ property }) {
                   name="sortTypeOption"
                   objectToOverlay={sortTypeRef}
                 >
-                  <>
-                    {TABLE_SORT_TYPE.map((type) => (
-                      <div
-                        key={type.text}
-                        className={[
-                          styles["filter-option-action"],
-                          styles[`filter-option-${type.text.toLowerCase()}`],
-                          styles["hover"],
-                        ].join(" ")}
-                      >
-                        <div className={styles["filter-option-icon"]}>
-                          <SvgMarkup
-                            classList="filter-icon icon-md icon-active"
-                            fragId={type.icon}
-                            styles={styles}
-                          />
-                        </div>
-                        <div className={styles["filter-option-text"]}>
-                          {type.text}
-                        </div>
-                      </div>
-                    ))}
-                  </>
+                  <TableSortRuleOptionComponent onSelect={handleSortAction} />
                 </ComponentOverlay.Window>
               </div>
             </ComponentOverlay>
           </div>
         </div>
         <div className={styles["sort-delete-container"]}>
-          <div className={styles["sort-action-box"]}>
+          <div className={styles["sort-action-box"]} onClick={handleDeleteSort}>
             <div className={styles["sort-delete-icon"]}>
               <div className={styles["sort-sort-icon"]}>
                 <SvgMarkup
@@ -1344,58 +1667,6 @@ function TableSortRuleComponent({ property }) {
   );
 }
 
-function JournalTableHeadActionPropertyOptionComponent({
-  componentName,
-  property,
-  onOpen = null,
-}) {
-  const { tableFuncPositionerRef } = useContext(AuthContext);
-
-  function onRenderChild() {
-    onOpen((v) => true);
-  }
-
-  return (
-    <ComponentOverlay>
-      <ComponentOverlay.Open
-        opens={`${property?.text}Filter`}
-        beforeRender={onRenderChild}
-      >
-        <div
-          className={[
-            styles[`${componentName}-property-content`],
-            styles["action-property-content"],
-            // styles[property?.class ?? ""],
-          ].join(" ")}
-        >
-          <div className={styles["action-property-icon"]}>
-            <SvgMarkup
-              classList={styles["property-icon"]}
-              fragId={property.icon}
-              styles={styles}
-            />
-          </div>
-          <div className={styles["action-property-text"]}>{property.text}</div>
-        </div>
-      </ComponentOverlay.Open>
-      <ComponentOverlay.Window
-        name={`${property?.text}Filter`}
-        objectToOverlay={tableFuncPositionerRef}
-      >
-        <>
-          {componentName.toLowerCase() === "filter" && (
-            <TableFilterRuleComponent property={property?.text} />
-          )}
-
-          {componentName.toLowerCase() === "sort" && (
-            <TableSortRuleComponent property={property?.text} />
-          )}
-        </>
-      </ComponentOverlay.Window>
-    </ComponentOverlay>
-  );
-}
-
 function JournalTableHeadActionComponent({ onClick }) {
   const {
     createTableItem,
@@ -1404,9 +1675,14 @@ function JournalTableHeadActionComponent({ onClick }) {
     setSidePeek,
     setSearchTableItemText,
     searchTableItemText,
+    tableFuncPositionerRef,
+    currentTableFunc,
   } = useContext(AuthContext);
   const filterRef = useRef(null);
   const sortRef = useRef(null);
+  const [selectedComponentState, setSelectedComponentState] = useState(
+    SELECTED_COMPONENT_STATE_DEFAULTS,
+  );
   const propertiesToRender = TABLE_PROPERTIES.properties.filter(
     (property) => property.text.toLowerCase() !== "created",
   );
@@ -1440,16 +1716,19 @@ function JournalTableHeadActionComponent({ onClick }) {
             <div className={styles["table-row-text"]}>Filter</div>
           </div>
         </ComponentOverlay.Open>
-        <ComponentOverlay.Window
-          name="filterProperties"
-          objectToOverlay={filterRef}
-        >
-          <JournalTableHeadActionOptionComponent
-            componentName="filter"
-            form={true}
-            properties={propertiesToRender}
-          />
-        </ComponentOverlay.Window>
+        {!currentTableFunc?.filter?.active && (
+          <ComponentOverlay.Window
+            name="filterProperties"
+            objectToOverlay={filterRef}
+          >
+            <JournalTableHeadActionOptionComponent
+              componentName="filter"
+              form={true}
+              properties={propertiesToRender}
+              setSelectedComponentState={setSelectedComponentState}
+            />
+          </ComponentOverlay.Window>
+        )}
         <ComponentOverlay.Open opens="sortProperties">
           <div
             className={[
@@ -1462,16 +1741,43 @@ function JournalTableHeadActionComponent({ onClick }) {
             <div className={styles["table-row-text"]}>Sort</div>
           </div>
         </ComponentOverlay.Open>
-        <ComponentOverlay.Window
-          name="sortProperties"
-          objectToOverlay={sortRef}
-        >
-          <JournalTableHeadActionOptionComponent
-            componentName="sort"
-            form={true}
-            properties={propertiesToRender}
-          />
-        </ComponentOverlay.Window>
+        {!currentTableFunc?.sort?.active && (
+          <ComponentOverlay.Window
+            name="sortProperties"
+            objectToOverlay={sortRef}
+          >
+            <JournalTableHeadActionOptionComponent
+              componentName="sort"
+              form={true}
+              properties={propertiesToRender}
+              setSelectedComponentState={setSelectedComponentState}
+            />
+          </ComponentOverlay.Window>
+        )}
+        {selectedComponentState?.componentName && (
+          <ComponentOverlay.Window
+            name={`${selectedComponentState.property.toLowerCase()}Filter`}
+            objectToOverlay={tableFuncPositionerRef}
+          >
+            <>
+              {selectedComponentState?.componentName?.toLowerCase() ===
+                "filter" && (
+                <TableFilterRuleComponent
+                  property={selectedComponentState?.property}
+                  setSelectedComponentState={setSelectedComponentState}
+                />
+              )}
+
+              {selectedComponentState?.componentName?.toLowerCase() ===
+                "sort" && (
+                <TableSortRuleComponent
+                  property={selectedComponentState?.property}
+                  setSelectedComponentState={setSelectedComponentState}
+                />
+              )}
+            </>
+          </ComponentOverlay.Window>
+        )}
       </ComponentOverlay>
       <div
         className={[
@@ -2033,6 +2339,8 @@ export function JournalTableBodyItemTagOptionOverlayComponent({
   itemIds,
   itemTags = null, //NOTE:if the itemIds is > 1, no itemTags is supplied
   disableInput = false,
+  onTagsFilter = null,
+  onFilterComplete = null,
 }) {
   const { journalState, dispatch } = useContext(AuthContext);
   const { addExtraAction } = useContext(OverlayContext);
@@ -2080,22 +2388,26 @@ export function JournalTableBodyItemTagOptionOverlayComponent({
       updateTableItem(payload);
     }
 
-    addExtraAction(handleSelectedTagsSaveToTableItem);
+    if (!disableInput) addExtraAction(handleSelectedTagsSaveToTableItem);
+    if (disableInput) addExtraAction(onFilterComplete);
   }, [
     dispatch,
+    disableInput,
     addExtraAction,
     isMultipleItemIds,
     itemIds,
     selectedTagIds,
     updateTableItem,
     selectedTagsToRender,
+    onFilterComplete,
   ]);
 
   function onSelectTag(tagId) {
     const tagAlreadySelected = selectedTagIds.find((tId) => tId === tagId);
-    if (!tagAlreadySelected) {
+    if (!tagAlreadySelected && !disableInput)
       setSelectedTagIds((tagIds) => [...tagIds, tagId]);
-    }
+
+    if (disableInput) onTagsFilter(tagId);
   }
 
   function onRemoveTag(tagId) {
@@ -2218,7 +2530,6 @@ function JournalTableBodyItemComponent({
   const inputRef = useRef(null);
   const tagRef = useRef(null);
   const [hoverActive, setHoverActive] = useState(false);
-  // const [itemSelected, setItemSelected] = useState(false);
   const textToCopyRef = useRef(null);
   const {
     createTableItem,

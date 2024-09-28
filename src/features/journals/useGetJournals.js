@@ -13,6 +13,7 @@ export function useGetJournals(token, removeToken) {
     queryKey: ["journals"],
     queryFn: async () => {
       const journalList = await getJournalList(token?.token, removeToken);
+      console.log("the journal list val", journalList);
       const formattedJournalList = formatAPIResp(...journalList, "journal");
       return formattedJournalList;
     },

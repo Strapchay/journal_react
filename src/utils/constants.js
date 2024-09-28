@@ -254,3 +254,25 @@ export const INPUT_SELECTION_REF_DEFAULTS = {
 };
 
 export const SIDE_PEEK_DEFAULTS = { isActive: false, itemId: null };
+
+export const FILTER_FUNC_DEFAULTS = {
+  conditional: null,
+  condition: null,
+  text: "",
+  tags: [],
+  active: false,
+  component: null,
+  property: "",
+};
+
+export const SORT_FUNC_DEFAULTS = {
+  type: null,
+  active: false,
+  component: null,
+  property: "",
+};
+
+export const SELECTED_COMPONENT_STATE_DEFAULTS = {
+  property: null,
+  componentName: null,
+};

@@ -781,7 +781,7 @@ svg.hidden {
     margin-bottom: 1rem;
 }
 
-.sort-action-container {
+.first-action-container {
     border-right: 1px solid #4e535a;
     margin-right: 1rem;
 }
@@ -882,6 +882,7 @@ svg.hidden {
     display: flex;
     gap: 0.4rem;
     color: #5f6163;
+    cursor: pointer;
 }
 
 /* .filter-value {
@@ -1069,6 +1070,7 @@ svg.hidden {
 .sort-rules {
     background-color: #262728;
     border-radius: 0.2rem;
+    width: 22rem;
 }
 
 .sort-rules-container {

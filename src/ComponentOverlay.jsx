@@ -128,6 +128,7 @@ function Window({
   name,
   objectToOverlay = null,
   disableOverlayInterceptor = false,
+  beforeUnmount = null,
 }) {
   const { openName, close } = useContext(OverlayContext);
   const { overlayContainerRef, overlayCountMap, decreaseOverlayCountMap } =
@@ -143,7 +144,9 @@ function Window({
     >
       {cloneElement(children, {
         onSubmit: () => {
+          //might have to rename to onUnMount
           decreaseOverlayCountMap(name);
+          beforeUnmount?.();
           close();
         },
       })}

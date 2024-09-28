@@ -192,6 +192,25 @@ export function journalReducer(state, action) {
         tags: [...state.tags.filter((tag) => tag.id !== action.payload)],
       };
     }
+    case "updateTableFunc": {
+      const currentTableFunc = state.tableFunc[state.currentTable];
+      if (currentTableFunc) {
+        return {
+          ...state,
+          tableFunc: {
+            ...state.tableFunc,
+            [state.currentTable]: { ...currentTableFunc, ...action.payload },
+          },
+        };
+      } else
+        return {
+          ...state,
+          tableFunc: {
+            ...state.tableFunc,
+            [state.currentTable]: { ...action.payload },
+          },
+        };
+    }
 
     case "updateSidebarClosed":
       return { ...state, sideBarClosed: !state.sideBarClosed };

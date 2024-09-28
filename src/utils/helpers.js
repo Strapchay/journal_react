@@ -12,6 +12,10 @@ export const valueEclipser = (value, len) => {
   if (value.length > len) return value.slice(0, len) + "...";
 };
 
+export const capitalize = (value) => {
+  return value.slice(0, 1).toUpperCase() + value.slice(1);
+};
+
 export const swapItemIndexInPlace = (items, itemToSwapId) => {
   const itemLength = items?.length;
   if (itemLength > 4) {
@@ -562,4 +566,179 @@ export function setCreatePayloadValue(
   )
     return textContent.slice(selectionAnchorOffset).trim();
   return "";
+}
+
+export function getConditionalAction(conditional) {
+  const createEmptyItemConditional = [
+    "Is not",
+    "Does not contain",
+    "Is empty",
+    "Is not empty",
+  ];
+
+  const action = createEmptyItemConditional.find(
+    (condition) => condition.toLowerCase() === conditional,
+  )
+    ? "createEmpty"
+    : "createFromInput";
+
+  return action;
+}
+
+function getPropertyValue(value) {
+  if (value.toLowerCase() === "name") return "itemTitle";
+  if (value.toLowerCase() === "tags") return "itemTags";
+}
+
+export function queryConditionalName(filterDict) {
+  let filterMethod;
+  if (filterDict.conditional.toLowerCase() === "contains") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter((items) =>
+        items[getPropertyValue(property)].includes(input),
+      );
+  }
+
+  if (filterDict.conditional.toLowerCase() === "does not contain") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter(
+        (items) => !items[getPropertyValue(property)].includes(input),
+      );
+  }
+
+  if (filterDict.conditional.toLowerCase() === "is empty") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter(
+        (items) => items[getPropertyValue(property)].length === 0,
+      );
+  }
+
+  if (filterDict.conditional.toLowerCase() === "is not empty") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter(
+        (items) =>
+          items[getPropertyValue(property)] !== null &&
+          items[getPropertyValue(property)] !== "" &&
+          items[getPropertyValue(property)].length > 0,
+      );
+  }
+
+  if (filterDict.conditional.toLowerCase() === "is") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter((items) => items[getPropertyValue(property)] === input);
+  }
+
+  if (filterDict.conditional.toLowerCase() === "is not") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter((items) => items[getPropertyValue(property)] !== input);
+  }
+
+  if (filterDict.conditional.toLowerCase() === "starts with") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter((items) =>
+        items[getPropertyValue(property)].startsWith(input),
+      );
+  }
+
+  if (filterDict.conditional.toLowerCase() === "ends with") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter((items) =>
+        items[getPropertyValue(property)].endsWith(input),
+      );
+  }
+
+  //bind the property and input search and return the bound method
+  return filterMethod.bind(null, filterDict.property, filterDict.text);
+}
+
+export function queryConditionalTags(filterDict) {
+  function getInputVal(input) {
+    return input ? input : [];
+  }
+
+  let filterMethod;
+  if (filterDict.conditional.toLowerCase() === "contains") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter((items) =>
+        items[getPropertyValue(property)].find((tag) =>
+          getInputVal(input).find(
+            (filteredTag) => Number(filteredTag.id) === tag,
+          ),
+        ),
+      );
+  }
+
+  if (filterDict.conditional.toLowerCase() === "does not contain") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter(
+        (items) =>
+          !items[getPropertyValue(property)].find((tag) =>
+            getInputVal(input).find(
+              (filteredTag) => Number(filteredTag.id) === tag,
+            ),
+          ),
+      );
+  }
+
+  if (filterDict.conditional.toLowerCase() === "is empty") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter(
+        (items) => items[getPropertyValue(property)].length === 0,
+      );
+  }
+
+  if (filterDict.conditional.toLowerCase() === "is not empty") {
+    filterMethod = (property, input, tableItems) =>
+      tableItems.filter(
+        (items) => items[getPropertyValue(property)].length > 0,
+      );
+  }
+
+  //bind the property and input search and return the bound method
+  return filterMethod.bind(null, filterDict.property, filterDict.text);
+}
+
+export function queryConditional(filterDict) {
+  if (filterDict.property.toLowerCase() === "name")
+    return queryConditionalName(filterDict);
+
+  if (filterDict.property.toLowerCase() === "tags")
+    return queryConditionalTags(filterDict);
+}
+
+export function querySort(sortDict) {
+  let sortMethod;
+  if (sortDict.property.toLowerCase() === "tags") {
+    sortMethod = (sortType, tableItems) =>
+      tableItems.sort((a, d) => {
+        if (sortType.toLowerCase() === "ascending") {
+          if (a.itemTags[0] && d.itemTags[0]) {
+            if (a.itemTags[0].text < d.itemTags[0].text) return -1;
+            else return 1;
+          } else return -1;
+        }
+
+        if (sortType.toLowerCase() === "descending") {
+          if (a.itemTags[0] && d.itemTags[0]) {
+            if (a.itemTags[0].text > d.itemTags[0].text) return -1;
+            else return 1;
+          } else return 1;
+        }
+      });
+  }
+
+  if (sortDict.property.toLowerCase() === "name") {
+    sortMethod = (sortType, tableItems) =>
+      tableItems.sort((a, d) => {
+        return sortType.toLowerCase() === "ascending"
+          ? a.itemTitle < d.itemTitle
+            ? -1
+            : 1
+          : a.itemTitle > d.itemTitle
+            ? -1
+            : 1;
+      });
+  }
+
+  return sortMethod.bind(this, sortDict.type);
 }

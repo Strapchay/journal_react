@@ -13,13 +13,19 @@ import { useRef } from "react";
 import { useDeleteTableItems } from "./features/journals/useDeleteTableItems";
 import toast from "react-hot-toast";
 import { useDuplicateTableItems } from "./features/journals/useDuplicateTableItems";
-import { formatAPITableItems, getSelectedItems } from "./utils/helpers";
+import {
+  formatAPITableItems,
+  getSelectedItems,
+  queryConditional,
+  querySort,
+} from "./utils/helpers";
 import { useGetUser } from "./features/users/useGetUser";
 import ComponentOverlay from "./ComponentOverlay";
 import { useUpdateTableRename } from "./features/journals/useUpdateTableRename";
 import { useDuplicateTable } from "./features/journals/useDuplicateTable";
 import { useDeleteTable } from "./features/journals/useDeleteTable";
 import { COPY_ALERT, SIDE_PEEK_DEFAULTS } from "./utils/constants";
+import { useTableDataSupllier } from "./hooks/useTableDataSupplier";
 
 export const AuthContext = createContext();
 
@@ -36,6 +42,7 @@ function ProtectedRoute() {
     "token",
     "journal",
   );
+
   const { user } = useGetUser(token, removeStorageData);
   const {
     journals,
@@ -66,11 +73,11 @@ function ProtectedRoute() {
     (table) => table.id === journalState.currentTable,
   );
   const currentTable = journalState?.tables?.[currentTableIndex];
-  const currentTableItems = searchTableItemText.length
-    ? currentTable?.tableItems.filter((tableItem) =>
-        tableItem.itemTitle.includes(searchTableItemText),
-      )
-    : currentTable?.tableItems;
+  const { currentTableItems, currentTableFunc } = useTableDataSupllier({
+    searchTableItemText,
+    currentTable,
+    journalState,
+  });
 
   useEffect(() => {
     if (Object.keys(token)?.length === 0 || !token)
@@ -224,6 +231,7 @@ function ProtectedRoute() {
         selectedTableItems,
         setSelectedTableItems,
         currentTableItems,
+        currentTableFunc,
         unselectAllSelectedTableItems,
         deleteSelectedTableItems,
         duplicateSelectedTableItems,
