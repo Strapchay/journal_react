@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   LAYOUT_BREAKPOINT,
   LAYOUT_MOBILE_BREAKPOINT,
+  LAYOUT_SMALLER_DESKTOP_BREAKPOINT,
 } from "../utils/constants";
 import { useEffect } from "react";
 
@@ -11,6 +12,9 @@ export function useScreenBreakpoints() {
   );
   const [largeScreenBreakpointMatches, setLargeScreenBreakpointMatches] =
     useState(window.matchMedia(LAYOUT_BREAKPOINT).matches);
+  const [tabletBreakpointMatches, setTableBreakpointMatches] = useState(
+    window.matchMedia(LAYOUT_SMALLER_DESKTOP_BREAKPOINT).matches,
+  );
 
   useEffect(() => {
     function handleMatchEvent(e) {
@@ -47,5 +51,28 @@ export function useScreenBreakpoints() {
     };
   }, [largeScreenBreakpointMatches]);
 
-  return { mobileBreakpointMatches, largeScreenBreakpointMatches };
+  useEffect(() => {
+    function handleMatchEvent(e) {
+      if (e.matches && !tabletBreakpointMatches)
+        setTableBreakpointMatches((_) => true);
+      if (!e.matches && tabletBreakpointMatches)
+        setTableBreakpointMatches((_) => false);
+    }
+
+    const layoutBreakpointTrigger = window.matchMedia(
+      LAYOUT_SMALLER_DESKTOP_BREAKPOINT,
+    );
+
+    layoutBreakpointTrigger.addEventListener("change", handleMatchEvent);
+
+    return () => {
+      layoutBreakpointTrigger.removeEventListener("change", handleMatchEvent);
+    };
+  }, [tabletBreakpointMatches]);
+
+  return {
+    mobileBreakpointMatches,
+    largeScreenBreakpointMatches,
+    tabletBreakpointMatches,
+  };
 }

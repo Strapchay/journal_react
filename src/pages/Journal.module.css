@@ -2573,6 +2573,10 @@ svg.hidden {
     .notification-render {
         margin-left: -7.5rem;
     }
+
+    .main-table-head-box {
+        grid-template-columns: 2fr 2fr;
+    }
 }
 
 /* --------------------------- */

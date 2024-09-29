@@ -19,12 +19,14 @@ import { JournalTableBodyItemTagOptionOverlayComponent } from "./pages/Journal";
 import { useState } from "react";
 import { useUpdateTableItem } from "./features/journals/useUpdateTableItem";
 import {
+  CUSTOMIZE_POSITION_DEFAULTS,
   INPUT_SELECTION_REF_DEFAULTS,
   SIDE_PEEK_DEFAULTS,
   THROTTLE_TIMER,
 } from "./utils/constants";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
+import { useScreenBreakpoints } from "./hooks/useScreenBreakpoints";
 
 function ContainerSidePeek({ itemId }) {
   const { journalState, setSidePeek, sidePeek } = useContext(AuthContext);
@@ -119,14 +121,15 @@ function ContainerSidePeek({ itemId }) {
 }
 
 function SlideContent({ tableItem }) {
+  const { handleCopyToClipboardEvent, dispatch } = useContext(AuthContext);
+  const { mobileBreakpointMatches } = useScreenBreakpoints();
+  const [title, setTitle] = useState(tableItem?.itemTitle);
+  const throttleTimerRef = useRef(null);
+  const textToCopyRef = useRef(null);
+  const tagOptionRef = useRef(null);
+  const { updateTableItem } = useUpdateTableItem();
   const tableItemTags = "Empty";
   const tagExists = tableItem?.itemTags?.length > 0;
-  const tagOptionRef = useRef(null);
-  const throttleTimerRef = useRef(null);
-  const { handleCopyToClipboardEvent, dispatch } = useContext(AuthContext);
-  const textToCopyRef = useRef(null);
-  const [title, setTitle] = useState(tableItem?.itemTitle);
-  const { updateTableItem } = useUpdateTableItem();
 
   useEffect(() => {
     setTitle((_) => tableItem?.itemTitle);
@@ -226,6 +229,11 @@ function SlideContent({ tableItem }) {
                 <ComponentOverlay.Window
                   name="tagOption"
                   objectToOverlay={tagOptionRef}
+                  customizePosition={
+                    mobileBreakpointMatches
+                      ? { ...CUSTOMIZE_POSITION_DEFAULTS, adjustLeft: -100 }
+                      : { ...CUSTOMIZE_POSITION_DEFAULTS }
+                  }
                 >
                   <JournalTableBodyItemTagOptionOverlayComponent
                     itemIds={[tableItem?.id]}

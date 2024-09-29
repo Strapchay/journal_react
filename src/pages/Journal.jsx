@@ -2355,6 +2355,7 @@ function JournalTableBodyItemTagsOptionEditComponent({
 
 function JournalTableBodyItemTagsOptionsOptionIcon({ tag }) {
   const tagOptionRef = useRef(null);
+  const { tabletBreakpointMatches } = useScreenBreakpoints();
 
   return (
     <div
@@ -2373,6 +2374,11 @@ function JournalTableBodyItemTagsOptionsOptionIcon({ tag }) {
         <ComponentOverlay.Window
           name="tagOptionsEdit"
           objectToOverlay={tagOptionRef}
+          customizePosition={
+            tabletBreakpointMatches
+              ? { ...CUSTOMIZE_POSITION_DEFAULTS, adjustLeft: -200 }
+              : { ...CUSTOMIZE_POSITION_DEFAULTS }
+          }
         >
           <JournalTableBodyItemTagsOptionEditComponent tag={tag} key={tag.id} />
         </ComponentOverlay.Window>
