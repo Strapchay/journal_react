@@ -636,6 +636,7 @@ svg.hidden {
     display: flex;
     gap: 2rem;
     width: 100%;
+    cursor: pointer;
     /* height: 3rem;
   padding: 0.4rem 2rem; */
 }
@@ -2464,6 +2465,240 @@ svg.hidden {
 .add-strikethrough {
     text-decoration: line-through;
 }
-/* #262728 */
 
-/* filler rgba(15, 15, 15, 0.6); */
+/* --------------------------- */
+/* BELOW 1000px (smaller desktops) */
+/* ----------------------------- */
+@media (max-width: 63em) {
+    .main-content-info {
+        padding-left: 9rem;
+    }
+
+    .main-table {
+        padding: unset;
+    }
+
+    .main-table-head,
+    .property-container {
+        padding: 0 8rem;
+    }
+
+    .main-table-row {
+        overflow-x: scroll;
+    }
+
+    [role="tablerow"] {
+        padding: 0 8rem 18rem;
+    }
+
+    .row-scroller-table {
+        height: 39rem !important;
+    }
+
+    .table-journal:not(.table-row-active) {
+        display: none;
+    }
+
+    .table-row-active {
+        min-width: 10rem;
+        max-width: 100%;
+    }
+
+    .table-head-selector {
+        display: block;
+    }
+
+    .table-column-options {
+        display: none;
+    }
+
+    .row-tag-options {
+        margin-left: -75px;
+    }
+
+    .form-container {
+        width: 50%;
+    }
+
+    .login-content-heading {
+        font-size: 3.2rem;
+        margin-top: 4rem;
+    }
+
+    .login-content-text {
+        width: 45%;
+    }
+
+    .outline-heading {
+        font-size: 2.6rem;
+    }
+
+    .outline-text {
+        font-size: 1.5rem;
+    }
+
+    .notification-render {
+        margin-left: -4rem;
+    }
+}
+
+/* --------------------------- */
+/* BELOW 800px (tablets and smaller screens) */
+/* ----------------------------- */
+@media (max-width: 50em) {
+    .side-peek .table-action-row {
+        display: none;
+    }
+
+    .side-peek .table-row-options {
+        display: block;
+    }
+
+    .form-container {
+        width: 60%;
+    }
+
+    .login-content-heading {
+        font-size: 3.2rem;
+    }
+
+    .login-content-text {
+        width: 55%;
+    }
+
+    .alert {
+        left: 36%;
+    }
+
+    .notification-render {
+        margin-left: -7.5rem;
+    }
+}
+
+/* --------------------------- */
+/* BELOW 600px (tablets and smaller screens) */
+/* ----------------------------- */
+@media (max-width: 37.5em) {
+    .side-peek .container-slide-template {
+        width: 70vw;
+    }
+
+    .form-container {
+        width: 70%;
+    }
+
+    .form-heading {
+        font-size: 2rem;
+    }
+
+    .form-content {
+        font-size: 1.4rem;
+    }
+
+    .login-content-heading {
+        font-size: 3rem;
+        text-align: center;
+        margin-bottom: 5rem;
+    }
+
+    .login-content-outline {
+        grid-template-columns: 1fr;
+    }
+
+    .content-img-box {
+        padding: 0 2rem;
+    }
+
+    .content-img {
+        width: 95%;
+        grid-row: 1/-1;
+    }
+
+    .img-overlay ul {
+        transform: translate(0%, -3.6%);
+    }
+
+    .property-add-action--options {
+        /* margin-left: -114px; */
+        margin-left: -40px;
+    }
+
+    .filter-input-option-option {
+        /* margin-left: -15px; */
+        margin-left: -153px;
+    }
+
+    .alert {
+        left: 33%;
+    }
+
+    .notification-render {
+        margin-left: -9.2rem;
+    }
+}
+
+/* --------------------------- */
+/* BELOW 500px (tablets and smaller screens) */
+/* ----------------------------- */
+@media (max-width: 31.3em) {
+    .form-container {
+        width: 80%;
+    }
+
+    .table-action-row {
+        display: none;
+    }
+
+    .table-row-options {
+        display: block;
+    }
+
+    .alert {
+        left: 29%;
+    }
+
+    .row-tag-popup {
+        margin-left: -61px;
+    }
+
+    .row-tag-options {
+        margin-left: 73px;
+    }
+
+    .notification-render {
+        margin-left: -9.6rem;
+    }
+}
+
+/* --------------------------- */
+/* BELOW 400px (tablets and smaller screens) */
+/* ----------------------------- */
+@media (max-width: 25em) {
+    .form-container {
+        width: 90%;
+    }
+
+    .login-content-text {
+        width: 85%;
+    }
+
+    .login-content-heading {
+        margin-bottom: 8rem;
+    }
+
+    .outline-heading {
+        font-size: 2.4rem;
+    }
+
+    .table-head-actions-add-action--options {
+        margin-left: 29px;
+    }
+
+    .alert {
+        left: 25%;
+    }
+
+    .notification-render {
+        margin-left: -11.5rem;
+    }
+}

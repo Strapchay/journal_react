@@ -19,6 +19,7 @@ export const HEADER_TITLE_LENGTH = 24;
 export const TABLE_VIEW_OPTION_REPLACE_TABLE_OPTION = "(max-width: 1008px)";
 export const LAYOUT_BREAKPOINT = "(max-width: 1008px)";
 export const LAYOUT_SMALLER_DESKTOP_BREAKPOINT = "(max-width:800px)";
+export const LAYOUT_MOBILE_BREAKPOINT = "(max-width:500px)";
 export const SIDEBAR_JOURNAL_TITLE_LENGTH = 14;
 export const HEADER_JOURNAL_TITLE_LENGTH = 24;
 export const NEW_JOURNAL_NAME = "Table";
@@ -275,4 +276,9 @@ export const SORT_FUNC_DEFAULTS = {
 export const SELECTED_COMPONENT_STATE_DEFAULTS = {
   property: null,
   componentName: null,
+};
+
+export const CUSTOMIZE_POSITION_DEFAULTS = {
+  adjustTop: 0,
+  adjustLeft: 0,
 };

@@ -3,8 +3,11 @@ import { useUpdateJournalInfo } from "../features/journals/useUpdateJournalInfo"
 import { AuthContext } from "../ProtectedRoute";
 import SvgMarkup from "../SvgMarkup";
 import {
+  CUSTOMIZE_POSITION_DEFAULTS,
   FILTER_FUNC_DEFAULTS,
   HEADER_JOURNAL_TITLE_LENGTH,
+  LAYOUT_BREAKPOINT,
+  LAYOUT_MOBILE_BREAKPOINT,
   NOTIFICATION_DELETE_MSG,
   PREPOSITIONS,
   SELECTED_COMPONENT_STATE_DEFAULTS,
@@ -47,6 +50,7 @@ import { useUpdateTags } from "../features/tags/useUpdateTags";
 import { useDeleteTags } from "../features/tags/useDeleteTags";
 import { useCreateTags } from "../features/tags/useCreateTags";
 import ContainerSidePeek from "../ContainerSidePeek";
+import { useScreenBreakpoints } from "../hooks/useScreenBreakpoints";
 
 function Journal() {
   const { journalState, overlayContainerRef, sidePeek } =
@@ -59,6 +63,7 @@ function Journal() {
         className={[
           styles["container"],
           styles[journalState?.sideBarClosed ? "nav-hide" : ""],
+          styles[sidePeek.isActive ? "side-peek" : ""],
         ].join(" ")}
       >
         <JournalSidebar />
@@ -675,17 +680,11 @@ function JournalTableRowColumnComponent({
   journalName,
   activeTable,
   journalId,
+  tableItems,
 }) {
   const tableHeadRef = useRef(null);
-  const { journalState, dispatch, setSidePeek } = useContext(AuthContext);
-
-  function handleSetCurrentTable(journalId) {
-    if (journalId !== journalState.currentTable) {
-      setSidePeek((_) => SIDE_PEEK_DEFAULTS);
-      dispatch({ type: "updateCurrentTable", payload: journalId });
-    }
-  }
-
+  const { handleSetCurrentTable } = useContext(AuthContext);
+  const { largeScreenBreakpointMatches } = useScreenBreakpoints();
   return (
     <div
       className={[
@@ -696,12 +695,16 @@ function JournalTableRowColumnComponent({
       // key={journalId}
       data-name={journalName}
       data-id={journalId}
-      onClick={() => handleSetCurrentTable(journalId)}
+      onClick={() =>
+        largeScreenBreakpointMatches ? {} : handleSetCurrentTable(journalId)
+      }
       ref={tableHeadRef}
     >
       <ComponentOverlay key={journalId}>
         <ComponentOverlay.Open
-          opens="tableColumnOption"
+          opens={
+            largeScreenBreakpointMatches ? "tableAction" : "tableColumnOption"
+          }
           conditional={activeTable}
         >
           <span
@@ -729,6 +732,12 @@ function JournalTableRowColumnComponent({
         >
           <JournalTableOptionComponent table={[journalName, journalId]} />
         </ComponentOverlay.Window>
+        <ComponentOverlay.Window
+          name="tableAction"
+          objectToOverlay={tableHeadRef}
+        >
+          <JournalTableActionOptionComponent tableItems={tableItems} />
+        </ComponentOverlay.Window>
       </ComponentOverlay>
     </div>
   );
@@ -754,6 +763,7 @@ function JournalTableRowComponent({ journalItems }) {
                 journalName={journalName}
                 activeTable={activeTable}
                 journalId={journalId}
+                tableItems={journalItems}
                 key={journalId}
               />
             )
@@ -764,10 +774,59 @@ function JournalTableRowComponent({ journalItems }) {
   );
 }
 
+function JournalTableActionOptionComponent({ tableItems, onSubmit }) {
+  const [searchTable, setSearchTable] = useState("");
+  const tableItemsToRender = searchTable.length
+    ? tableItems?.filter((item) => item[0].toLowerCase().includes(searchTable))
+    : tableItems;
+
+  return (
+    <div
+      className={[
+        styles["table-view-list--options"],
+        styles["component-options"],
+      ].join(" ")}
+    >
+      <div className={styles["table-options"]}>
+        <div className={styles["table-list--option"]}>
+          <div className={styles["table-list-content-box"]}>
+            <div className={styles["table-search-input"]}>
+              <input
+                type="text"
+                name="table-search"
+                className={[
+                  styles["table-search"],
+                  styles["component-form"],
+                ].join(" ")}
+                value={searchTable}
+                placeholder="Search for a View..."
+                onChange={(e) => setSearchTable(e.target.value)}
+              />
+            </div>
+            <div className={styles["table-content"]}>
+              <div className={styles["add-table-content"]}>
+                {tableItemsToRender.map((item) => (
+                  <JournalTableHeadOptionComponent
+                    tableItem={item}
+                    key={item[1]}
+                    onSetCurrent={onSubmit}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function JournalTableHeadComponent() {
   const tableHeadRef = useRef(null);
   const { journalState, token, dispatch, selectedTableItems } =
     useContext(AuthContext);
+  const { mobileBreakpointMatches } = useScreenBreakpoints();
+
   const { createTable } = useCreateTable(token);
   const tables = journalState.tables.map((table) => [
     table.tableTitle,
@@ -779,16 +838,15 @@ function JournalTableHeadComponent() {
   const selectedTableItemsLength = Object.values(selectedTableItems).filter(
     (v) => v,
   ).length;
-  const [searchTable, setSearchTable] = useState("");
-  const tableItemsToRender = searchTable.length
-    ? tableItems?.filter((item) => item[0].toLowerCase().includes(searchTable))
-    : tableItems;
 
   function handleAddTableEvent(e) {
     createTable(journalState.id, {
       onSuccess: (data) => {
         const formattedData = formatAPIResp(data, "journalTables");
         dispatch({ type: "createTable", payload: formattedData });
+        if (journalState.tables.length + 1 > 4) {
+          dispatch({ type: "updateCurrentTable", payload: formattedData.id });
+        }
       },
     });
   }
@@ -798,10 +856,7 @@ function JournalTableHeadComponent() {
       <div className={styles["main-table-head-box"]}>
         {!switchTableAdd && (
           <div className={styles["main-table-heading"]}>
-            <JournalTableRowComponent
-              journalItems={tableItems}
-              // currentTableId={currentTableId}
-            />
+            <JournalTableRowComponent journalItems={tableItems} />
             <div
               className={[
                 styles["table-column-adder"],
@@ -839,47 +894,14 @@ function JournalTableHeadComponent() {
                 name="tableAction"
                 objectToOverlay={tableHeadRef}
               >
-                <div
-                  className={[
-                    styles["table-view-list--options"],
-                    styles["component-options"],
-                  ].join(" ")}
-                >
-                  <div className={styles["table-options"]}>
-                    <div className={styles["table-list--option"]}>
-                      <div className={styles["table-list-content-box"]}>
-                        <div className={styles["table-search-input"]}>
-                          <input
-                            type="text"
-                            name="table-search"
-                            className={[
-                              styles["table-search"],
-                              styles["component-form"],
-                            ].join(" ")}
-                            value={searchTable}
-                            placeholder="Search for a View..."
-                            onChange={(e) => setSearchTable(e.target.value)}
-                          />
-                        </div>
-                        <div className={styles["table-content"]}>
-                          <div className={styles["add-table-content"]}>
-                            {tableItemsToRender.map((item) => (
-                              <JournalTableHeadOptionComponent
-                                tableItem={item}
-                                key={item[1]}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <JournalTableActionOptionComponent tableItems={tableItems} />
               </ComponentOverlay.Window>
             </ComponentOverlay>
           </div>
         )}
-        <JournalTableHeadActionComponent />
+        <JournalTableHeadActionComponent
+          mobileBreakpointMatches={mobileBreakpointMatches}
+        />
       </div>
       {selectedTableItemsLength ? (
         <JournalTableBodyCheckboxOptionComponent
@@ -892,12 +914,24 @@ function JournalTableHeadComponent() {
   );
 }
 
-function JournalTableHeadOptionComponent({ tableItem }) {
+function JournalTableHeadOptionComponent({ tableItem, onSetCurrent }) {
+  const { handleSetCurrentTable } = useContext(AuthContext);
+  const { mobileBreakpointMatches } = useScreenBreakpoints();
+
   const tableViewOptionRef = useRef(null);
+
+  function onSetCurrentTable(journalId) {
+    handleSetCurrentTable(journalId);
+    onSetCurrent?.();
+  }
+
   return (
     <div className={[styles["table-list-content"], styles["hover"]].join(" ")}>
       <div className={styles["table-view-box"]}>
-        <div className={styles["table-view-content"]}>
+        <div
+          className={styles["table-view-content"]}
+          onClick={() => onSetCurrentTable(tableItem[1])}
+        >
           <div className={styles["table-row-icon"]}>
             <SvgMarkup
               classList={styles["icon-active"]}
@@ -938,6 +972,11 @@ function JournalTableHeadOptionComponent({ tableItem }) {
             <ComponentOverlay.Window
               name="tableOptionEdit"
               objectToOverlay={tableViewOptionRef}
+              customizePosition={
+                mobileBreakpointMatches
+                  ? { ...CUSTOMIZE_POSITION_DEFAULTS, adjustLeft: -200 }
+                  : { ...CUSTOMIZE_POSITION_DEFAULTS }
+              }
             >
               <JournalTableOptionComponent table={tableItem} hasParent={true} />
             </ComponentOverlay.Window>
@@ -955,6 +994,7 @@ function JournalTableHeadActionOptionComponent({
   setSelectedComponentState = null,
   switchSortProp = null,
   onSubmit,
+  onOpenSidePeek = null,
 }) {
   const { currentTableFunc, dispatch, journalState } = useContext(AuthContext);
   const placeholder = componentName[0].toUpperCase() + componentName.slice(1);
@@ -1058,17 +1098,27 @@ function JournalTableHeadActionOptionComponent({
                 {renderedProperties?.map((property) => (
                   <ComponentOverlay.Open
                     key={property?.text}
-                    opens={`${property?.text?.toLowerCase()}Filter`}
-                    beforeRender={onSelectProperty.bind(
-                      this,
-                      property.text.toLowerCase(),
-                    )}
+                    opens={
+                      form
+                        ? `${property?.text?.toLowerCase()}Filter`
+                        : `${property?.text?.toLowerCase()}Properties`
+                    }
+                    beforeRender={
+                      property.text ===
+                      TABLE_ACTION_OPTIONS.properties[
+                        TABLE_ACTION_OPTIONS.properties.length - 1
+                      ].text
+                        ? onOpenSidePeek
+                        : onSelectProperty.bind(
+                            this,
+                            property.text.toLowerCase(),
+                          )
+                    }
                   >
                     <div
                       className={[
                         styles[`${componentName}-property-content`],
                         styles["action-property-content"],
-                        // styles[property?.class ?? ""],
                       ].join(" ")}
                     >
                       <div className={styles["action-property-icon"]}>
@@ -1682,7 +1732,7 @@ function TableSortRuleComponent({
   );
 }
 
-function JournalTableHeadActionComponent({ onClick }) {
+function JournalTableHeadActionComponent({ onClick, mobileBreakpointMatches }) {
   const {
     createTableItem,
     journalState,
@@ -1695,6 +1745,7 @@ function JournalTableHeadActionComponent({ onClick }) {
   } = useContext(AuthContext);
   const filterRef = useRef(null);
   const sortRef = useRef(null);
+  const breakScreenOptionRef = useRef(null);
   const [selectedComponentState, setSelectedComponentState] = useState(
     SELECTED_COMPONENT_STATE_DEFAULTS,
   );
@@ -1704,6 +1755,7 @@ function JournalTableHeadActionComponent({ onClick }) {
   const [allowSearch, setAllowSearch] = useState(false);
 
   function handleCreateAndOpenSidePeek() {
+    console.log("got open side peek");
     createTableItem(
       { currentTableId: journalState.currentTable },
       {
@@ -1734,7 +1786,14 @@ function JournalTableHeadActionComponent({ onClick }) {
         {!currentTableFunc?.filter?.active && (
           <ComponentOverlay.Window
             name="filterProperties"
-            objectToOverlay={filterRef}
+            objectToOverlay={
+              mobileBreakpointMatches ? breakScreenOptionRef : filterRef
+            }
+            customizePosition={
+              mobileBreakpointMatches
+                ? { ...CUSTOMIZE_POSITION_DEFAULTS, adjustLeft: -50 }
+                : { ...CUSTOMIZE_POSITION_DEFAULTS }
+            }
           >
             <JournalTableHeadActionOptionComponent
               componentName="filter"
@@ -1759,7 +1818,14 @@ function JournalTableHeadActionComponent({ onClick }) {
         {!currentTableFunc?.sort?.active && (
           <ComponentOverlay.Window
             name="sortProperties"
-            objectToOverlay={sortRef}
+            objectToOverlay={
+              mobileBreakpointMatches ? breakScreenOptionRef : sortRef
+            }
+            customizePosition={
+              mobileBreakpointMatches
+                ? { ...CUSTOMIZE_POSITION_DEFAULTS, adjustLeft: -50 }
+                : { ...CUSTOMIZE_POSITION_DEFAULTS }
+            }
           >
             <JournalTableHeadActionOptionComponent
               componentName="sort"
@@ -1793,76 +1859,98 @@ function JournalTableHeadActionComponent({ onClick }) {
             </>
           </ComponentOverlay.Window>
         )}
-      </ComponentOverlay>
-      <div
-        className={[
-          styles["table-row"],
-          styles["table-action-row"],
-          styles["table-row-search"],
-        ].join(" ")}
-        onClick={() => {
-          setAllowSearch((v) => !v);
-          setSearchTableItemText((_) => "");
-        }}
-      >
-        <div className={styles["table-row-icon"]}>
-          <SvgMarkup
-            classList={styles["table-icon"]}
-            fragId="search-icon"
-            styles={styles}
+        <div
+          className={[
+            styles["table-row"],
+            styles["table-action-row"],
+            styles["table-row-search"],
+          ].join(" ")}
+          onClick={() => {
+            setAllowSearch((v) => !v);
+            setSearchTableItemText((_) => "");
+          }}
+        >
+          <div className={styles["table-row-icon"]}>
+            <SvgMarkup
+              classList={styles["table-icon"]}
+              fragId="search-icon"
+              styles={styles}
+            />
+          </div>
+        </div>
+        <div
+          className={[
+            styles["table-row-search--form"],
+            styles["table-action-row"],
+          ].join(" ")}
+        >
+          <input
+            type="text"
+            className={[
+              styles["search-input"],
+              styles[!allowSearch ? "hide-search-input" : ""],
+            ].join(" ")}
+            value={searchTableItemText}
+            onChange={(e) => setSearchTableItemText(e.target.value)}
+            placeholder="Type to search..."
           />
         </div>
-      </div>
-      <div
-        className={[
-          styles["table-row-search--form"],
-          styles["table-action-row"],
-        ].join(" ")}
-      >
-        <input
-          type="text"
-          className={[
-            styles["search-input"],
-            styles[!allowSearch ? "hide-search-input" : ""],
-          ].join(" ")}
-          value={searchTableItemText}
-          onChange={(e) => setSearchTableItemText(e.target.value)}
-          placeholder="Type to search..."
-        />
-      </div>
-      <div
-        className={[
-          styles["table-row-button"],
-          styles["table-action-row"],
-        ].join(" ")}
-      >
         <div
-          className={styles["table-button"]}
-          onClick={handleCreateAndOpenSidePeek}
+          className={[
+            styles["table-row-button"],
+            styles["table-action-row"],
+          ].join(" ")}
         >
-          <div className={styles["table-button-content"]}>
-            <div
-              className={[
-                styles["table-button-text"],
-                styles["table-row-text"],
-              ].join(" ")}
-            >
-              New
+          <div
+            className={styles["table-button"]}
+            onClick={handleCreateAndOpenSidePeek}
+          >
+            <div className={styles["table-button-content"]}>
+              <div
+                className={[
+                  styles["table-button-text"],
+                  styles["table-row-text"],
+                ].join(" ")}
+              >
+                New
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div
-        className={[styles["table-row-options"], styles["table-row"]].join(" ")}
-      >
-        <div className={styles["table-row-icon"]}>
-          <SvgMarkup
-            classList={styles["table-icon"]}
-            fragId="ellipsis"
-            styles={styles}
+
+        <ComponentOverlay.Open opens="breakScreenOption">
+          <div
+            className={[styles["table-row-options"], styles["table-row"]].join(
+              " ",
+            )}
+            ref={breakScreenOptionRef}
+          >
+            <div className={styles["table-row-icon"]}>
+              <SvgMarkup
+                classList={styles["table-icon"]}
+                fragId="ellipsis"
+                styles={styles}
+              />
+            </div>
+          </div>
+        </ComponentOverlay.Open>
+        <ComponentOverlay.Window
+          name="breakScreenOption"
+          objectToOverlay={breakScreenOptionRef}
+          customizePosition={{
+            ...CUSTOMIZE_POSITION_DEFAULTS,
+            adjustLeft: -50,
+          }}
+        >
+          <JournalTableHeadActionOptionComponent
+            form={false}
+            properties={TABLE_ACTION_OPTIONS.properties}
+            componentName="table-head-actions"
+            setSelectedComponentState={setSelectedComponentState}
+            onOpenSidePeek={handleCreateAndOpenSidePeek}
           />
-        </div>
-      </div>
+        </ComponentOverlay.Window>
+      </ComponentOverlay>
     </div>
   );
 }

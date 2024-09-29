@@ -241,6 +241,13 @@ function ProtectedRoute() {
     setOverlayCountMap((_) => activeOverlays);
   }
 
+  function handleSetCurrentTable(journalId) {
+    if (journalId !== journalState.currentTable) {
+      setSidePeek((_) => SIDE_PEEK_DEFAULTS);
+      dispatch({ type: "updateCurrentTable", payload: journalId });
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -276,6 +283,7 @@ function ProtectedRoute() {
         searchTableItemText,
         setSearchTableItemText,
         activateTableFuncPersist,
+        handleSetCurrentTable,
       }}
     >
       <Journal />

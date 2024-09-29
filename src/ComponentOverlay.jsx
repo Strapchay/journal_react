@@ -40,10 +40,19 @@ function Overlay({
   disableOverlayInterceptor,
   overlayState,
   decreaseOverlayState,
+  customizePosition,
 }) {
   const { top, left, width, height } =
     objectToOverlay?.current?.getBoundingClientRect() ?? {};
+  const { adjustLeft = 0, adjustTop = 0 } = customizePosition;
   const { close, openName, executeExtraAction } = useContext(OverlayContext);
+  console.log(
+    "adjust left for ",
+    openName,
+    adjustLeft,
+    left,
+    customizePosition,
+  );
 
   function handleCloseOverlay() {
     executeExtraAction?.();
@@ -74,8 +83,8 @@ function Overlay({
           style={
             objectToOverlay?.current
               ? {
-                  top: `${top}px`,
-                  left: `${left}px`,
+                  top: `${parseInt(top) + adjustTop}px`,
+                  left: `${parseInt(left) + adjustLeft}px`,
                 }
               : { top: "40%", left: "40%" }
           }
@@ -129,6 +138,7 @@ function Window({
   objectToOverlay = null,
   disableOverlayInterceptor = false,
   beforeUnmount = null,
+  customizePosition = {},
 }) {
   const { openName, close } = useContext(OverlayContext);
   const { overlayContainerRef, overlayCountMap, decreaseOverlayCountMap } =
@@ -141,6 +151,7 @@ function Window({
       disableOverlayInterceptor={disableOverlayInterceptor}
       overlayState={overlayCountMap}
       decreaseOverlayState={decreaseOverlayCountMap}
+      customizePosition={customizePosition}
     >
       {cloneElement(children, {
         onSubmit: () => {
