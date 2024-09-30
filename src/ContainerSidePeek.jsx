@@ -15,7 +15,7 @@ import {
 import { AuthContext } from "./ProtectedRoute";
 import ComponentOverlay from "./ComponentOverlay";
 import { useRef } from "react";
-import { JournalTableBodyItemTagOptionOverlayComponent } from "./pages/Journal";
+
 import { useState } from "react";
 import { useUpdateTableItem } from "./features/journals/useUpdateTableItem";
 import {
@@ -27,6 +27,7 @@ import {
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { useScreenBreakpoints } from "./hooks/useScreenBreakpoints";
+import { JournalTableBodyItemTagOptionOverlayComponent } from "./pages/components/JournalTableBodyComponent";
 
 function ContainerSidePeek({ itemId }) {
   const { journalState, setSidePeek, sidePeek } = useContext(AuthContext);
