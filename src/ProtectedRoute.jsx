@@ -248,6 +248,18 @@ function ProtectedRoute() {
     }
   }
 
+  function handleAddBodyItem() {
+    createTableItem(
+      { currentTableId: journalState.currentTable },
+      {
+        onSuccess: (data) => {
+          const formatResp = formatAPITableItems([data]);
+          dispatch({ type: "createTableItem", payload: formatResp });
+        },
+      },
+    );
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -284,6 +296,7 @@ function ProtectedRoute() {
         setSearchTableItemText,
         activateTableFuncPersist,
         handleSetCurrentTable,
+        handleAddBodyItem,
       }}
     >
       <Journal />

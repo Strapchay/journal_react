@@ -8,7 +8,7 @@ import {
 } from "../utils/constants";
 import { useEffect } from "react";
 
-export function useTableSortRuleActions({ setSelectedComponentState }) {
+export function useSortActions({ setSelectedComponentState }) {
   const { currentTableFunc, dispatch, activateTableFuncPersist } =
     useContext(AuthContext);
   const { addExtraAction } = useContext(OverlayContext);

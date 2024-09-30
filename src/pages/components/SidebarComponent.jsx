@@ -9,20 +9,20 @@ import Modal from "../../Modal";
 import UpdateInfoForm from "../forms/UpdateInfoForm";
 import UpdatePwdForm from "../forms/UpdatePwdForm";
 
-function JournalSidebarComponent() {
+function SidebarComponent() {
   return (
     <div className={styles["nav-sidebar"]}>
       <div className={styles["nav-sidebar-options"]}>
-        <JournalSidebarHeadingMarkup />
-        <JournalSidebarJournalMarkup />
-        <JournalSidebarUserSettingsOption />
-        <JournalSidebarLogout />
+        <HeadingComponent />
+        <ListComponent />
+        <SettingsComponent />
+        <LogoutComponent />
       </div>
     </div>
   );
 }
 
-function JournalSidebarHeadingMarkup() {
+function HeadingComponent() {
   const { user, dispatch } = useContext(AuthContext);
   const username = user?.username;
 
@@ -44,7 +44,7 @@ function JournalSidebarHeadingMarkup() {
   );
 }
 
-function JournalSidebarJournalMarkup() {
+function ListComponent() {
   const { journalState, dispatch } = useContext(AuthContext);
   const [listTables, setListTables] = useState(false);
   const tables = journalState.tables.map((table) => [
@@ -116,7 +116,7 @@ function JournalSidebarJournalMarkup() {
   );
 }
 
-function JournalSidebarUserSettingsOption() {
+function SettingsComponent() {
   const [listSettings, setListSettings] = useState(false);
 
   return (
@@ -184,7 +184,7 @@ function JournalSidebarUserSettingsOption() {
   );
 }
 
-function JournalSidebarLogout() {
+function LogoutComponent() {
   const { removeTokenAndLogout } = useContext(AuthContext);
 
   return (
@@ -208,4 +208,4 @@ function JournalSidebarLogout() {
   );
 }
 
-export default JournalSidebarComponent;
+export default SidebarComponent;

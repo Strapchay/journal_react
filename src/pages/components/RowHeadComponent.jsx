@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import SvgMarkup from "../../SvgMarkup";
 
-function JournalTableRowHeadComponent() {
+function RowHeadComponent() {
   const { selectAllSelectedTableItems, selectedTableItems } =
     useContext(AuthContext);
   const [checkedActive, setCheckedActive] = useState(false);
@@ -80,4 +80,4 @@ function JournalTableRowHeadComponent() {
     </div>
   );
 }
-export default JournalTableRowHeadComponent;
+export default RowHeadComponent;

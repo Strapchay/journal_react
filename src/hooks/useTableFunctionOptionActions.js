@@ -8,7 +8,7 @@ import {
 import { AuthContext } from "../ProtectedRoute";
 import { useState } from "react";
 
-export function useJournalTableHeadActionOptionActions({
+export function useTableFunctionOptionActions({
   onSubmit,
   componentName,
   properties,

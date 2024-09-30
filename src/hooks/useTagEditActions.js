@@ -5,7 +5,7 @@ import { useUpdateTags } from "../features/tags/useUpdateTags";
 import { useDeleteTags } from "../features/tags/useDeleteTags";
 import { formatAPIRequestTagPayload } from "../utils/helpers";
 
-export function useTagOptionEditActions({ tag, onSubmit }) {
+export function useTagEditActions({ tag, onSubmit }) {
   const { journalState, dispatch } = useContext(AuthContext);
   const [tagName, setTagName] = useState(tag.text);
   const tagsColor = journalState.tagsColor;

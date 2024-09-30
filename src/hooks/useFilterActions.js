@@ -5,7 +5,7 @@ import { AuthContext } from "../ProtectedRoute";
 import { useRef } from "react";
 import { PREPOSITIONS } from "../utils/constants";
 
-export function useTableFilterRuleActions({ property }) {
+export function useFilterActions({ property }) {
   const { currentTableFunc, dispatch, journalState, activateTableFuncPersist } =
     useContext(AuthContext);
   const { addExtraAction } = useContext(OverlayContext);

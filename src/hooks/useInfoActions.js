@@ -5,7 +5,7 @@ import { useUpdateJournalInfo } from "../features/journals/useUpdateJournalInfo"
 import { useEffect } from "react";
 import { THROTTLE_TIMER } from "../utils/constants";
 
-export function useJournalInfoContentActions() {
+export function useInfoActions() {
   const { journalState, dispatch } = useContext(AuthContext);
   const journalNameRef = useRef(null);
   const journalDescRef = useRef(null);

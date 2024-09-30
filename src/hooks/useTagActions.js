@@ -12,7 +12,7 @@ import {
 } from "../utils/helpers";
 import { useEffect } from "react";
 
-export function useTagOptionActions({
+export function useTagActions({
   itemIds,
   itemTags,
   disableInput,

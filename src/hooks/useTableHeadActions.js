@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { useCreateTable } from "../features/journals/useCreateTable";
 import { formatAPIResp, swapItemIndexInPlace } from "../utils/helpers";
 
-export function useJournalTableHeadActions() {
+export function useTableHeadActions() {
   const { journalState, token, dispatch, selectedTableItems } =
     useContext(AuthContext);
   const tableHeadRef = useRef(null);

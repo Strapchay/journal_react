@@ -3,23 +3,17 @@ import styles from "../Journal.module.css";
 import { AuthContext } from "../../ProtectedRoute";
 import SvgMarkup from "../../SvgMarkup";
 import { valueEclipser } from "../../utils/helpers";
-import {
-  HEADER_JOURNAL_TITLE_LENGTH,
-  THROTTLE_TIMER,
-} from "../../utils/constants";
-import { useRef } from "react";
-import { useUpdateJournalInfo } from "../../features/journals/useUpdateJournalInfo";
-import { useEffect } from "react";
-import { useJournalInfoContentActions } from "../../hooks/useJournalInfoContentActions";
+import { HEADER_JOURNAL_TITLE_LENGTH } from "../../utils/constants";
+import { useInfoActions } from "../../hooks/useInfoActions";
 
-function JournalMainInfoComponent({ children }) {
+function InfoComponent({ children }) {
   return (
     <div className={styles["content-container"]}>
       <div className={styles["row"]}>
-        <JournalInfoHeaderComponent />
+        <HeaderComponent />
         <div className={styles["container-main-content"]}>
           <div className={[styles["row"], styles["row-scroller"]].join(" ")}>
-            <JournalInfoContentComponent />
+            <ContentComponent />
             {children}
           </div>
         </div>
@@ -28,7 +22,7 @@ function JournalMainInfoComponent({ children }) {
   );
 }
 
-function JournalInfoHeaderComponent() {
+function HeaderComponent() {
   const { journalState, dispatch } = useContext(AuthContext);
 
   return (
@@ -67,9 +61,9 @@ function JournalInfoHeaderComponent() {
   );
 }
 
-function JournalInfoContentComponent() {
+function ContentComponent() {
   const { handleJournalInfoChange, journalNameRef, journalDescRef } =
-    useJournalInfoContentActions();
+    useInfoActions();
 
   return (
     <div className={styles["main-content-info"]}>
@@ -104,4 +98,4 @@ function JournalInfoContentComponent() {
   );
 }
 
-export default JournalMainInfoComponent;
+export default InfoComponent;

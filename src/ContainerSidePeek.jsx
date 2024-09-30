@@ -27,7 +27,7 @@ import {
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { useScreenBreakpoints } from "./hooks/useScreenBreakpoints";
-import { JournalTableBodyItemTagOptionOverlayComponent } from "./pages/components/JournalTableBodyComponent";
+import TagComponent from "./pages/components/TagComponent";
 
 function ContainerSidePeek({ itemId }) {
   const { journalState, setSidePeek, sidePeek } = useContext(AuthContext);
@@ -236,7 +236,7 @@ function SlideContent({ tableItem }) {
                       : { ...CUSTOMIZE_POSITION_DEFAULTS }
                   }
                 >
-                  <JournalTableBodyItemTagOptionOverlayComponent
+                  <TagComponent
                     itemIds={[tableItem?.id]}
                     itemTags={tableItem?.itemTags}
                   />

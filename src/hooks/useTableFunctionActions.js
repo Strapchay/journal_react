@@ -8,7 +8,7 @@ import { useContext } from "react";
 import { AuthContext } from "../ProtectedRoute";
 import { formatAPITableItems } from "../utils/helpers";
 
-export function useJournalTableHeadActionActions() {
+export function useTableFunctionActions() {
   const { createTableItem, dispatch, journalState, setSidePeek } =
     useContext(AuthContext);
   const filterRef = useRef(null);

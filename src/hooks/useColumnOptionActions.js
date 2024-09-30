@@ -4,7 +4,7 @@ import { AuthContext } from "../ProtectedRoute";
 import toast from "react-hot-toast";
 import { formatAPIResp } from "../utils/helpers";
 
-export function useJournalTableOptionActions({ table, onSubmit, hasParent }) {
+export function useColumnOptionActions({ table, onSubmit, hasParent }) {
   const [renameActive, setRenameActive] = useState(false);
   const { renameTable, dispatch, journalState, duplicateTable, deleteTable } =
     useContext(AuthContext);

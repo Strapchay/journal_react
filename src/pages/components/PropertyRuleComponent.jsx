@@ -6,12 +6,10 @@ import ComponentOverlay from "../../ComponentOverlay";
 import SvgMarkup from "../../SvgMarkup";
 import { TABLE_PROPERTIES } from "../../utils/constants";
 import { capitalize } from "../../utils/helpers";
-import {
-  TableFilterRuleComponent,
-  TableSortRuleComponent,
-} from "./JournalTableHeadComponent";
+import FilterComponent from "./FilterComponent";
+import SortComponent from "./SortComponent";
 
-function PropertyRuleComponent() {
+function RuleComponent() {
   const { tableFuncPositionerRef, currentTableFunc } = useContext(AuthContext);
   const funcKeys = currentTableFunc ? Object.keys(currentTableFunc) : [];
   const rules = funcKeys
@@ -23,7 +21,7 @@ function PropertyRuleComponent() {
     <div className={styles["property-container"]}>
       <div className={styles["property-actions"]} ref={tableFuncPositionerRef}>
         {rules.map((rule, i) => (
-          <PropertyRuleItemComponent
+          <RuleItemComponent
             key={rule.component}
             rule={rule}
             multipleRulesExist={multipleRulesExist}
@@ -36,7 +34,7 @@ function PropertyRuleComponent() {
   );
 }
 
-function PropertyRuleItemComponent({ rule, multipleRulesExist, index }) {
+function RuleItemComponent({ rule, multipleRulesExist, index }) {
   const ruleItemRef = useRef(null);
   const { journalState } = useContext(AuthContext);
 
@@ -114,11 +112,11 @@ function PropertyRuleItemComponent({ rule, multipleRulesExist, index }) {
         >
           <>
             {rule?.component?.toLowerCase() === "filter" && (
-              <TableFilterRuleComponent property={rule?.property} />
+              <FilterComponent property={rule?.property} />
             )}
 
             {rule?.component?.toLowerCase() === "sort" && (
-              <TableSortRuleComponent property={rule?.property} />
+              <SortComponent property={rule?.property} />
             )}
           </>
         </ComponentOverlay.Window>
@@ -127,4 +125,4 @@ function PropertyRuleItemComponent({ rule, multipleRulesExist, index }) {
   );
 }
 
-export default PropertyRuleComponent;
+export default RuleComponent;
