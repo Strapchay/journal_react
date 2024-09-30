@@ -1,6 +1,6 @@
 import styles from "../Journal.module.css";
 import HeadComponent from "./HeadComponent";
-import RuleComponent from "./PropertyRuleComponent";
+import RuleComponent from "./RuleComponent";
 import TableContent from "./TableContent";
 
 function TableComponent() {

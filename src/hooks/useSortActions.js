@@ -14,9 +14,6 @@ export function useSortActions({ setSelectedComponentState }) {
   const { addExtraAction } = useContext(OverlayContext);
   const propertyRef = useRef(null);
   const sortTypeRef = useRef(null);
-  const propertiesToRender = TABLE_PROPERTIES.properties.filter(
-    (property) => property.text.toLowerCase() !== "created",
-  );
 
   useEffect(() => {
     addExtraAction(activateTableFuncPersist);
@@ -47,7 +44,6 @@ export function useSortActions({ setSelectedComponentState }) {
     handleDeleteSort,
     handleSortAction,
     propertyRef,
-    propertiesToRender,
     sortTypeRef,
     currentTableFunc,
   };

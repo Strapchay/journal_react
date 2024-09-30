@@ -21,7 +21,6 @@ function ComponentOverlay({ children }) {
 
   function executeExtraAction() {
     extraActionRef.current?.();
-    console.log("completed execution");
     extraActionRef.current = null;
   }
 
@@ -46,13 +45,6 @@ function Overlay({
     objectToOverlay?.current?.getBoundingClientRect() ?? {};
   const { adjustLeft = 0, adjustTop = 0 } = customizePosition;
   const { close, openName, executeExtraAction } = useContext(OverlayContext);
-  console.log(
-    "adjust left for ",
-    openName,
-    adjustLeft,
-    left,
-    customizePosition,
-  );
 
   function handleCloseOverlay() {
     executeExtraAction?.();

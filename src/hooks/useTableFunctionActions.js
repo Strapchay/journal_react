@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { useRef } from "react";
-import {
-  SELECTED_COMPONENT_STATE_DEFAULTS,
-  TABLE_PROPERTIES,
-} from "../utils/constants";
+import { SELECTED_COMPONENT_STATE_DEFAULTS } from "../utils/constants";
 import { useContext } from "react";
 import { AuthContext } from "../ProtectedRoute";
 import { formatAPITableItems } from "../utils/helpers";
@@ -13,12 +10,13 @@ export function useTableFunctionActions() {
     useContext(AuthContext);
   const filterRef = useRef(null);
   const sortRef = useRef(null);
+  const actionRefDictRef = useRef({
+    filter: filterRef,
+    sort: sortRef,
+  });
   const breakScreenOptionRef = useRef(null);
   const [selectedComponentState, setSelectedComponentState] = useState(
     SELECTED_COMPONENT_STATE_DEFAULTS,
-  );
-  const propertiesToRender = TABLE_PROPERTIES.properties.filter(
-    (property) => property.text.toLowerCase() !== "created",
   );
   const [allowSearch, setAllowSearch] = useState(false);
 
@@ -37,10 +35,8 @@ export function useTableFunctionActions() {
 
   return {
     handleCreateAndOpenSidePeek,
-    filterRef,
-    sortRef,
+    actionRefDictRef,
     breakScreenOptionRef,
-    propertiesToRender,
     setSelectedComponentState,
     selectedComponentState,
     setAllowSearch,

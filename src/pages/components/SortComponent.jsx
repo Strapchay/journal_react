@@ -11,7 +11,6 @@ function SortComponent({ property, setSelectedComponentState = null }) {
     handleDeleteSort,
     handleSortAction,
     propertyRef,
-    propertiesToRender,
     sortTypeRef,
     currentTableFunc,
   } = useSortActions({ setSelectedComponentState });
@@ -27,30 +26,7 @@ function SortComponent({ property, setSelectedComponentState = null }) {
                 ref={propertyRef}
               >
                 <ComponentOverlay.Open opens="propertyOption">
-                  <div
-                    className={[
-                      styles["sort-select"],
-                      styles["sort-property-options-box"],
-                    ].join(" ")}
-                  >
-                    <div className={styles["sort-sort-icon"]}>
-                      <SvgMarkup
-                        classList="sort-icon icon-active icon-md"
-                        fragId={property?.icon}
-                        styles={styles}
-                      />
-                    </div>
-                    <div className={styles["action-filter-text"]}>
-                      {capitalize(property)}
-                    </div>
-                    <div className={styles["sort-dropdown-icon"]}>
-                      <SvgMarkup
-                        classList="sort-icon icon-active icon-sm"
-                        fragId="arrow-down"
-                        styles={styles}
-                      />
-                    </div>
-                  </div>
+                  <SelectedPropertyTextComponent property={property} />
                 </ComponentOverlay.Open>
                 <ComponentOverlay.Window
                   name="propertyOption"
@@ -59,34 +35,16 @@ function SortComponent({ property, setSelectedComponentState = null }) {
                   <TableFunctionOptionComponent
                     componentName="sort"
                     form={true}
-                    properties={propertiesToRender}
                     switchSortProp={true}
                   />
                 </ComponentOverlay.Window>
               </div>
               <div className={styles["sort-type"]}>
                 <ComponentOverlay.Open opens="sortTypeOption">
-                  <div className={styles["sort-type-options"]}>
-                    <div
-                      className={[
-                        styles["sort-type-options-box"],
-                        styles["sort-select"],
-                      ].join(" ")}
-                      ref={sortTypeRef}
-                    >
-                      <div className={styles["action-filter-text"]}>
-                        {currentTableFunc?.sort?.type ||
-                          TABLE_SORT_TYPE[0].text}
-                      </div>
-                      <div className={styles["sort-dropdown-icon"]}>
-                        <SvgMarkup
-                          classList="sort-icon icon-active icon-sm"
-                          fragId="arrow-down"
-                          styles={styles}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <SelectedSortTypeTextComponent
+                    sortTypeRef={sortTypeRef}
+                    currentTableFunc={currentTableFunc}
+                  />
                 </ComponentOverlay.Open>
                 <ComponentOverlay.Window
                   name="sortTypeOption"
@@ -98,19 +56,58 @@ function SortComponent({ property, setSelectedComponentState = null }) {
             </ComponentOverlay>
           </div>
         </div>
-        <div className={styles["sort-delete-container"]}>
-          <div className={styles["sort-action-box"]} onClick={handleDeleteSort}>
-            <div className={styles["sort-delete-icon"]}>
-              <div className={styles["sort-sort-icon"]}>
-                <SvgMarkup
-                  classList="icon-active icon-md"
-                  fragId="trashcan-icon"
-                  styles={styles}
-                />
-              </div>
-            </div>
-            <div className={styles["sort-delete-text"]}>Delete Sort</div>
-          </div>
+        <DeleteSortComponent handleDeleteSort={handleDeleteSort} />
+      </div>
+    </div>
+  );
+}
+
+function SelectedPropertyTextComponent({ property }) {
+  return (
+    <div
+      className={[
+        styles["sort-select"],
+        styles["sort-property-options-box"],
+      ].join(" ")}
+    >
+      <div className={styles["sort-sort-icon"]}>
+        <SvgMarkup
+          classList="sort-icon icon-active icon-md"
+          fragId={property?.icon}
+          styles={styles}
+        />
+      </div>
+      <div className={styles["action-filter-text"]}>{capitalize(property)}</div>
+      <div className={styles["sort-dropdown-icon"]}>
+        <SvgMarkup
+          classList="sort-icon icon-active icon-sm"
+          fragId="arrow-down"
+          styles={styles}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SelectedSortTypeTextComponent({ sortTypeRef, currentTableFunc }) {
+  return (
+    <div className={styles["sort-type-options"]}>
+      <div
+        className={[
+          styles["sort-type-options-box"],
+          styles["sort-select"],
+        ].join(" ")}
+        ref={sortTypeRef}
+      >
+        <div className={styles["action-filter-text"]}>
+          {currentTableFunc?.sort?.type || TABLE_SORT_TYPE[0].text}
+        </div>
+        <div className={styles["sort-dropdown-icon"]}>
+          <SvgMarkup
+            classList="sort-icon icon-active icon-sm"
+            fragId="arrow-down"
+            styles={styles}
+          />
         </div>
       </div>
     </div>
@@ -149,6 +146,25 @@ function SortOptionComponent({ onSubmit, onSelect }) {
         </div>
       ))}
     </>
+  );
+}
+
+function DeleteSortComponent({ handleDeleteSort }) {
+  return (
+    <div className={styles["sort-delete-container"]}>
+      <div className={styles["sort-action-box"]} onClick={handleDeleteSort}>
+        <div className={styles["sort-delete-icon"]}>
+          <div className={styles["sort-sort-icon"]}>
+            <SvgMarkup
+              classList="icon-active icon-md"
+              fragId="trashcan-icon"
+              styles={styles}
+            />
+          </div>
+        </div>
+        <div className={styles["sort-delete-text"]}>Delete Sort</div>
+      </div>
+    </div>
   );
 }
 

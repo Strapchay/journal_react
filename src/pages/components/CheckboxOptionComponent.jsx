@@ -31,35 +31,13 @@ function CheckboxOptionComponent({ selectedItemsLength }) {
   return (
     <div className={styles["checkbox-options"]}>
       <div className={styles["checkbox-options-box"]}>
-        <div
-          className={[
-            styles["checkbox-item"],
-            styles["checkbox-total"],
-            styles["hover"],
-          ].join(" ")}
-          onClick={unselectAllSelectedTableItems}
-        >
-          <div className={styles["checkbox-text"]}>
-            {selectedItemsLength} selected
-          </div>
-        </div>
+        <ParentCheckboxComponent
+          unselectAllSelectedTableItems={unselectAllSelectedTableItems}
+          selectedItemsLength={selectedItemsLength}
+        />
         <ComponentOverlay>
           <ComponentOverlay.Open opens="checkboxTags">
-            <div
-              className={[
-                styles["checkbox-item"],
-                styles["checkbox-tags"],
-                styles["hover"],
-              ].join(" ")}
-              ref={checkboxTagOptionRef}
-            >
-              <SvgMarkup
-                classList="icon-md icon-active"
-                fragId="list-icon"
-                styles={styles}
-              />
-              <div className={styles["checkbox-text"]}>Tags</div>
-            </div>
+            <TagTextComponent checkboxTagOptionRef={checkboxTagOptionRef} />
           </ComponentOverlay.Open>
           <ComponentOverlay.Window
             name="checkboxTags"
@@ -68,35 +46,92 @@ function CheckboxOptionComponent({ selectedItemsLength }) {
             <TagComponent itemIds={getSelectedItems(selectedTableItems)} />
           </ComponentOverlay.Window>
         </ComponentOverlay>
-        <div
-          className={[
-            styles["checkbox-item"],
-            styles["checkbox-delete"],
-            styles["hover"],
-          ].join(" ")}
-          onClick={deleteSelectedTableItems}
-        >
-          <SvgMarkup
-            classList="icon-md icon-active"
-            fragId="trashcan-icon"
-            styles={styles}
-          />
-        </div>
-        <div
-          className={[
-            styles["checkbox-item"],
-            styles["checkbox-clone"],
-            styles["hover"],
-          ].join(" ")}
-          onClick={duplicateSelectedTableItems}
-        >
-          <SvgMarkup
-            classList="icon-md icon-active"
-            fragId="clone"
-            styles={styles}
-          />
-        </div>
+        <DeleteTextComponent
+          deleteSelectedTableItems={deleteSelectedTableItems}
+        />
+        <DuplicateTextComponent
+          duplicateSelectedTableItems={duplicateSelectedTableItems}
+        />
       </div>
+    </div>
+  );
+}
+
+function ParentCheckboxComponent({
+  unselectAllSelectedTableItems,
+  selectedItemsLength,
+}) {
+  return (
+    <div
+      className={[
+        styles["checkbox-item"],
+        styles["checkbox-total"],
+        styles["hover"],
+      ].join(" ")}
+      onClick={unselectAllSelectedTableItems}
+    >
+      <div className={styles["checkbox-text"]}>
+        {selectedItemsLength} selected
+      </div>
+    </div>
+  );
+}
+
+function TagTextComponent({ checkboxTagOptionRef, onClick }) {
+  return (
+    <div
+      className={[
+        styles["checkbox-item"],
+        styles["checkbox-tags"],
+        styles["hover"],
+      ].join(" ")}
+      ref={checkboxTagOptionRef}
+      onClick={onClick}
+    >
+      <SvgMarkup
+        classList="icon-md icon-active"
+        fragId="list-icon"
+        styles={styles}
+      />
+      <div className={styles["checkbox-text"]}>Tags</div>
+    </div>
+  );
+}
+
+function DeleteTextComponent({ deleteSelectedTableItems }) {
+  return (
+    <div
+      className={[
+        styles["checkbox-item"],
+        styles["checkbox-delete"],
+        styles["hover"],
+      ].join(" ")}
+      onClick={deleteSelectedTableItems}
+    >
+      <SvgMarkup
+        classList="icon-md icon-active"
+        fragId="trashcan-icon"
+        styles={styles}
+      />
+    </div>
+  );
+}
+
+function DuplicateTextComponent({ duplicateSelectedTableItems }) {
+  return (
+    <div
+      className={[
+        styles["checkbox-item"],
+        styles["checkbox-clone"],
+        styles["hover"],
+      ].join(" ")}
+      onClick={duplicateSelectedTableItems}
+    >
+      <SvgMarkup
+        classList="icon-md icon-active"
+        fragId="clone"
+        styles={styles}
+      />
     </div>
   );
 }

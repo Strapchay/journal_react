@@ -59,7 +59,6 @@ function Placeholder({ placeholder, onClick }) {
           className={
             styles[placeholder ? "row-adder-filter" : "row-adder-content"]
           }
-          // ref={ref}
           onClick={onClick}
         >
           <div
@@ -80,12 +79,12 @@ function BodyItemComponent({ item, tableItemsMap, onSelectTableItem }) {
   const tagRef = useRef(null);
   const [hoverActive, setHoverActive] = useState(false);
   const textToCopyRef = useRef(null);
-  const {
-    createTableItem,
-    journalState,
-    dispatch,
-    handleCopyToClipboardEvent,
-  } = useContext(AuthContext);
+  const { createTableItem, journalState, dispatch } = useContext(AuthContext);
+  const inputAutoClick =
+    journalState.tableItemInputActive &&
+    journalState.tableItemInputActive === item.id
+      ? false
+      : true;
 
   function handleAddRelativeTableBodyItemEvent(e) {
     const currentTableId = journalState.currentTable;
@@ -126,149 +125,153 @@ function BodyItemComponent({ item, tableItemsMap, onSelectTableItem }) {
       }}
       onMouseOut={() => setHoverActive(false)}
     >
-      <div className={styles["tableInput-container"]}>
-        <label className={styles["tableInput"]}>
-          <input
-            type="checkbox"
-            name=""
-            className={[
-              styles["checkboxInput"],
-              tableItemsMap[item?.id] ? styles["visible"] : "",
-            ].join(" ")}
-            autoComplete="off"
-            checked={tableItemsMap[item?.id] ?? false}
-            onChange={() => onSelectTableItem(item?.id)}
-          />
-        </label>
-      </div>
+      <CheckboxInputComponent
+        tableItemsMap={tableItemsMap}
+        item={item}
+        onSelectTableItem={onSelectTableItem}
+      />
       <div role="rowgroup">
         <div
           role="row"
           className={styles["row-actions-handler-container"]}
           data-id={item.id}
         >
-          <span
-            role="cell"
-            className={[styles["table-item"], styles["table-item-name"]].join(
-              " ",
-            )}
-          >
-            <div className={styles["row-actions-segment"]} ref={inputRef}>
-              <ComponentOverlay>
-                <ComponentOverlay.Open
-                  opens="nameInput"
-                  click={
-                    journalState.tableItemInputActive &&
-                    journalState.tableItemInputActive === item.id
-                      ? false
-                      : true
-                  }
-                >
-                  <div
-                    className={[
-                      styles["name-actions-text"],
-                      styles["row-actions-text"],
-                      styles["highlight-column"],
-                    ].join(" ")}
-                  >
-                    {item.itemTitle}
-                  </div>
-                </ComponentOverlay.Open>
-                <ComponentOverlay.Window
-                  name="nameInput"
-                  objectToOverlay={inputRef}
-                >
-                  <InputOverlayComponent item={item} />
-                </ComponentOverlay.Window>
-              </ComponentOverlay>
-              {hoverActive && <HoverComponent item={item} />}
-            </div>
-          </span>
-          <span
-            role="cell"
-            className={[
-              styles["table-item"],
-              styles["table-item-created"],
-            ].join(" ")}
-          >
-            <div className={styles["row-actions-segment"]}>
-              <div
-                className={[
-                  styles["created-actions-text"],
-                  styles["row-actions-text"],
-                ].join(" ")}
-                ref={textToCopyRef}
-              >
-                {dateTimeFormat(item.created ?? item.id)}
-              </div>
-              {hoverActive && (
-                <div className={[styles["row-actions-render"]].join(" ")}>
-                  <div
-                    className={styles["row-actions-render-icon"]}
-                    onClick={() => handleCopyToClipboardEvent(textToCopyRef)}
-                  >
-                    <SvgMarkup
-                      classList={styles["row-icon"]}
-                      fragId="copy"
-                      styles={styles}
-                    />
-                  </div>
-                  <div className={styles["row-actions-tooltip"]}>
-                    <div className={styles["tooltip-text"]}>
-                      Copy to Clipboard
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </span>
-          <span
-            role="cell"
-            className={[styles["table-item"], styles["table-item-tags"]].join(
-              " ",
-            )}
-            ref={tagRef}
-          >
-            <ComponentOverlay>
-              <ComponentOverlay.Open opens="tagOption">
-                <ListTagItems tags={item?.itemTags} />
-              </ComponentOverlay.Open>
-              <ComponentOverlay.Window
-                name="tagOption"
-                objectToOverlay={tagRef}
-              >
-                <TagComponent itemIds={[item?.id]} itemTags={item?.itemTags} />
-              </ComponentOverlay.Window>
-            </ComponentOverlay>
-          </span>
+          <NameTextComponent
+            inputRef={inputRef}
+            inputAutoClick={inputAutoClick}
+            item={item}
+            hoverActive={hoverActive}
+          />
+          <DateCreatedTextComponent
+            textToCopyRef={textToCopyRef}
+            item={item}
+            hoverActive={hoverActive}
+          />
+          <TagTextComponent item={item} tagRef={tagRef} />
         </div>
         {hoverActive && (
-          <div className={styles["row-actions-handler"]} data-id={item.id}>
+          <HoverActionsComponent
+            item={item}
+            handleAddRelativeTableBodyItemEvent={
+              handleAddRelativeTableBodyItemEvent
+            }
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CheckboxInputComponent({ tableItemsMap, item, onSelectTableItem }) {
+  return (
+    <div className={styles["tableInput-container"]}>
+      <label className={styles["tableInput"]}>
+        <input
+          type="checkbox"
+          name=""
+          className={[
+            styles["checkboxInput"],
+            tableItemsMap[item?.id] ? styles["visible"] : "",
+          ].join(" ")}
+          autoComplete="off"
+          checked={tableItemsMap[item?.id] ?? false}
+          onChange={() => onSelectTableItem(item?.id)}
+        />
+      </label>
+    </div>
+  );
+}
+
+function NameTextComponent({ inputRef, inputAutoClick, item, hoverActive }) {
+  return (
+    <span
+      role="cell"
+      className={[styles["table-item"], styles["table-item-name"]].join(" ")}
+    >
+      <div className={styles["row-actions-segment"]} ref={inputRef}>
+        <ComponentOverlay>
+          <ComponentOverlay.Open opens="nameInput" click={inputAutoClick}>
+            <NameTextRenderComponent item={item} />
+          </ComponentOverlay.Open>
+          <ComponentOverlay.Window name="nameInput" objectToOverlay={inputRef}>
+            <InputOverlayComponent item={item} />
+          </ComponentOverlay.Window>
+        </ComponentOverlay>
+        {hoverActive && <HoverComponent item={item} />}
+      </div>
+    </span>
+  );
+}
+
+function NameTextRenderComponent({ item }) {
+  return (
+    <div
+      className={[
+        styles["name-actions-text"],
+        styles["row-actions-text"],
+        styles["highlight-column"],
+      ].join(" ")}
+    >
+      {item.itemTitle}
+    </div>
+  );
+}
+
+function DateCreatedTextComponent({ textToCopyRef, item, hoverActive }) {
+  const { handleCopyToClipboardEvent } = useContext(AuthContext);
+  return (
+    <span
+      role="cell"
+      className={[styles["table-item"], styles["table-item-created"]].join(" ")}
+    >
+      <div className={styles["row-actions-segment"]}>
+        <div
+          className={[
+            styles["created-actions-text"],
+            styles["row-actions-text"],
+          ].join(" ")}
+          ref={textToCopyRef}
+        >
+          {dateTimeFormat(item.created ?? item.id)}
+        </div>
+        {hoverActive && (
+          <div className={[styles["row-actions-render"]].join(" ")}>
             <div
-              className={[
-                styles["row-actions-icon"],
-                styles["row-add-icon"],
-                styles["hover"],
-              ].join(" ")}
-              onClick={handleAddRelativeTableBodyItemEvent}
+              className={styles["row-actions-render-icon"]}
+              onClick={() => handleCopyToClipboardEvent(textToCopyRef)}
             >
               <SvgMarkup
                 classList={styles["row-icon"]}
-                fragId="plus"
+                fragId="copy"
                 styles={styles}
               />
             </div>
-            <div className="row-actions-icon row-drag-icon hover">
-              <SvgMarkup
-                classList={styles["row-icon"]}
-                fragId="drag-icon"
-                styles={styles}
-              />
+            <div className={styles["row-actions-tooltip"]}>
+              <div className={styles["tooltip-text"]}>Copy to Clipboard</div>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </span>
+  );
+}
+
+function TagTextComponent({ item, tagRef }) {
+  return (
+    <span
+      role="cell"
+      className={[styles["table-item"], styles["table-item-tags"]].join(" ")}
+      ref={tagRef}
+    >
+      <ComponentOverlay>
+        <ComponentOverlay.Open opens="tagOption">
+          <ListTagItems tags={item?.itemTags} />
+        </ComponentOverlay.Open>
+        <ComponentOverlay.Window name="tagOption" objectToOverlay={tagRef}>
+          <TagComponent itemIds={[item?.id]} itemTags={item?.itemTags} />
+        </ComponentOverlay.Window>
+      </ComponentOverlay>
+    </span>
   );
 }
 
@@ -369,6 +372,34 @@ function ListTagItems({ tags, onClick }) {
             ""
           );
         })}
+    </div>
+  );
+}
+
+function HoverActionsComponent({ item, handleAddRelativeTableBodyItemEvent }) {
+  return (
+    <div className={styles["row-actions-handler"]} data-id={item.id}>
+      <div
+        className={[
+          styles["row-actions-icon"],
+          styles["row-add-icon"],
+          styles["hover"],
+        ].join(" ")}
+        onClick={handleAddRelativeTableBodyItemEvent}
+      >
+        <SvgMarkup
+          classList={styles["row-icon"]}
+          fragId="plus"
+          styles={styles}
+        />
+      </div>
+      <div className="row-actions-icon row-drag-icon hover">
+        <SvgMarkup
+          classList={styles["row-icon"]}
+          fragId="drag-icon"
+          styles={styles}
+        />
+      </div>
     </div>
   );
 }

@@ -8,11 +8,7 @@ import { useRef } from "react";
 import { SELECTED_COMPONENT_STATE_DEFAULTS } from "../../utils/constants";
 import TagComponent, { SelectedTagsComponent } from "./TagComponent";
 
-function FilterComponent({
-  property,
-  onClick,
-  setSelectedComponentState = null,
-}) {
+function FilterComponent({ property, setSelectedComponentState = null }) {
   const {
     onTagsFilter,
     onRemoveTag,
@@ -28,30 +24,16 @@ function FilterComponent({
   } = useFilterActions({ property });
 
   return (
-    <div className={styles["filter-rule-input-box"]} onClick={onClick}>
+    <div className={styles["filter-rule-input-box"]}>
       <div className={styles["filter-input-content"]}>
         <div className={styles["filter-input-content-box"]}>
           <div className={styles["filter-input-text"]}>{propertyName}</div>
           <ComponentOverlay>
             <ComponentOverlay.Open opens="filterConditionals">
-              <div
-                className={[
-                  styles["filter-input-filter"],
-                  styles["hover"],
-                ].join(" ")}
-                ref={prepositionRef}
-              >
-                <div className={styles["filter-input-filter-text"]}>
-                  {currentTableFunc?.filter?.conditional}
-                </div>
-                <div className={styles["added-rule-icon"]}>
-                  <SvgMarkup
-                    classList="filter-added-icon icon-sm nav-icon-active"
-                    fragId="arrow-down"
-                    styles={styles}
-                  />
-                </div>
-              </div>
+              <ConditionalTextComponent
+                prepositionRef={prepositionRef}
+                currentTableFunc={currentTableFunc}
+              />
             </ComponentOverlay.Open>
             <ComponentOverlay.Window
               name="filterConditionals"
@@ -61,19 +43,7 @@ function FilterComponent({
             </ComponentOverlay.Window>
             <div className={styles["div-filler"]}></div>
             <ComponentOverlay.Open opens="filterRuleOption">
-              <div
-                className={[
-                  styles["filter-input-option"],
-                  styles["hover"],
-                ].join(" ")}
-                ref={optionRef}
-              >
-                <SvgMarkup
-                  classList="filter-added-icon icon-md nav-icon-active"
-                  fragId="ellipsis"
-                  styles={styles}
-                />
-              </div>
+              <OptionIconComponent optionRef={optionRef} />
             </ComponentOverlay.Open>
             <ComponentOverlay.Window
               name="filterRuleOption"
@@ -126,7 +96,27 @@ function FilterComponent({
   );
 }
 
-export function ConditionalsComponent({ prepositions, onSubmit }) {
+function ConditionalTextComponent({ prepositionRef, currentTableFunc }) {
+  return (
+    <div
+      className={[styles["filter-input-filter"], styles["hover"]].join(" ")}
+      ref={prepositionRef}
+    >
+      <div className={styles["filter-input-filter-text"]}>
+        {currentTableFunc?.filter?.conditional}
+      </div>
+      <div className={styles["added-rule-icon"]}>
+        <SvgMarkup
+          classList="filter-added-icon icon-sm nav-icon-active"
+          fragId="arrow-down"
+          styles={styles}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ConditionalsComponent({ prepositions, onSubmit }) {
   const { currentTableFunc, dispatch } = useContext(AuthContext);
 
   function handlePrepositionSelect(e) {
@@ -180,6 +170,21 @@ export function ConditionalsComponent({ prepositions, onSubmit }) {
   );
 }
 
+function OptionIconComponent({ optionRef }) {
+  return (
+    <div
+      className={[styles["filter-input-option"], styles["hover"]].join(" ")}
+      ref={optionRef}
+    >
+      <SvgMarkup
+        classList="filter-added-icon icon-md nav-icon-active"
+        fragId="ellipsis"
+        styles={styles}
+      />
+    </div>
+  );
+}
+
 function FilterOptionComponent({
   setSelectedComponentState,
   property,
@@ -204,43 +209,14 @@ function FilterOptionComponent({
   return (
     <div className={styles["filter-input-option-option"]}>
       <div className={styles["filter-option-option"]}>
-        <div
-          className={[
-            styles["filter-option-action"],
-            styles["filter-option-delete"],
-            styles["hover"],
-          ].join(" ")}
-          onClick={handleDeleteFilter}
-        >
-          <div className={styles["filter-option-icon"]} ref={tagOptionRef}>
-            <SvgMarkup
-              classList="filter-icon icon-md nav-icon-active"
-              fragId="trashcan-icon"
-              styles={styles}
-            />
-          </div>
-          <div className={styles["filter-option-text"]}>Delete Filter</div>
-        </div>
+        <DeleteFilterComponent
+          handleDeleteFilter={handleDeleteFilter}
+          tagOptionRef={tagOptionRef}
+        />
         {property.toLowerCase() === "tags" && (
           <ComponentOverlay>
             <ComponentOverlay.Open opens="tagOptions">
-              <div
-                className={[
-                  styles["filter-option-action"],
-                  styles["filter-option-tags"],
-                  styles["hover"],
-                ].join(" ")}
-                ref={tagOptionRef}
-              >
-                <div className={styles["filter-option-icon"]}>
-                  <SvgMarkup
-                    classList="filter-icon icon-md nav-icon-active"
-                    fragId="list-icon"
-                    styles={styles}
-                  />
-                </div>
-                <div className={styles["filter-option-text"]}>Select Tags</div>
-              </div>
+              <SelectTagTextComponent tagOptionRef={tagOptionRef} />
             </ComponentOverlay.Open>
             <ComponentOverlay.Window
               name="tagOptions"
@@ -256,6 +232,50 @@ function FilterOptionComponent({
           </ComponentOverlay>
         )}
       </div>
+    </div>
+  );
+}
+
+function DeleteFilterComponent({ tagOptionRef, handleDeleteFilter }) {
+  return (
+    <div
+      className={[
+        styles["filter-option-action"],
+        styles["filter-option-delete"],
+        styles["hover"],
+      ].join(" ")}
+      onClick={handleDeleteFilter}
+    >
+      <div className={styles["filter-option-icon"]} ref={tagOptionRef}>
+        <SvgMarkup
+          classList="filter-icon icon-md nav-icon-active"
+          fragId="trashcan-icon"
+          styles={styles}
+        />
+      </div>
+      <div className={styles["filter-option-text"]}>Delete Filter</div>
+    </div>
+  );
+}
+
+function SelectTagTextComponent({ tagOptionRef }) {
+  return (
+    <div
+      className={[
+        styles["filter-option-action"],
+        styles["filter-option-tags"],
+        styles["hover"],
+      ].join(" ")}
+      ref={tagOptionRef}
+    >
+      <div className={styles["filter-option-icon"]}>
+        <SvgMarkup
+          classList="filter-icon icon-md nav-icon-active"
+          fragId="list-icon"
+          styles={styles}
+        />
+      </div>
+      <div className={styles["filter-option-text"]}>Select Tags</div>
     </div>
   );
 }
