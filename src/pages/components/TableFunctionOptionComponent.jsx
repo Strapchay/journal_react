@@ -11,6 +11,7 @@ function TableFunctionOptionComponent({
   switchSortProp = null,
   onSubmit,
   onOpenSidePeek = null,
+  onClick,
 }) {
   const properties = !form
     ? TABLE_ACTION_OPTIONS.properties
@@ -53,6 +54,7 @@ function TableFunctionOptionComponent({
         styles["property-add-action--options"],
         styles["component-options"],
       ].join(" ")}
+      onClick={onClick}
     >
       <div className={styles["property-options"]}>
         <div className={styles["property-options-property--option"]}>

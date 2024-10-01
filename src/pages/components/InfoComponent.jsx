@@ -83,6 +83,7 @@ function ContentComponent() {
           suppressContentEditableWarning={true}
           ref={journalNameRef}
           onKeyUp={(e) => handleJournalInfoChange("name")}
+          spellCheck={false}
         ></h2>
       </div>
       <div className={styles["main-content-description"]}>

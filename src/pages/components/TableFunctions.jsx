@@ -224,11 +224,12 @@ function ButtonAddComponent({ handleCreateAndOpenSidePeek }) {
   );
 }
 
-function MobileFunctionOptionComponent({ breakScreenOptionRef }) {
+function MobileFunctionOptionComponent({ breakScreenOptionRef, onClick }) {
   return (
     <div
       className={[styles["table-row-options"], styles["table-row"]].join(" ")}
       ref={breakScreenOptionRef}
+      onClick={onClick}
     >
       <div className={styles["table-row-icon"]}>
         <SvgMarkup

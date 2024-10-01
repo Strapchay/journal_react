@@ -203,7 +203,7 @@ function NameTextComponent({ inputRef, inputAutoClick, item, hoverActive }) {
   );
 }
 
-function NameTextRenderComponent({ item }) {
+function NameTextRenderComponent({ item, onClick }) {
   return (
     <div
       className={[
@@ -211,6 +211,7 @@ function NameTextRenderComponent({ item }) {
         styles["row-actions-text"],
         styles["highlight-column"],
       ].join(" ")}
+      onClick={onClick}
     >
       {item.itemTitle}
     </div>

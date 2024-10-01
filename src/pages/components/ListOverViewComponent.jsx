@@ -117,9 +117,12 @@ function ListOverviewItemComponent({ tableItem, onSetCurrent }) {
   );
 }
 
-function IconComponent() {
+function IconComponent({ onClick }) {
   return (
-    <div className={[styles["table-row-icon"], styles["hover-dull"]].join(" ")}>
+    <div
+      className={[styles["table-row-icon"], styles["hover-dull"]].join(" ")}
+      onClick={onClick}
+    >
       <SvgMarkup
         classList="table-icon icon-md"
         fragId="ellipsis"

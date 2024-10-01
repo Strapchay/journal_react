@@ -91,9 +91,9 @@ function ListColumnComponent({
   );
 }
 
-function ColumnText({ journalName }) {
+function ColumnText({ journalName, onClick }) {
   return (
-    <span className={styles["table-row-column-wrapper"]}>
+    <span className={styles["table-row-column-wrapper"]} onClick={onClick}>
       <div className={styles["table-row-icon"]}>
         <SvgMarkup
           classList={styles["table-icon"]}

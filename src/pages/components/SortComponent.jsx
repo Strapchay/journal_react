@@ -1,10 +1,16 @@
+import { useContext } from "react";
 import ComponentOverlay from "../../ComponentOverlay";
 import { useSortActions } from "../../hooks/useSortActions";
 import SvgMarkup from "../../SvgMarkup";
-import { TABLE_SORT_TYPE } from "../../utils/constants";
+import {
+  CUSTOMIZE_POSITION_DEFAULTS,
+  TABLE_SORT_TYPE,
+} from "../../utils/constants";
 import { capitalize } from "../../utils/helpers";
 import styles from "../Journal.module.css";
 import TableFunctionOptionComponent from "./TableFunctionOptionComponent";
+import { AuthContext } from "../../ProtectedRoute";
+import { useScreenBreakpoints } from "../../hooks/useScreenBreakpoints";
 
 function SortComponent({ property, setSelectedComponentState = null }) {
   const {
@@ -14,6 +20,10 @@ function SortComponent({ property, setSelectedComponentState = null }) {
     sortTypeRef,
     currentTableFunc,
   } = useSortActions({ setSelectedComponentState });
+  const { mobileBreakpointMatches } = useScreenBreakpoints();
+  const customizePosition = mobileBreakpointMatches
+    ? { ...CUSTOMIZE_POSITION_DEFAULTS, adjustLeft: 100 }
+    : { ...CUSTOMIZE_POSITION_DEFAULTS };
 
   return (
     <div className={styles["sort-rules"]}>
@@ -31,6 +41,7 @@ function SortComponent({ property, setSelectedComponentState = null }) {
                 <ComponentOverlay.Window
                   name="propertyOption"
                   objectToOverlay={propertyRef}
+                  customizePosition={customizePosition}
                 >
                   <TableFunctionOptionComponent
                     componentName="sort"
@@ -49,6 +60,7 @@ function SortComponent({ property, setSelectedComponentState = null }) {
                 <ComponentOverlay.Window
                   name="sortTypeOption"
                   objectToOverlay={sortTypeRef}
+                  customizePosition={customizePosition}
                 >
                   <SortOptionComponent onSelect={handleSortAction} />
                 </ComponentOverlay.Window>
@@ -62,13 +74,15 @@ function SortComponent({ property, setSelectedComponentState = null }) {
   );
 }
 
-function SelectedPropertyTextComponent({ property }) {
+function SelectedPropertyTextComponent({ property, onClick }) {
+  const { currentTableFunc } = useContext(AuthContext);
   return (
     <div
       className={[
         styles["sort-select"],
         styles["sort-property-options-box"],
       ].join(" ")}
+      onClick={onClick}
     >
       <div className={styles["sort-sort-icon"]}>
         <SvgMarkup
@@ -77,7 +91,9 @@ function SelectedPropertyTextComponent({ property }) {
           styles={styles}
         />
       </div>
-      <div className={styles["action-filter-text"]}>{capitalize(property)}</div>
+      <div className={styles["action-filter-text"]}>
+        {capitalize(currentTableFunc?.sort?.property) ?? capitalize(property)}
+      </div>
       <div className={styles["sort-dropdown-icon"]}>
         <SvgMarkup
           classList="sort-icon icon-active icon-sm"
@@ -89,9 +105,13 @@ function SelectedPropertyTextComponent({ property }) {
   );
 }
 
-function SelectedSortTypeTextComponent({ sortTypeRef, currentTableFunc }) {
+function SelectedSortTypeTextComponent({
+  sortTypeRef,
+  currentTableFunc,
+  onClick,
+}) {
   return (
-    <div className={styles["sort-type-options"]}>
+    <div className={styles["sort-type-options"]} onClick={onClick}>
       <div
         className={[
           styles["sort-type-options-box"],

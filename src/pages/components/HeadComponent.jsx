@@ -34,7 +34,10 @@ function HeadComponent() {
             <TablesListComponent journalItems={tableItems} />
             <ComponentOverlay>
               <ComponentOverlay.Open opens="tableAction">
-                <ListViewInitComponent tables={tables} />
+                <ListViewInitComponent
+                  tableHeadRef={tableHeadRef}
+                  tables={tables}
+                />
               </ComponentOverlay.Open>
               <ComponentOverlay.Window
                 name="tableAction"
@@ -58,14 +61,14 @@ function HeadComponent() {
   );
 }
 
-function ListViewInitComponent({ tables }) {
-  const { tableHeadRef } = useContext(AuthContext);
+function ListViewInitComponent({ tables, onClick, tableHeadRef }) {
   return (
     <div
       className={[styles["table-column-options"], styles["table-row"]].join(
         " ",
       )}
       ref={tableHeadRef}
+      onClick={onClick}
     >
       <div className={styles["table-row-text"]}>
         {tables?.length - TABLE_HEAD_LIMIT} more...

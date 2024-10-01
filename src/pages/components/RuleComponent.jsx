@@ -4,10 +4,14 @@ import { AuthContext } from "../../ProtectedRoute";
 import { useRef } from "react";
 import ComponentOverlay from "../../ComponentOverlay";
 import SvgMarkup from "../../SvgMarkup";
-import { TABLE_PROPERTIES } from "../../utils/constants";
+import {
+  CUSTOMIZE_POSITION_DEFAULTS,
+  TABLE_PROPERTIES,
+} from "../../utils/constants";
 import { capitalize } from "../../utils/helpers";
 import FilterComponent from "./FilterComponent";
 import SortComponent from "./SortComponent";
+import { useScreenBreakpoints } from "../../hooks/useScreenBreakpoints";
 
 const ComponentSelector = {
   filter: FilterComponent,
@@ -42,6 +46,10 @@ function RuleComponent() {
 function RuleItemComponent({ rule, multipleRulesExist, index }) {
   const ruleItemRef = useRef(null);
   const RuleComponent = ComponentSelector[rule?.component];
+  const { mobileBreakpointMatches } = useScreenBreakpoints();
+  const customizePosition = mobileBreakpointMatches
+    ? { ...CUSTOMIZE_POSITION_DEFAULTS, adjustLeft: -60 }
+    : { ...CUSTOMIZE_POSITION_DEFAULTS };
 
   return (
     <div
@@ -59,6 +67,7 @@ function RuleItemComponent({ rule, multipleRulesExist, index }) {
         <ComponentOverlay.Window
           name={`${rule?.property}FilterRule`}
           objectToOverlay={ruleItemRef}
+          customizePosition={customizePosition}
         >
           <RuleComponent property={rule?.property} />
         </ComponentOverlay.Window>

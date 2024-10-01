@@ -96,11 +96,16 @@ function FilterComponent({ property, setSelectedComponentState = null }) {
   );
 }
 
-function ConditionalTextComponent({ prepositionRef, currentTableFunc }) {
+function ConditionalTextComponent({
+  prepositionRef,
+  currentTableFunc,
+  onClick,
+}) {
   return (
     <div
       className={[styles["filter-input-filter"], styles["hover"]].join(" ")}
       ref={prepositionRef}
+      onClick={onClick}
     >
       <div className={styles["filter-input-filter-text"]}>
         {currentTableFunc?.filter?.conditional}
@@ -170,11 +175,12 @@ function ConditionalsComponent({ prepositions, onSubmit }) {
   );
 }
 
-function OptionIconComponent({ optionRef }) {
+function OptionIconComponent({ optionRef, onClick }) {
   return (
     <div
       className={[styles["filter-input-option"], styles["hover"]].join(" ")}
       ref={optionRef}
+      onClick={onClick}
     >
       <SvgMarkup
         classList="filter-added-icon icon-md nav-icon-active"
@@ -258,7 +264,7 @@ function DeleteFilterComponent({ tagOptionRef, handleDeleteFilter }) {
   );
 }
 
-function SelectTagTextComponent({ tagOptionRef }) {
+function SelectTagTextComponent({ tagOptionRef, onClick }) {
   return (
     <div
       className={[
@@ -267,6 +273,7 @@ function SelectTagTextComponent({ tagOptionRef }) {
         styles["hover"],
       ].join(" ")}
       ref={tagOptionRef}
+      onClick={onClick}
     >
       <div className={styles["filter-option-icon"]}>
         <SvgMarkup
