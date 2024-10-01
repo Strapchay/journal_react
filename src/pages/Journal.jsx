@@ -1,8 +1,7 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext } from "react";
 import { AuthContext } from "../ProtectedRoute";
 import styles from "./Journal.module.css";
 import ContainerSidePeek from "../ContainerSidePeek";
-import TagComponent from "./components/TagComponent";
 import InfoComponent from "./components/InfoComponent";
 import TableComponent from "./components/TableComponent";
 import SidebarComponent from "./components/SidebarComponent";

@@ -13,12 +13,7 @@ import { useRef } from "react";
 import { useDeleteTableItems } from "./features/journals/useDeleteTableItems";
 import toast from "react-hot-toast";
 import { useDuplicateTableItems } from "./features/journals/useDuplicateTableItems";
-import {
-  formatAPITableItems,
-  getSelectedItems,
-  queryConditional,
-  querySort,
-} from "./utils/helpers";
+import { formatAPITableItems, getSelectedItems } from "./utils/helpers";
 import { useGetUser } from "./features/users/useGetUser";
 import ComponentOverlay from "./ComponentOverlay";
 import { useUpdateTableRename } from "./features/journals/useUpdateTableRename";
@@ -57,7 +52,6 @@ function ProtectedRoute() {
     error: journalTablesError,
     journalTablesFetchedAfterMount,
   } = useGetJournalTables(token, removeStorageData);
-  console.log("the journals tab v", journalTables);
   const { deleteTableItems } = useDeleteTableItems(token, removeStorageData);
   const { duplicateTableItems, isDuplicatingTableItems } =
     useDuplicateTableItems(token, removeStorageData);
@@ -65,10 +59,7 @@ function ProtectedRoute() {
   const [journalState, dispatch] = useReducer(journalReducer, initialState);
   const { isCreatingTableItem, createTableItem, createTableItemError } =
     useCreateTableItem(token, removeStorageData);
-  const { renameTable, isRenaming, renameError } = useUpdateTableRename(
-    token,
-    removeStorageData,
-  );
+  const { renameTable } = useUpdateTableRename(token, removeStorageData);
   const { duplicateTable } = useDuplicateTable(token, removeStorageData);
   const { deleteTable } = useDeleteTable(token, removeStorageData);
   const currentTableIndex = journalState.tables.findIndex(
