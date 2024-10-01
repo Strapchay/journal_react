@@ -163,7 +163,7 @@ export async function makeAPIRequest(
     // const res = await fetch(url, prepare);
     const res = await Promise.race([
       fetch(BASE_API_URL + url, prepare),
-      timeout(20, action),
+      timeout(100, action),
     ]);
     const data =
       method !== "DELETE" ? await res.json() : await getDeleteRes(res, action);
@@ -171,7 +171,6 @@ export async function makeAPIRequest(
       if (res.status === 401) removeToken?.();
       throw new Error(getInitError(data));
     }
-    console.log("the data val", action, data);
     return data;
   } catch (err) {
     throw new Error(err.message);
@@ -693,7 +692,6 @@ export function queryConditionalTags(filterDict) {
   }
 
   //bind the property and input search and return the bound method
-  console.log("the filterDict tags", filterDict);
   return filterMethod.bind(null, filterDict.property, filterDict.tags);
 }
 

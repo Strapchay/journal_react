@@ -9,7 +9,6 @@ import SidebarComponent from "./components/SidebarComponent";
 function Journal() {
   const { journalState, overlayContainerRef, sidePeek } =
     useContext(AuthContext);
-  console.log("the jor state", journalState);
 
   return (
     <main>

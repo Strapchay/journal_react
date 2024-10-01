@@ -1,5 +1,5 @@
 export const successCodes = [200, 201, 204];
-export const BASE_API_URL = `http://0.0.0.0:9008/api/`; //"https://journalhub.ddns.net/api/"//"http://0.0.0.0:9008/api/"
+export const BASE_API_URL = `https://journalinghub.ddns.net/api`;
 export const subModelEndpoints = [
   "grateful-for",
   "happenings",
@@ -10,8 +10,7 @@ export const DEFAULT_JOURNAL_DESC = `
 Document your life - daily happenings, special occasions,
 and reflections on your goals. Categorize entries with
 tags and automatically capture the date.
-<br />
-<br />
+
 ↓ Click through the different database tabs to filter
 entries by a specific category such as daily or personal.
 `;
