@@ -15,7 +15,12 @@ function LoginForm({ onCloseModal, switchForm }) {
   const { setToken } = useLocalStorageState({}, "token");
   const navigate = useNavigate();
   const { loginUser, isLoading } = useLoginUser();
-  const { register, handleSubmit, reset, formState } = useForm();
+  const { register, handleSubmit, reset, formState } = useForm({
+    defaultValues: {
+      login_email: "testuser123@email.com",
+      login_password: "Testuser123",
+    },
+  });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   useEffect(() => {
     if (isLoggedIn) {
