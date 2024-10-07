@@ -1,5 +1,5 @@
 export const successCodes = [200, 201, 204];
-export const BASE_API_URL = `https://journalinghub.ddns.net/api`;
+export const BASE_API_URL = `https://journalinghub.ddns.net/api/`;
 export const subModelEndpoints = [
   "grateful-for",
   "happenings",
